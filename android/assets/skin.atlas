@@ -1,0 +1,423 @@
+
+skin.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+button
+  rotate: false
+  xy: 810, 914
+  size: 46, 42
+  split: 8, 8, 7, 9
+  pad: 12, 12, 11, 13
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+button-over
+  rotate: false
+  xy: 1, 15
+  size: 46, 42
+  split: 8, 8, 7, 9
+  pad: 12, 12, 11, 13
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+button-over.locked
+  rotate: false
+  xy: 673, 786
+  size: 46, 42
+  split: 17, 17, 15, 16
+  pad: 15, 15, 14, 14
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+button-pressed
+  rotate: false
+  xy: 262, 139
+  size: 46, 42
+  split: 8, 8, 7, 9
+  pad: 12, 12, 11, 13
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+button-pressed.locked
+  rotate: false
+  xy: 509, 528
+  size: 46, 42
+  split: 17, 17, 15, 16
+  pad: 15, 15, 14, 14
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+button.locked
+  rotate: false
+  xy: 563, 672
+  size: 46, 42
+  split: 8, 8, 7, 9
+  pad: 12, 12, 11, 13
+  orig: 46, 42
+  offset: 0, 0
+  index: -1
+checkbox
+  rotate: false
+  xy: 727, 850
+  size: 22, 22
+  orig: 22, 22
+  offset: 0, 0
+  index: -1
+checkbox-over
+  rotate: false
+  xy: 561, 614
+  size: 22, 22
+  orig: 22, 22
+  offset: 0, 0
+  index: -1
+checkbox-pressed
+  rotate: false
+  xy: 889, 934
+  size: 22, 22
+  orig: 22, 22
+  offset: 0, 0
+  index: -1
+checkbox-pressed-over
+  rotate: false
+  xy: 341, 159
+  size: 22, 22
+  orig: 22, 22
+  offset: 0, 0
+  index: -1
+kenney_high_square_72
+  rotate: false
+  xy: 1, 626
+  size: 506, 397
+  orig: 506, 397
+  offset: 0, 0
+  index: -1
+kenney_mini_18
+  rotate: false
+  xy: 509, 958
+  size: 506, 65
+  orig: 506, 65
+  offset: 0, 0
+  index: -1
+kenney_pixel_42
+  rotate: false
+  xy: 1, 183
+  size: 505, 124
+  orig: 505, 124
+  offset: 0, 0
+  index: -1
+kenney_pixel_72
+  rotate: false
+  xy: 1, 309
+  size: 506, 315
+  orig: 506, 315
+  offset: 0, 0
+  index: -1
+list
+  rotate: false
+  xy: 1, 59
+  size: 52, 38
+  split: 18, 18, 0, 16
+  pad: 14, 14, 0, 12
+  orig: 52, 38
+  offset: 0, 0
+  index: -1
+minus
+  rotate: false
+  xy: 642, 696
+  size: 18, 18
+  orig: 18, 18
+  offset: 0, 0
+  index: -1
+plus
+  rotate: false
+  xy: 673, 734
+  size: 18, 18
+  orig: 18, 18
+  offset: 0, 0
+  index: -1
+progress-bar
+  rotate: false
+  xy: 561, 575
+  size: 9, 37
+  split: 0, 0, 0, 23
+  pad: 0, 0, 0, 0
+  orig: 9, 37
+  offset: 0, 0
+  index: -1
+progress-bar-big
+  rotate: false
+  xy: 509, 874
+  size: 241, 82
+  split: 50, 47, 0, 0
+  pad: 17, 18, 0, 0
+  orig: 241, 82
+  offset: 0, 0
+  index: -1
+progress-bar-big-knob
+  rotate: false
+  xy: 1, 99
+  size: 205, 82
+  orig: 205, 82
+  offset: 0, 0
+  index: -1
+progress-bar-knob
+  rotate: false
+  xy: 1017, 986
+  size: 1, 37
+  split: 0, 0, 0, 36
+  pad: 0, 0, 0, 0
+  orig: 1, 37
+  offset: 0, 0
+  index: -1
+progress-bar-vertical
+  rotate: false
+  xy: 752, 889
+  size: 37, 9
+  split: 0, 20, 0, 0
+  pad: 0, 0, 0, 0
+  orig: 37, 9
+  offset: 0, 0
+  index: -1
+progress-bar-vertical-knob
+  rotate: false
+  xy: 208, 136
+  size: 37, 1
+  split: 0, 36, 0, 0
+  pad: 0, 0, 0, 0
+  orig: 37, 1
+  offset: 0, 0
+  index: -1
+radio
+  rotate: false
+  xy: 509, 502
+  size: 24, 24
+  orig: 24, 24
+  offset: 0, 0
+  index: -1
+radio-over
+  rotate: false
+  xy: 101, 73
+  size: 24, 24
+  orig: 24, 24
+  offset: 0, 0
+  index: -1
+radio-pressed
+  rotate: false
+  xy: 208, 110
+  size: 24, 24
+  orig: 24, 24
+  offset: 0, 0
+  index: -1
+rainbow_bar
+  rotate: false
+  xy: 557, 564
+  size: 1, 6
+  orig: 1, 6
+  offset: 0, 0
+  index: -1
+scroll-horizontal
+  rotate: false
+  xy: 55, 70
+  size: 44, 27
+  split: 11, 11, 11, 11
+  pad: 0, 0, 0, 0
+  orig: 44, 27
+  offset: 0, 0
+  index: -1
+scroll-vertical
+  rotate: false
+  xy: 509, 456
+  size: 15, 44
+  split: 7, 7, 11, 11
+  pad: 0, 0, 0, 0
+  orig: 15, 44
+  offset: 0, 0
+  index: -1
+select-box
+  rotate: false
+  xy: 208, 139
+  size: 52, 42
+  split: 18, 22, 14, 21
+  pad: 15, 23, 14, 14
+  orig: 52, 42
+  offset: 0, 0
+  index: -1
+select-box-over
+  rotate: false
+  xy: 509, 672
+  size: 52, 42
+  split: 18, 22, 14, 21
+  pad: 15, 23, 14, 14
+  orig: 52, 42
+  offset: 0, 0
+  index: -1
+select-box-pressed
+  rotate: false
+  xy: 673, 830
+  size: 52, 42
+  split: 18, 22, 14, 21
+  pad: 15, 23, 14, 14
+  orig: 52, 42
+  offset: 0, 0
+  index: -1
+slider
+  rotate: false
+  xy: 704, 762
+  size: 8, 22
+  split: 2, 2, 10, 10
+  pad: 0, 0, 0, 0
+  orig: 8, 22
+  offset: 0, 0
+  index: -1
+slider-before
+  rotate: false
+  xy: 49, 35
+  size: 1, 22
+  split: 0, 0, 9, 9
+  pad: 0, 0, 0, 0
+  orig: 1, 22
+  offset: 0, 0
+  index: -1
+slider-knob
+  rotate: false
+  xy: 596, 660
+  size: 10, 10
+  orig: 10, 10
+  offset: 0, 0
+  index: -1
+slider-knob-pressed
+  rotate: false
+  xy: 858, 914
+  size: 10, 10
+  orig: 10, 10
+  offset: 0, 0
+  index: -1
+slider-vertical
+  rotate: false
+  xy: 810, 904
+  size: 22, 8
+  split: 10, 10, 2, 2
+  pad: 0, 0, 0, 0
+  orig: 22, 8
+  offset: 0, 0
+  index: -1
+slider-vertical-before
+  rotate: false
+  xy: 1, 12
+  size: 22, 1
+  split: 9, 9, 0, 0
+  pad: 0, 0, 0, 0
+  orig: 22, 1
+  offset: 0, 0
+  index: -1
+split-pane-horizontal
+  rotate: false
+  xy: 1, 1
+  size: 1, 9
+  orig: 1, 9
+  offset: 0, 0
+  index: -1
+split-pane-vertical
+  rotate: false
+  xy: 791, 897
+  size: 9, 1
+  orig: 9, 1
+  offset: 0, 0
+  index: -1
+textfield
+  rotate: false
+  xy: 55, 60
+  size: 14, 8
+  split: 3, 3, 0, 7
+  pad: 4, 4, 0, 6
+  orig: 14, 8
+  offset: 0, 0
+  index: -1
+textfield-login
+  rotate: false
+  xy: 858, 926
+  size: 29, 30
+  split: 18, 3, 0, 29
+  pad: 20, 4, 0, 6
+  orig: 29, 30
+  offset: 0, 0
+  index: -1
+textfield-login-selected
+  rotate: false
+  xy: 310, 151
+  size: 29, 30
+  split: 18, 3, 0, 29
+  pad: 20, 4, 0, 6
+  orig: 29, 30
+  offset: 0, 0
+  index: -1
+textfield-password
+  rotate: false
+  xy: 611, 684
+  size: 29, 30
+  split: 19, 3, 0, 29
+  pad: 21, 4, 0, 6
+  orig: 29, 30
+  offset: 0, 0
+  index: -1
+textfield-password-selected
+  rotate: false
+  xy: 673, 754
+  size: 29, 30
+  split: 20, 3, 0, 29
+  pad: 21, 4, 0, 6
+  orig: 29, 30
+  offset: 0, 0
+  index: -1
+textfield-selected
+  rotate: false
+  xy: 752, 879
+  size: 14, 8
+  split: 3, 3, 0, 7
+  pad: 4, 4, 0, 6
+  orig: 14, 8
+  offset: 0, 0
+  index: -1
+tooltip
+  rotate: false
+  xy: 509, 572
+  size: 50, 98
+  split: 14, 14, 15, 16
+  pad: 13, 13, 13, 13
+  orig: 50, 98
+  offset: 0, 0
+  index: -1
+touchpad
+  rotate: false
+  xy: 509, 716
+  size: 162, 156
+  split: 54, 53, 57, 50
+  pad: 0, 0, 1, 0
+  orig: 162, 156
+  offset: 0, 0
+  index: -1
+touchpad-knob
+  rotate: false
+  xy: 752, 900
+  size: 56, 56
+  orig: 56, 56
+  offset: 0, 0
+  index: -1
+white
+  rotate: false
+  xy: 721, 827
+  size: 1, 1
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+window
+  rotate: false
+  xy: 561, 638
+  size: 33, 32
+  split: 5, 5, 5, 5
+  pad: 4, 4, 4, 4
+  orig: 33, 32
+  offset: 0, 0
+  index: -1
