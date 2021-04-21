@@ -37,7 +37,7 @@ class Asteroid(initialPosition: Vector2, private val size: Float, private val ve
             val velocity = Vector2(0f, speed).rotateDeg((Math.random() * 360).toFloat())
             val rotation = (Math.random() * (MAX_ROTATION - MIN_ROTATION) + MIN_ROTATION).toFloat()
 
-            return Asteroid(pos, size, velocity, rotation)
+            return Asteroid(pos, size, velocity, rotation).apply { setWorldSize(worldWidth, worldHeight) }
         }
 
         fun renderBulk(camera: Camera, r: ShapeRenderer, asteroids: List<Asteroid>) {

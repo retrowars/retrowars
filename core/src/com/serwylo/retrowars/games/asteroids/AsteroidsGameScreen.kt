@@ -112,24 +112,34 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         val asteroidsToBreak = mutableListOf<Asteroid>()
 
         asteroids.forEach { asteroid ->
+
             if (asteroid.isColliding(ship)) {
+
                 asteroidsToBreak.add(asteroid)
+
                 // TODO: Lose health
+
             } else {
+
                 val bullet = bullets.firstOrNull { asteroid.isColliding(it) }
 
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
-
-                    // TODO: The new asteroids eventually seem to avoid collision detection and world wrapping, though they are rendered correctly...
                     bullets.remove(bullet)
                 }
+
             }
+
         }
 
         asteroidsToBreak.forEach { toBreak ->
+
+            val newAsteroids = toBreak.split()
+            newAsteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
+
             asteroids.remove(toBreak)
-            asteroids.addAll(toBreak.split())
+            asteroids.addAll(newAsteroids)
+
         }
     }
 

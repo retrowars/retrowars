@@ -47,9 +47,6 @@ interface WrapsWorld {
         if (isFullyPastLeft()) {
             position.x += worldWidth
         } else if (isFullyPastRight()) {
-            if (this is Bullet) {
-                println("Wrapping bullet from ${position.x} to ${position.x - worldWidth}.")
-            }
             position.x -= worldWidth
         }
 
