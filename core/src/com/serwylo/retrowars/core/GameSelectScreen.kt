@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeHeading
+import com.serwylo.beatgame.ui.makeIcon
 import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
@@ -153,6 +154,11 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             pad(Value.percentWidth(0.125f))
 
             add(gameLabel).expand().fill().colspan(4)
+        }
+
+        if (!game.isAvailable) {
+            table.row()
+            table.add(Label(strings["unimplemented-game.coming-soon"], styles.label.small))
         }
 
         return WidgetGroup(button, table)
