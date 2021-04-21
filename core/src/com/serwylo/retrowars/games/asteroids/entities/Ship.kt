@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld {
+class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingSphere {
 
     companion object {
 
@@ -129,5 +129,9 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld {
     fun onShoot(listener: (Bullet) -> Unit) {
         onShootListener = listener
     }
+
+    override fun getPosition(): Vector2 = position
+
+    override fun getRadius() = HEIGHT / 2
 
 }

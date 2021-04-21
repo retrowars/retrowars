@@ -5,12 +5,11 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Bullet(initialPosition: Vector2 = Vector2(0f, 0f), directionInDegrees: Float): WrapsWorld {
+class Bullet(initialPosition: Vector2 = Vector2(0f, 0f), directionInDegrees: Float): WrapsWorld, HasBoundingSphere {
 
     companion object {
 
-        const val WIDTH = 1f
-        const val HEIGHT = 1f
+        const val SIZE = 1f
 
         // Shouldn't be able to catch our own bullets, so always go faster than the fastest 
         const val SPEED = Ship.MAX_SPEED * 1.2f
@@ -25,7 +24,7 @@ class Bullet(initialPosition: Vector2 = Vector2(0f, 0f), directionInDegrees: Flo
             r.color = Color.WHITE
             r.begin(ShapeRenderer.ShapeType.Line)
             bullets.forEach {
-                r.rect(it.position.x, it.position.y, WIDTH, HEIGHT)
+                r.rect(it.position.x, it.position.y, SIZE, SIZE)
             }
             r.end()
         }
@@ -46,6 +45,10 @@ class Bullet(initialPosition: Vector2 = Vector2(0f, 0f), directionInDegrees: Flo
     }
 
     fun isExpired() = age > MAX_AGE
+
+    override fun getPosition(): Vector2 = position
+
+    override fun getRadius() = SIZE / 2
 
     override fun isFullyPastRight() = isFullyPastRight(position.x)
     override fun isPartiallyPastRight() = isPartiallyPastRight(position.x)

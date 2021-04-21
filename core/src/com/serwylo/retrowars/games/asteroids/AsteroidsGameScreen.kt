@@ -39,13 +39,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             bullets.add(it)
         }
 
-        repeat(5) {
-            asteroids.add(
-                Asteroid.spawn(
-                    viewport.worldWidth,
-                    viewport.worldHeight
-                )
-            )
+        repeat(3) {
+            asteroids.add(Asteroid.spawn(Asteroid.Size.large, viewport.worldWidth, viewport.worldHeight))
         }
     }
 
@@ -108,6 +103,33 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
         asteroids.forEach { it.update(delta) }
 
+        checkCollisions()
+
+    }
+
+    private fun checkCollisions() {
+        val asteroidsToBreak = mutableListOf<Asteroid>()
+
+        asteroids.forEach { asteroid ->
+            if (asteroid.isColliding(ship)) {
+                asteroidsToBreak.add(asteroid)
+                // TODO: Lose health
+            } else {
+                val bullet = bullets.firstOrNull { asteroid.isColliding(it) }
+
+                if (bullet != null) {
+                    asteroidsToBreak.add(asteroid)
+
+                    // TODO: The new asteroids eventually seem to avoid collision detection and world wrapping, though they are rendered correctly...
+                    bullets.remove(bullet)
+                }
+            }
+        }
+
+        asteroidsToBreak.forEach { toBreak ->
+            asteroids.remove(toBreak)
+            asteroids.addAll(toBreak.split())
+        }
     }
 
     private fun renderEntities() {
