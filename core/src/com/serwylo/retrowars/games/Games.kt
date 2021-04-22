@@ -7,15 +7,18 @@ import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 
 object Games {
 
-    val asteroids = GameDetails("game.asteroids.name", true) { game -> AsteroidsGameScreen(game) }
-    val missileCommand = GameDetails("game.missile-command.name", false) { game -> UnimplementedGameScreen(game) }
+    val asteroids = GameDetails("game.asteroids.name", true) { app, _ -> AsteroidsGameScreen(app) }
 
-    val all = listOf(asteroids, missileCommand)
+    val missileCommand = GameDetails("game.missile-command.name", false) { game, details -> UnimplementedGameScreen(game, details) }
+    val spaceInvaders = GameDetails("game.space-invaders.name", false) { game, details -> UnimplementedGameScreen(game, details) }
+    val snake = GameDetails("game.snake.name", false) { game, details -> UnimplementedGameScreen(game, details) }
+
+    val all = listOf(asteroids, missileCommand, spaceInvaders, snake)
 
 }
 
 class GameDetails(
     val nameId: String,
     val isAvailable: Boolean,
-    val createScreen: (game: RetrowarsGame) -> Screen
+    val createScreen: (app: RetrowarsGame, gameDetails: GameDetails) -> Screen
 )

@@ -166,7 +166,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     fun onGameSelected(game: GameDetails) {
-        this.game.startGame(game.createScreen(this.game))
+        this.game.startGame(game.createScreen(this.game, game))
     }
 
 }

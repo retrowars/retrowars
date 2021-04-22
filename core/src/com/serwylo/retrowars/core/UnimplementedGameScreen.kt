@@ -1,18 +1,19 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Screen
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.*
+import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.makeButton
+import com.serwylo.beatgame.ui.makeHeading
+import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.games.GameDetails
 
-class UnimplementedGameScreen(private val game: RetrowarsGame): ScreenAdapter() {
+class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameDetails: GameDetails): ScreenAdapter() {
 
     private val stage = makeStage()
 
@@ -36,7 +37,16 @@ class UnimplementedGameScreen(private val game: RetrowarsGame): ScreenAdapter() 
             Label(strings["unimplemented-game.description"], styles.label.medium)
         )
 
-        stage.addActor(container)
+        container.addActor(
+            makeButton(
+                strings.format("unimplemented-game.vote", strings[gameDetails.nameId]),
+                styles
+            ) {
+                Gdx.net.openURI("https://github.com/retrowars/retrowars/issues/12")
+            }
+        )
+
+            stage.addActor(container)
 
     }
 

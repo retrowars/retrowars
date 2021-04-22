@@ -62,6 +62,25 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
         }
     }
 
+    //
+    //     E
+    //    / \
+    //   /   \    <- Main ship
+    //  /     \
+    // A--B-C--D
+    //    \ /     <- Fire below the ship when accelerating.
+    //     F
+    //
+    // Don't want to have to perform the math for every render, so lets just calculate once.
+    //
+    private val vertexTop = HEIGHT / 2f
+    private val vertexBottom = -HEIGHT / 2f
+    private val vertexLeft = -WIDTH / 2f
+    private val vertexRight = WIDTH / 2f
+    private val vertexThrustBottom = vertexBottom - (HEIGHT / 4f)
+    private val vertexThrustLeft = vertexLeft + (WIDTH / 3f)
+    private val vertexThrustRight = vertexRight - (WIDTH / 3f)
+
     private fun renderShipAt(camera: Camera, r: ShapeRenderer, position: Vector2) {
         r.projectionMatrix = camera.combined
         r.begin(ShapeRenderer.ShapeType.Line)
@@ -70,15 +89,14 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
         r.rotate(0f, 0f, 1f, rotationInDegrees - 90)
         r.color = Color.WHITE
 
-        //
-        //    C
-        //   / \
-        //  /   \
-        // A-----B
-        //
-        r.line(-WIDTH / 2f, -HEIGHT / 2f, WIDTH / 2f, -HEIGHT / 2f) // A -> B
-        r.line(WIDTH / 2f, -HEIGHT / 2f, 0f, HEIGHT / 2f) // B -> C
-        r.line(0f, HEIGHT / 2f, -WIDTH / 2f, -HEIGHT / 2f) // C -> A
+        r.line(vertexLeft, vertexBottom, vertexRight, vertexBottom) // A -> D
+        r.line(vertexRight, vertexBottom, 0f, vertexTop) // D -> E
+        r.line(0f, vertexTop, vertexLeft, vertexBottom) // E -> A
+
+        if (thrust) {
+            r.line(vertexThrustLeft, vertexBottom, 0f, vertexThrustBottom) // B -> F
+            r.line(0f, vertexThrustBottom, vertexThrustRight, vertexBottom) // C -> F
+        }
 
         r.end()
         r.identity()
