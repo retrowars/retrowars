@@ -5,39 +5,63 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Asteroid(initialPosition: Vector2, private val size: Float, private val velocity: Vector2, private val rotationSpeedInDegPerSec: Float): WrapsWorld {
+class Asteroid(initialPosition: Vector2, private val size: Size, private val velocity: Vector2, private val rotationSpeedInDegPerSec: Float): WrapsWorld {
 
-    object Size {
-        const val large = 150f
-        const val medium = 75f
-        const val small = 30f
-        const val tiny = 15f
+    class Size(val radius: Float, val speed: Float, val points: Int) {
 
-        fun nextSizeDown(currentSize: Float): Float? = when(currentSize) {
+        companion object {
+
+            val large = Size(75f, Ship.MAX_SPEED * 0.2f, 1000)
+            val medium = Size(37.5f, Ship.MAX_SPEED * 0.25f, 2000)
+            val small = Size(15f, Ship.MAX_SPEED * 0.3f, 3000)
+            val tiny = Size(7.5f, Ship.MAX_SPEED * 0.35f, 4000)
+
+        }
+
+        fun nextSizeDown(): Size? = when(this) {
             large -> medium
             medium -> small
             small -> tiny
             tiny -> null
             else -> null
         }
+
     }
 
     companion object {
 
-        // Shouldn't be able to catch our own bullets, so always go faster than the fastest 
-        private const val MIN_SPEED = Ship.MAX_SPEED * 0.1
-        private const val MAX_SPEED = Ship.MAX_SPEED * 0.25
+        private const val ROTATION = 40f
 
-        private const val MIN_ROTATION = 20f
-        private const val MAX_ROTATION = 100f
+        fun spawn(numOfAsteroids: Int, worldWidth: Float, worldHeight: Float): List<Asteroid> {
 
-        fun spawn(size: Float, worldWidth: Float, worldHeight: Float): Asteroid {
-            val pos = Vector2((Math.random() * worldWidth).toFloat(), (Math.random() * worldHeight).toFloat())
-            val speed = (Math.random() * (MAX_SPEED - MIN_SPEED) + MIN_SPEED).toFloat()
-            val velocity = Vector2(0f, speed).rotateDeg((Math.random() * 360).toFloat())
-            val rotation = (Math.random() * (MAX_ROTATION - MIN_ROTATION) + MIN_ROTATION).toFloat()
+            val approxDegreesBetween = 360f / numOfAsteroids
 
-            return Asteroid(pos, size, velocity, rotation).apply { setWorldSize(worldWidth, worldHeight) }
+            return (0 until numOfAsteroids).map { i ->
+
+                // Project outward from the centre of the screen until we hit the edge, then pull back a little.
+                // The idea is that we litter asteroids around the outside of the screen so they ship can
+                // safely stay in the middle while they spawn.
+                val ray = Vector2(0f, worldWidth / 10).rotateDeg(i * approxDegreesBetween)
+                while (ray.x > -worldWidth / 2 && ray.x < worldWidth / 2 && ray.y > -worldHeight / 2 && ray.y < worldHeight / 2) {
+                    ray.scl(1.2f)
+                }
+                ray.scl(0.8f)
+
+                val rotation = ((Math.random() * 0.4 - 0.2) + 1).toFloat() * ROTATION
+                val speed = ((Math.random() * 0.4 - 0.2) + 1).toFloat() * Size.large.speed
+                val velocity = Vector2(0f, speed).rotateDeg((Math.random() * 360).toFloat())
+
+                Asteroid(
+                    Vector2(worldWidth / 2, worldHeight / 2).add(ray),
+                    Size.large,
+                    velocity,
+                    rotation
+                ).apply {
+                    setWorldSize(worldWidth, worldHeight)
+                }
+
+            }
+
         }
 
         fun renderBulk(camera: Camera, r: ShapeRenderer, asteroids: List<Asteroid>) {
@@ -67,7 +91,7 @@ class Asteroid(initialPosition: Vector2, private val size: Float, private val ve
             r.identity()
             r.translate(position.x, position.y, 0f)
             r.rotate(0f, 0f, 1f, asteroid.rotationInDegrees)
-            r.circle(0f, 0f, asteroid.size / 2, 7)
+            r.circle(0f, 0f, asteroid.size.radius, 7)
         }
 
     }
@@ -90,12 +114,12 @@ class Asteroid(initialPosition: Vector2, private val size: Float, private val ve
      * if it is already very small, return an empty list).
      */
     fun split(): List<Asteroid> {
-        val nextSize = Size.nextSizeDown(size) ?: return emptyList()
+        val nextSize = size.nextSizeDown() ?: return emptyList()
 
         return (0 until 2).map {
             // Offset the location of the new asteroids slightly from the centre
             val newPositionOffsetAngle = (Math.random() * 360).toFloat()
-            val newPositionOffset = Vector2(0f, nextSize / 2).rotateDeg(newPositionOffsetAngle)
+            val newPositionOffset = Vector2(0f, nextSize.radius).rotateDeg(newPositionOffsetAngle)
             val newPosition = position
                 .cpy()
                 .mulAdd(newPositionOffset, 1f)
@@ -103,15 +127,18 @@ class Asteroid(initialPosition: Vector2, private val size: Float, private val ve
             // The new asteroid will have a similar velocity to the current (though greater), except
             // we will randomly shift the direction from -45 degrees to +45 degrees.
             val newVelocityOffsetFromCurrent = (Math.random() * 90 - 45).toFloat()
+            val speed = ((Math.random() * 0.4 - 0.2) + 1).toFloat() * nextSize.speed
             val newVelocity = velocity
                 .cpy()
                 .rotateDeg(newVelocityOffsetFromCurrent)
+                .nor()
+                .scl(speed)
 
             // We could also increase the speed of smaller items, but it seems that having smaller
             // asteroids travel the same speed as larger ones result in a visual perception that
             // they are moving faster for some reason, so right now will leave the speed as is.
 
-            val rotation = (Math.random() * (MAX_ROTATION - MIN_ROTATION) + MIN_ROTATION).toFloat()
+            val rotation = ((Math.random() * 0.4 - 0.2) + 1).toFloat() * ROTATION
 
             Asteroid(newPosition, nextSize, newVelocity, rotation)
         }
@@ -119,21 +146,21 @@ class Asteroid(initialPosition: Vector2, private val size: Float, private val ve
 
     fun isColliding(entity: HasBoundingSphere): Boolean {
         val distance2 = entity.getPosition().dst2(this.position)
-        val collideDistance = (size / 2 + entity.getRadius())
+        val collideDistance = (size.radius + entity.getRadius())
 
         return distance2 < collideDistance * collideDistance
     }
 
-    override fun isFullyPastRight() = isFullyPastRight(position.x - size / 2)
-    override fun isPartiallyPastRight() = isPartiallyPastRight(position.x + size / 2)
+    override fun isFullyPastRight() = isFullyPastRight(position.x - size.radius)
+    override fun isPartiallyPastRight() = isPartiallyPastRight(position.x + size.radius)
 
-    override fun isFullyPastTop() = isFullyPastTop(position.y - size / 2)
-    override fun isPartiallyPastTop() = isPartiallyPastTop(position.y + size / 2)
+    override fun isFullyPastTop() = isFullyPastTop(position.y - size.radius)
+    override fun isPartiallyPastTop() = isPartiallyPastTop(position.y + size.radius)
 
-    override fun isFullyPastLeft() = isFullyPastLeft(position.x + size / 2)
-    override fun isPartiallyPastLeft() = isPartiallyPastLeft(position.x - size / 2)
+    override fun isFullyPastLeft() = isFullyPastLeft(position.x + size.radius)
+    override fun isPartiallyPastLeft() = isPartiallyPastLeft(position.x - size.radius)
 
-    override fun isFullyPastBottom() = isFullyPastBottom(position.y + size / 2)
-    override fun isPartiallyPastBottom() = isPartiallyPastBottom(position.y - size / 2)
+    override fun isFullyPastBottom() = isFullyPastBottom(position.y + size.radius)
+    override fun isPartiallyPastBottom() = isPartiallyPastBottom(position.y - size.radius)
 
 }

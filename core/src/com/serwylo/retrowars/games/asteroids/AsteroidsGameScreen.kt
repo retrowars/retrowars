@@ -13,7 +13,6 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.Ship
-import com.gmail.blueboxware.libgdxplugin.annotations.GDXAssets
 import java.util.*
 
 class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
@@ -40,9 +39,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             bullets.add(it)
         }
 
-        repeat(3) {
-            asteroids.add(Asteroid.spawn(Asteroid.Size.large, viewport.worldWidth, viewport.worldHeight))
-        }
+        asteroids.addAll(Asteroid.spawn(3, viewport.worldWidth, viewport.worldHeight))
     }
 
     override fun show() {
@@ -83,12 +80,6 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-        val r = game.uiAssets.shapeRenderer
-        r.projectionMatrix = camera.combined
-        r.begin(ShapeRenderer.ShapeType.Line)
-        r.rect(5f, 5f, camera.viewportWidth - 10, camera.viewportHeight - 10)
-        r.end()
 
         updateEntities(delta)
         renderEntities()
