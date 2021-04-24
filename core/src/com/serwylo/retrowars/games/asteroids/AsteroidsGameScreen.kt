@@ -6,10 +6,13 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
+import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
+import com.serwylo.retrowars.games.asteroids.entities.Ship
 
 class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
@@ -90,7 +93,17 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     private fun updateEntities(delta: Float) {
 
-        state.ship.update(delta)
+        if (state.isShipAlive()) {
+
+            // If we have not died (i.e. we are not in the mandatory waiting period for respawning the ship).
+            state.ship.update(delta)
+
+        } else if (state.isShipReadyToRespawn()) {
+
+            // If we have died, waited the minimum amount of time, and are now ready to respawn...
+            respawnShipIfSafe()
+
+        }
 
         state.bullets.forEach { it.update(delta) }
         state.bullets.removeAll { it.isExpired() }
@@ -99,11 +112,39 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
         checkCollisions()
 
-        if (state.asteroids.size == 0 && state.nextRespawnTime < 0f) {
+        if (state.asteroids.size == 0 && state.nextAsteroidRespawnTime < 0f) {
             queueAsteroidsRespawn()
+        } else if (state.areAsteroidsReadyToRespawn()) {
+            respawnAsteroids()
         }
 
-        respawnAsteroids()
+    }
+
+    object SafeRespawnArea : HasBoundingSphere {
+
+        val screenCentre = Vector2()
+
+        override fun getPosition() = screenCentre
+        override fun getRadius() = Ship.HEIGHT * 3
+
+    }
+
+    /**
+     * Check a bounding box in the middle of the screen, and if there are no asteroids there,
+     * then respawn the ship there and reset the respawn counter.
+     */
+    private fun respawnShipIfSafe() {
+
+        val asteroidsInWay = state.asteroids.any { asteroid ->
+            asteroid.isColliding(SafeRespawnArea)
+        }
+
+        if (asteroidsInWay) {
+            return
+        }
+
+        state.ship.respawnInCentre()
+        state.nextShipRespawnTime = -1f
 
     }
 
@@ -113,10 +154,11 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
         state.asteroids.forEach { asteroid ->
 
-            if (asteroid.isColliding(state.ship)) {
+            if (state.isShipAlive() && asteroid.isColliding(state.ship)) {
 
                 asteroidsToBreak.add(asteroid)
                 state.numLives--
+                state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
 
             } else {
 
@@ -144,24 +186,28 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     }
 
     private fun queueAsteroidsRespawn() {
-        Gdx.app.log(TAG, "Queueing a respawn of more asteroids in ${Asteroid.RESPAWN_DELAY}s.")
-        state.nextRespawnTime = state.timer + Asteroid.RESPAWN_DELAY
+        state.nextAsteroidRespawnTime = state.timer + Asteroid.RESPAWN_DELAY
     }
 
+    /**
+     * Add a new collection of large asteroids around the edge of the screen. There will be one
+     * more than last time we did this. We will then reset the respawning status.
+     */
     private fun respawnAsteroids() {
-        if (state.nextRespawnTime > 0f && state.nextRespawnTime < state.timer) {
-            val numToRespawn = ++state.currentNumAsteroids
-            state.nextRespawnTime = -1f
-            state.asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
-
-            Gdx.app.log(TAG, "Respawned $numToRespawn asteroids.")
-        }
+        val numToRespawn = ++state.currentNumAsteroids
+        state.nextAsteroidRespawnTime = -1f
+        state.asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
     }
 
     private fun renderEntities() {
         val r = game.uiAssets.shapeRenderer
 
-        state.ship.render(camera, r)
+        // Make the ship disappear when respawning. It will then reappear in the future when ready to
+        // go again.
+        if (state.isShipAlive()) {
+            state.ship.render(camera, r)
+        }
+
         Bullet.renderBulk(camera, r, state.bullets)
         Asteroid.renderBulk(camera, r, state.asteroids)
     }
@@ -171,6 +217,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         state.ship.setWorldSize(camera.viewportWidth, camera.viewportHeight)
         state.bullets.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
         state.asteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
+        SafeRespawnArea.screenCentre.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f)
     }
 
     override fun pause() {

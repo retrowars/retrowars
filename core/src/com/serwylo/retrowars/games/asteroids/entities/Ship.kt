@@ -39,9 +39,9 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
     private var isReloading = false
 
     private val position = initialPosition.cpy()
-    private val velocity = Vector2()
-    private val acceleration = Vector2()
-    private var rotationInDegrees = 0f
+    val velocity = Vector2()
+    val acceleration = Vector2()
+    var rotationInDegrees = 0f
 
     private var onShootListener: ((Bullet) -> Unit)? = null
 
@@ -151,5 +151,12 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
     override fun getPosition(): Vector2 = position
 
     override fun getRadius() = HEIGHT / 2
+
+    fun respawnInCentre() {
+        position.set(worldWidth / 2f, worldHeight / 2f)
+        velocity.set(0f, 0f)
+        acceleration.set(0f, 0f)
+        rotationInDegrees = 0f
+    }
 
 }

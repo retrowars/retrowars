@@ -22,7 +22,7 @@ class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
         table.pad(UI_SPACE)
         table.row().expand()
         table.add(lifeContainer).left().bottom()
-        table.add(scoreLabel).left().bottom()
+        table.add(scoreLabel).right().bottom()
 
         lifeContainer.space(UI_SPACE * 2)
 

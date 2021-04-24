@@ -8,6 +8,21 @@ import java.util.*
 
 class AsteroidsGameState(worldWidth: Float, worldHeight: Float) {
 
+    companion object {
+        /**
+         * After getting hit, wait this long before respawning the ship in the middle of the screen.
+         * In the future, this will be the *minimum* respawn delay, as we may need to wait until
+         * there are no asteroids in the way.
+         */
+        const val SHIP_RESPAWN_DELAY = 2f
+
+        /**
+         * After clearing the screen of asteroids, wait this long before respawning a new set of
+         * asteroids around the edge of the screen.
+         */
+        const val ASTEROID_RESPAWN_DELAY = 3f
+    }
+
     var numLives: Int = 3
     var score: Long = 0
 
@@ -22,12 +37,16 @@ class AsteroidsGameState(worldWidth: Float, worldHeight: Float) {
      */
     var timer = 0f
 
-    var nextRespawnTime = -1f
+    var nextAsteroidRespawnTime = -1f
+    var nextShipRespawnTime = -1f
 
     init {
         ship.setWorldSize(worldWidth, worldHeight)
         asteroids.addAll(Asteroid.spawn(currentNumAsteroids, worldWidth, worldHeight))
     }
 
+    fun isShipAlive() = nextShipRespawnTime < 0
+    fun isShipReadyToRespawn() = nextShipRespawnTime > 0 && nextShipRespawnTime <= timer
+    fun areAsteroidsReadyToRespawn() = nextAsteroidRespawnTime > 0 && nextAsteroidRespawnTime < timer
 
 }
