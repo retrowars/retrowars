@@ -157,8 +157,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             if (state.isShipAlive() && asteroid.isColliding(state.ship)) {
 
                 asteroidsToBreak.add(asteroid)
-                state.numLives--
-                state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
+
+                shipHit()
 
             } else {
 
@@ -182,6 +182,17 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             state.asteroids.remove(toBreak)
             state.asteroids.addAll(newAsteroids)
 
+        }
+    }
+
+    private fun shipHit() {
+        state.numLives--
+
+        if (state.numLives <= 0) {
+            // TODO: Record high score.
+            game.showGameSelectMenu()
+        } else {
+            state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
         }
     }
 
