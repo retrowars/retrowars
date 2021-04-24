@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
@@ -20,6 +19,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     companion object {
         const val MIN_WORLD_WIDTH = 400f
         const val MIN_WORLD_HEIGHT = 400f
+        const val TAG = "AsteroidsGameScreen"
     }
 
     private val camera = OrthographicCamera()
@@ -27,6 +27,14 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     private val ship: Ship
     private val bullets = LinkedList<Bullet>()
     private val asteroids = mutableListOf<Asteroid>()
+    private var currentNumAsteroids = 3
+
+    /**
+     * Seconds elapsed since the game began. Wont count during pause.
+     */
+    private var timer = 0f
+
+    private var nextRespawnTime = -1f
 
     init {
         viewport.apply(true)
@@ -39,7 +47,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             bullets.add(it)
         }
 
-        asteroids.addAll(Asteroid.spawn(3, viewport.worldWidth, viewport.worldHeight))
+        asteroids.addAll(Asteroid.spawn(currentNumAsteroids, viewport.worldWidth, viewport.worldHeight))
     }
 
     override fun show() {
@@ -78,6 +86,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     override fun render(delta: Float) {
 
+        timer += delta
+
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
@@ -96,6 +106,12 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         asteroids.forEach { it.update(delta) }
 
         checkCollisions()
+
+        if (asteroids.size == 0 && nextRespawnTime < 0f) {
+            queueAsteroidsRespawn()
+        }
+
+        respawnAsteroids()
 
     }
 
@@ -131,6 +147,21 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             asteroids.remove(toBreak)
             asteroids.addAll(newAsteroids)
 
+        }
+    }
+
+    private fun queueAsteroidsRespawn() {
+        Gdx.app.log(TAG, "Queueing a respawn of more asteroids in ${Asteroid.RESPAWN_DELAY}s.")
+        nextRespawnTime = timer + Asteroid.RESPAWN_DELAY
+    }
+
+    private fun respawnAsteroids() {
+        if (nextRespawnTime > 0f && nextRespawnTime < timer) {
+            val numToRespawn = ++currentNumAsteroids
+            nextRespawnTime = -1f
+            asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
+
+            Gdx.app.log(TAG, "Respawned $numToRespawn asteroids.")
         }
     }
 

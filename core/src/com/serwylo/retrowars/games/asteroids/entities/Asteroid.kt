@@ -30,6 +30,11 @@ class Asteroid(initialPosition: Vector2, private val size: Size, private val vel
 
     companion object {
 
+        /**
+         * Seconds between finishing off the last asteroid on the screen, and the next asteroids respawning.
+         */
+        const val RESPAWN_DELAY: Float = 1.5f
+
         private const val ROTATION = 40f
 
         fun spawn(numOfAsteroids: Int, worldWidth: Float, worldHeight: Float): List<Asteroid> {
