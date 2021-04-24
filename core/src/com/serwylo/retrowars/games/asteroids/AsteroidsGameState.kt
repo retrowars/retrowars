@@ -9,6 +9,7 @@ import java.util.*
 class AsteroidsGameState(worldWidth: Float, worldHeight: Float) {
 
     var numLives: Int = 3
+    var score: Long = 0
 
     val ship = Ship(Vector2(worldWidth / 2, worldHeight / 2))
 

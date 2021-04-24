@@ -9,10 +9,11 @@ import com.serwylo.retrowars.UiAssets
 
 class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
 
+    private val styles = assets.getStyles()
+
     private val stage = makeStage()
     private val lifeContainer = HorizontalGroup()
-
-    private val styles = assets.getStyles()
+    private val scoreLabel = Label("", styles.label.large)
 
     init {
 
@@ -21,6 +22,7 @@ class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
         table.pad(UI_SPACE)
         table.row().expand()
         table.add(lifeContainer).left().bottom()
+        table.add(scoreLabel).left().bottom()
 
         lifeContainer.space(UI_SPACE * 2)
 
@@ -29,6 +31,8 @@ class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
     }
 
     fun render(delta: Float) {
+
+        scoreLabel.setText(state.score.toString())
 
         if (lifeContainer.children.size != state.numLives) {
             redrawLives()

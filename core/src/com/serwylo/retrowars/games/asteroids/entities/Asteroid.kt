@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Asteroid(initialPosition: Vector2, private val size: Size, private val velocity: Vector2, private val rotationSpeedInDegPerSec: Float): WrapsWorld {
+class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: Vector2, private val rotationSpeedInDegPerSec: Float): WrapsWorld {
 
     class Size(val radius: Float, val speed: Float, val points: Int) {
 

@@ -107,6 +107,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     }
 
+    // TODO: Doesn't correctly check for collisions on the wrapped side of the world.
     private fun checkCollisions() {
         val asteroidsToBreak = mutableListOf<Asteroid>()
 
@@ -124,6 +125,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
+                    state.score += asteroid.size.points
                 }
 
             }
