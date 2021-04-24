@@ -6,13 +6,10 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
-import com.serwylo.retrowars.games.asteroids.entities.Ship
-import java.util.*
 
 class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
@@ -24,43 +21,36 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     private val camera = OrthographicCamera()
     private val viewport = ExtendViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
-    private val ship: Ship
-    private val bullets = LinkedList<Bullet>()
-    private val asteroids = mutableListOf<Asteroid>()
-    private var currentNumAsteroids = 3
 
-    /**
-     * Seconds elapsed since the game began. Wont count during pause.
-     */
-    private var timer = 0f
+    private val state: AsteroidsGameState
 
-    private var nextRespawnTime = -1f
+    private val hud: HUD
 
     init {
         viewport.apply(true)
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
 
-        ship = Ship(Vector2(viewport.worldWidth / 2, viewport.worldHeight / 2))
-        ship.setWorldSize(viewport.worldWidth, viewport.worldHeight)
-        ship.onShoot {
+        state = AsteroidsGameState(viewport.worldWidth, viewport.worldHeight)
+
+        state.ship.onShoot {
             it.setWorldSize(camera.viewportWidth, camera.viewportHeight)
-            bullets.add(it)
+            state.bullets.add(it)
         }
 
-        asteroids.addAll(Asteroid.spawn(currentNumAsteroids, viewport.worldWidth, viewport.worldHeight))
+        hud = HUD(state, game.uiAssets)
     }
 
     override fun show() {
         Gdx.input.inputProcessor = object: InputAdapter() {
             override fun keyDown(keycode: Int): Boolean {
                 when (keycode) {
-                    Input.Keys.LEFT -> ship.left = true
-                    Input.Keys.A -> ship.left = true
-                    Input.Keys.RIGHT -> ship.right = true
-                    Input.Keys.D -> ship.right = true
-                    Input.Keys.UP -> ship.thrust = true
-                    Input.Keys.W -> ship.thrust = true
-                    Input.Keys.SPACE -> ship.shooting = true
+                    Input.Keys.LEFT -> state.ship.left = true
+                    Input.Keys.A -> state.ship.left = true
+                    Input.Keys.RIGHT -> state.ship.right = true
+                    Input.Keys.D -> state.ship.right = true
+                    Input.Keys.UP -> state.ship.thrust = true
+                    Input.Keys.W -> state.ship.thrust = true
+                    Input.Keys.SPACE -> state.ship.shooting = true
                     else -> return false
                 }
 
@@ -69,13 +59,13 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
             override fun keyUp(keycode: Int): Boolean {
                 when (keycode) {
-                    Input.Keys.LEFT -> ship.left = false
-                    Input.Keys.A -> ship.left = false
-                    Input.Keys.RIGHT -> ship.right = false
-                    Input.Keys.D -> ship.right = false
-                    Input.Keys.UP -> ship.thrust = false
-                    Input.Keys.W -> ship.thrust = false
-                    Input.Keys.SPACE -> ship.shooting = false
+                    Input.Keys.LEFT -> state.ship.left = false
+                    Input.Keys.A -> state.ship.left = false
+                    Input.Keys.RIGHT -> state.ship.right = false
+                    Input.Keys.D -> state.ship.right = false
+                    Input.Keys.UP -> state.ship.thrust = false
+                    Input.Keys.W -> state.ship.thrust = false
+                    Input.Keys.SPACE -> state.ship.shooting = false
                     else -> return false
                 }
 
@@ -86,7 +76,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     override fun render(delta: Float) {
 
-        timer += delta
+        state.timer += delta
 
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
@@ -94,20 +84,22 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         updateEntities(delta)
         renderEntities()
 
+        hud.render(delta)
+
     }
 
     private fun updateEntities(delta: Float) {
 
-        ship.update(delta)
+        state.ship.update(delta)
 
-        bullets.forEach { it.update(delta) }
-        bullets.removeAll { it.isExpired() }
+        state.bullets.forEach { it.update(delta) }
+        state.bullets.removeAll { it.isExpired() }
 
-        asteroids.forEach { it.update(delta) }
+        state.asteroids.forEach { it.update(delta) }
 
         checkCollisions()
 
-        if (asteroids.size == 0 && nextRespawnTime < 0f) {
+        if (state.asteroids.size == 0 && state.nextRespawnTime < 0f) {
             queueAsteroidsRespawn()
         }
 
@@ -118,21 +110,20 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     private fun checkCollisions() {
         val asteroidsToBreak = mutableListOf<Asteroid>()
 
-        asteroids.forEach { asteroid ->
+        state.asteroids.forEach { asteroid ->
 
-            if (asteroid.isColliding(ship)) {
+            if (asteroid.isColliding(state.ship)) {
 
                 asteroidsToBreak.add(asteroid)
-
-                // TODO: Lose health
+                state.numLives--
 
             } else {
 
-                val bullet = bullets.firstOrNull { asteroid.isColliding(it) }
+                val bullet = state.bullets.firstOrNull { asteroid.isColliding(it) }
 
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
-                    bullets.remove(bullet)
+                    state.bullets.remove(bullet)
                 }
 
             }
@@ -144,22 +135,22 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             val newAsteroids = toBreak.split()
             newAsteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
 
-            asteroids.remove(toBreak)
-            asteroids.addAll(newAsteroids)
+            state.asteroids.remove(toBreak)
+            state.asteroids.addAll(newAsteroids)
 
         }
     }
 
     private fun queueAsteroidsRespawn() {
         Gdx.app.log(TAG, "Queueing a respawn of more asteroids in ${Asteroid.RESPAWN_DELAY}s.")
-        nextRespawnTime = timer + Asteroid.RESPAWN_DELAY
+        state.nextRespawnTime = state.timer + Asteroid.RESPAWN_DELAY
     }
 
     private fun respawnAsteroids() {
-        if (nextRespawnTime > 0f && nextRespawnTime < timer) {
-            val numToRespawn = ++currentNumAsteroids
-            nextRespawnTime = -1f
-            asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
+        if (state.nextRespawnTime > 0f && state.nextRespawnTime < state.timer) {
+            val numToRespawn = ++state.currentNumAsteroids
+            state.nextRespawnTime = -1f
+            state.asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
 
             Gdx.app.log(TAG, "Respawned $numToRespawn asteroids.")
         }
@@ -168,16 +159,16 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     private fun renderEntities() {
         val r = game.uiAssets.shapeRenderer
 
-        ship.render(camera, r)
-        Bullet.renderBulk(camera, r, bullets)
-        Asteroid.renderBulk(camera, r, asteroids)
+        state.ship.render(camera, r)
+        Bullet.renderBulk(camera, r, state.bullets)
+        Asteroid.renderBulk(camera, r, state.asteroids)
     }
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)
-        ship.setWorldSize(camera.viewportWidth, camera.viewportHeight)
-        bullets.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
-        asteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
+        state.ship.setWorldSize(camera.viewportWidth, camera.viewportHeight)
+        state.bullets.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
+        state.asteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
     }
 
     override fun pause() {
