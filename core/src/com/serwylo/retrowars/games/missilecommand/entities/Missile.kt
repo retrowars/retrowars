@@ -5,25 +5,37 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Missile(private val start: Vector2, val target: Vector2) {
+class Missile(private val type: Type, private val start: Vector2, val target: Vector2) {
+
+    class Type(val speed: Float, val missileColour: Color, val trailColour: Color) {
+        companion object {
+            val friendly = Type(
+                200f,
+                Color(0.2f, 1f, 0.2f, 1f),
+                Color(0.2f, 1f, 0.2f, 0.5f)
+            )
+
+            val enemy = Type(
+                25f,
+                Color(1f, 0.2f, 0.2f, 1f),
+                Color(1f, 0.2f, 0.2f, 0.5f)
+            )
+        }
+    }
 
     companion object {
 
         private const val SIZE = 2f
-        private const val SPEED = 100f
-
-        private val COLOUR_TRAIL = Color(0.2f, 1f, 0.2f, 0.5f)
-        private val COLOUR_MISSILE = Color(0.2f, 1f, 0.2f, 1f)
 
         fun renderBulk(camera: Camera, r: ShapeRenderer, missiles: List<Missile>) {
             r.projectionMatrix = camera.combined
             r.color = Color.WHITE
             r.begin(ShapeRenderer.ShapeType.Line)
             missiles.forEach {
-                r.color = COLOUR_TRAIL
+                r.color = it.type.trailColour
                 r.line(it.start, it.position)
 
-                r.color = COLOUR_MISSILE
+                r.color = it.type.missileColour
                 r.rect(it.position.x - SIZE / 2, it.position.y - SIZE / 2, SIZE, SIZE)
             }
             r.end()
@@ -32,7 +44,7 @@ class Missile(private val start: Vector2, val target: Vector2) {
     }
 
     private val position = start.cpy()
-    private val velocity = target.cpy().sub(start).nor().scl(SPEED)
+    private val velocity = target.cpy().sub(start).nor().scl(type.speed)
 
     fun update(delta: Float) {
         position.mulAdd(velocity, delta)

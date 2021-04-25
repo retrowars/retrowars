@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class City(private val position: Vector2) {
+class City(val position: Vector2) {
 
     companion object {
         const val WIDTH = 20f

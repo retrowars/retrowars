@@ -9,12 +9,19 @@ import java.util.*
 
 class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
 
+    companion object {
+        const val MIN_TIME_BETWEEN_ENEMY_MISSILES = 0.5f
+        const val MAX_TIME_BETWEEN_ENEMY_MISSILES = 3f
+    }
+
     var score: Long = 0
 
     /**
      * Seconds elapsed since the game began. Wont count during pause.
      */
     var timer = 0f
+
+    var nextEnemyMissileTime = -1f
 
     val cities: List<City>
     val turrets: List<Turret>
@@ -49,5 +56,7 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
             Turret(Vector2(9 * segments, 0f))
         )
     }
+
+    fun shouldFireEnemyMissile() = timer > nextEnemyMissileTime
 
 }

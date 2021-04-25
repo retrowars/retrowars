@@ -34,6 +34,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
 
         state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
+        queueEnemyMissile()
 
         hud = HUD(state, game.uiAssets)
     }
@@ -50,7 +51,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     }
 
     private fun fire(turret: Turret, target: Vector2) {
-        state.friendlyMissiles.add(Missile(turret.position, target))
+        state.friendlyMissiles.add(Missile(Missile.Type.friendly, turret.position, target))
     }
 
     override fun render(delta: Float) {
@@ -109,6 +110,26 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
         state.enemyMissiles.forEach { it.update(delta) }
 
+        if (state.shouldFireEnemyMissile()) {
+            fireEnemyMissile()
+            queueEnemyMissile()
+        }
+
+    }
+
+    private fun fireEnemyMissile() {
+        // TODO: Only target alive cities.
+        val targetCity = state.cities.random()
+        val startX = (Math.random() * camera.viewportWidth).toFloat()
+        val missile = Missile(Missile.Type.enemy, Vector2(startX, camera.viewportHeight), targetCity.position)
+
+        state.enemyMissiles.add(missile)
+    }
+
+    private fun queueEnemyMissile() {
+        val max = MissileCommandGameState.MAX_TIME_BETWEEN_ENEMY_MISSILES
+        val min = MissileCommandGameState.MIN_TIME_BETWEEN_ENEMY_MISSILES
+        state.nextEnemyMissileTime = state.timer + ((Math.random() * (max - min)) + min).toFloat()
     }
 
     override fun resize(width: Int, height: Int) {
