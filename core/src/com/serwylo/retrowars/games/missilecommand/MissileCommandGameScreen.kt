@@ -114,7 +114,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
                     val missile = enemyMissiles.next()
                     if (missile.isColliding(explosion)) {
                         enemyMissiles.remove()
-                        // TODO: Bump score.
+                        state.score += Missile.POINTS
                     }
                 }
             }

@@ -27,6 +27,7 @@ class Missile(private val type: Type, private val start: Vector2, val target: Ve
     companion object {
 
         private const val SIZE = 2f
+        const val POINTS = 10000
 
         fun renderBulk(camera: Camera, r: ShapeRenderer, missiles: List<Missile>) {
             r.projectionMatrix = camera.combined
