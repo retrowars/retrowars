@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.serwylo.retrowars.core.GameSelectScreen
 import com.serwylo.retrowars.core.MainMenuScreen
-import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import java.util.*
 
 class RetrowarsGame : Game() {

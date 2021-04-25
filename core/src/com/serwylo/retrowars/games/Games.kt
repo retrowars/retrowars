@@ -4,12 +4,13 @@ import com.badlogic.gdx.Screen
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
+import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 
 object Games {
 
     val asteroids = GameDetails("game.asteroids.name", true) { app, _ -> AsteroidsGameScreen(app) }
+    val missileCommand = GameDetails("game.missile-command.name", true) { app, _ -> MissileCommandGameScreen(app) }
 
-    val missileCommand = GameDetails("game.missile-command.name", false) { game, details -> UnimplementedGameScreen(game, details) }
     val spaceInvaders = GameDetails("game.space-invaders.name", false) { game, details -> UnimplementedGameScreen(game, details) }
     val snake = GameDetails("game.snake.name", false) { game, details -> UnimplementedGameScreen(game, details) }
 
