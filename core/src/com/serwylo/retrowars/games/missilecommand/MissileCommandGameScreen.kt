@@ -108,6 +108,15 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
             if (explosion.hasReachedMaxSize()) {
                 explosions.remove()
+            } else {
+                val enemyMissiles = state.enemyMissiles.iterator()
+                while (enemyMissiles.hasNext()) {
+                    val missile = enemyMissiles.next()
+                    if (missile.isColliding(explosion)) {
+                        enemyMissiles.remove()
+                        // TODO: Bump score.
+                    }
+                }
             }
         }
 
