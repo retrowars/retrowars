@@ -41,16 +41,30 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
     override fun show() {
         Gdx.input.inputProcessor = object: InputAdapter() {
+
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+
                 val worldPos = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
-                val closest = state.turrets.minBy { abs(it.position.x - worldPos.x) }
-                fire(closest!!, Vector2(worldPos.x, worldPos.y))
+
+                val closest = state.turrets
+                    .filter { it.ammunition > 0 }
+                    .minBy { abs(it.position.x - worldPos.x) }
+
+                if (closest == null) {
+                    // TODO: Show feedback that we are completely out of ammunition
+                } else {
+                    fire(closest, Vector2(worldPos.x, worldPos.y))
+                }
+
                 return true
+
             }
+
         }
     }
 
     private fun fire(turret: Turret, target: Vector2) {
+        turret.ammunition --
         state.friendlyMissiles.add(Missile(Missile.Type.friendly, turret.position, target))
     }
 
