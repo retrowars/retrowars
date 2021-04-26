@@ -7,16 +7,12 @@ import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 
 class FriendlyMissile(startTurret: Turret, target: Vector2): Missile(
-    200f,
+    150f,
     Color(0.2f, 1f, 0.2f, 1f),
     Color(0.2f, 1f, 0.2f, 0.5f),
     startTurret.position.cpy().add(0f, Turret.HEIGHT),
     target
-) {
-    // TODO: Doesn't work when shooting downward from the top of the turret (should this even be possible?). It will just explode immediately.
-    //       https://github.com/retrowars/retrowars/projects/2#card-59798055
-    override fun hasReachedDestination() = position.y >= target.y
-}
+)
 
 class EnemyMissile(start: Vector2, public val targetCity: City): Missile(
     25f,
@@ -24,11 +20,9 @@ class EnemyMissile(start: Vector2, public val targetCity: City): Missile(
     Color(1f, 0.2f, 0.2f, 0.5f),
     start,
     targetCity.position.cpy().add(0f, City.HEIGHT)
-) {
-    override fun hasReachedDestination() = position.y <= target.y
-}
+)
 
-abstract class Missile(speed: Float, val missileColour: Color, val trailColour: Color, private val start: Vector2, val target: Vector2) {
+abstract class Missile(speed: Float, val missileColour: Color, val trailColour: Color, protected val start: Vector2, val target: Vector2) {
 
     companion object {
 
@@ -53,18 +47,21 @@ abstract class Missile(speed: Float, val missileColour: Color, val trailColour: 
 
     protected val position = start.cpy()
     private val velocity = target.cpy().sub(start).nor().scl(speed)
+    private val distance2 = target.cpy().sub(start).len2()
 
     fun update(delta: Float) {
         position.mulAdd(velocity, delta)
     }
-
-    abstract fun hasReachedDestination(): Boolean
 
     fun isColliding(entity: HasBoundingSphere): Boolean {
         val distance2 = entity.getPosition().dst2(this.position)
         val collideDistance = (SIZE / 2 + entity.getRadius())
 
         return distance2 < collideDistance * collideDistance
+    }
+
+    fun hasReachedDestination(): Boolean {
+        return position.dst2(start) >= distance2
     }
 
 }
