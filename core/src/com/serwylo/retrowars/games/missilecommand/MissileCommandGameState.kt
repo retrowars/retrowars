@@ -1,10 +1,7 @@
 package com.serwylo.retrowars.games.missilecommand
 
 import com.badlogic.gdx.math.Vector2
-import com.serwylo.retrowars.games.missilecommand.entities.City
-import com.serwylo.retrowars.games.missilecommand.entities.Explosion
-import com.serwylo.retrowars.games.missilecommand.entities.Missile
-import com.serwylo.retrowars.games.missilecommand.entities.Turret
+import com.serwylo.retrowars.games.missilecommand.entities.*
 import java.util.*
 
 class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
@@ -26,8 +23,8 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
     val cities: List<City>
     val turrets: List<Turret>
 
-    val friendlyMissiles = LinkedList<Missile>()
-    val enemyMissiles = LinkedList<Missile>()
+    val friendlyMissiles = LinkedList<FriendlyMissile>()
+    val enemyMissiles = LinkedList<EnemyMissile>()
     val explosions = LinkedList<Explosion>()
 
     init {
@@ -58,5 +55,6 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
     }
 
     fun shouldFireEnemyMissile() = timer > nextEnemyMissileTime
+    fun anyCitiesAlive() = cities.any { it.health > 0 }
 
 }

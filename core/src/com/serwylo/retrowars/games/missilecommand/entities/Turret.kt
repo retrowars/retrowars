@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.games.missilecommand.entities
 
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
@@ -23,6 +24,7 @@ class Turret(val position: Vector2) {
         r.translate(position.x, position.y, 0f)
 
         r.begin(ShapeRenderer.ShapeType.Line)
+        r.color = Color.BLUE
 
         r.rect(-WIDTH / 2f, 0f, WIDTH, HEIGHT)
 

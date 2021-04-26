@@ -9,9 +9,7 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
-import com.serwylo.retrowars.games.missilecommand.entities.Explosion
-import com.serwylo.retrowars.games.missilecommand.entities.Missile
-import com.serwylo.retrowars.games.missilecommand.entities.Turret
+import com.serwylo.retrowars.games.missilecommand.entities.*
 import kotlin.math.abs
 
 class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
@@ -19,6 +17,8 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     companion object {
         const val MIN_WORLD_WIDTH = 400f
         const val MIN_WORLD_HEIGHT = 400f
+
+        @Suppress("unused")
         const val TAG = "MissileCommandGameScreen"
     }
 
@@ -65,7 +65,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
     private fun fire(turret: Turret, target: Vector2) {
         turret.ammunition --
-        state.friendlyMissiles.add(Missile(Missile.Type.friendly, turret.position, target))
+        state.friendlyMissiles.add(FriendlyMissile(turret, target))
     }
 
     override fun render(delta: Float) {
@@ -131,7 +131,22 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
             }
         }
 
-        state.enemyMissiles.forEach { it.update(delta) }
+        val enemyMissiles = state.enemyMissiles.iterator()
+        while (enemyMissiles.hasNext()) {
+            val missile = enemyMissiles.next()
+            missile.update(delta)
+
+            if (missile.hasReachedDestination()) {
+                enemyMissiles.remove()
+
+                missile.targetCity.health --
+
+                if (!state.anyCitiesAlive()) {
+                    // TODO: Record high score, show end of game screen.
+                    game.showGameSelectMenu()
+                }
+            }
+        }
 
         if (state.shouldFireEnemyMissile()) {
             fireEnemyMissile()
@@ -141,10 +156,19 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     }
 
     private fun fireEnemyMissile() {
-        // TODO: Only target alive cities.
-        val targetCity = state.cities.random()
+        val aliveCities = state.cities.filter { it.health > 0 }
+
+        if (aliveCities.isEmpty()) {
+            // Don't really expect to get here, this is more defensive.
+            // Elsewhere, we should be ending the game when the last city is dead. At this point,
+            // we wont be able to target any cities anymore.
+            return
+        }
+
+        val targetCity = aliveCities.random()
+
         val startX = (Math.random() * camera.viewportWidth).toFloat()
-        val missile = Missile(Missile.Type.enemy, Vector2(startX, camera.viewportHeight), targetCity.position)
+        val missile = EnemyMissile(Vector2(startX, camera.viewportHeight), targetCity)
 
         state.enemyMissiles.add(missile)
     }

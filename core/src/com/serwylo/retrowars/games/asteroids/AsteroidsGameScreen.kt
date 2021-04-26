@@ -189,7 +189,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         state.numLives--
 
         if (state.numLives <= 0) {
-            // TODO: Record high score.
+            // TODO: Record high score, show end of game screen.
             game.showGameSelectMenu()
         } else {
             state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
