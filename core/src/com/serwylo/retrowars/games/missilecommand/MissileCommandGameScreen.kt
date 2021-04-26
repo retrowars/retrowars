@@ -148,11 +148,30 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
             }
         }
 
-        if (state.shouldFireEnemyMissile()) {
+        if (state.numMissilesRemaining <= 0) {
+            if (state.enemyMissiles.size == 0) {
+                completeLevel()
+            }
+        } else if (state.shouldFireEnemyMissile()) {
             fireEnemyMissile()
             queueEnemyMissile()
         }
 
+    }
+
+    private fun completeLevel() {
+        with(state) {
+            score += MissileCommandGameState.BONUS_SCORE_PER_LEVEL
+
+            nextEnemyMissileTime = timer + (MissileCommandGameState.MAX_TIME_BETWEEN_ENEMY_MISSILES * 1.5f)
+
+            level ++
+            missileSpeed = MissileCommandGameState.INITIAL_MISSILE_SPEED + (level * MissileCommandGameState.SPEED_INCREASE_PER_LEVEL)
+            numMissilesRemaining = MissileCommandGameState.BASE_NUM_MISSILES_FOR_LEVEL + (level * MissileCommandGameState.EXTRA_MISSILES_PER_LEVEL)
+
+            turrets.forEach { it.ammunition = Turret.INITIAL_AMMUNITION }
+            cities.forEach { it.health = City.INITIAL_HEALTH }
+        }
     }
 
     private fun fireEnemyMissile() {
@@ -168,9 +187,10 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         val targetCity = aliveCities.random()
 
         val startX = (Math.random() * camera.viewportWidth).toFloat()
-        val missile = EnemyMissile(Vector2(startX, camera.viewportHeight), targetCity)
+        val missile = EnemyMissile(state.missileSpeed, Vector2(startX, camera.viewportHeight), targetCity)
 
         state.enemyMissiles.add(missile)
+        state.numMissilesRemaining --
     }
 
     private fun queueEnemyMissile() {

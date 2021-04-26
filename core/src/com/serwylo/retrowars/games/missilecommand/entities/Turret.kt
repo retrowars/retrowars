@@ -5,14 +5,14 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 
-class Turret(val position: Vector2) {
+class Turret(val position: Vector2, val missileSpeed: Float) {
 
     companion object {
         const val WIDTH = 15f
         const val HEIGHT = 30f
 
         const val AMMO_RADIUS = 2f
-        const val INITIAL_AMMUNITION = 8
+        const val INITIAL_AMMUNITION = 10
     }
 
     var ammunition = INITIAL_AMMUNITION

@@ -12,12 +12,10 @@ class City(val position: Vector2) {
     companion object {
         const val WIDTH = 20f
         const val HEIGHT = 15f
-        const val INITIAL_HEALTH = 3
+        const val INITIAL_HEALTH = 1
 
         val colours = listOf(
             Color.GRAY,
-            Color.RED,
-            Color.ORANGE,
             Color.GREEN
         )
     }

@@ -7,15 +7,15 @@ import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 
 class FriendlyMissile(startTurret: Turret, target: Vector2): Missile(
-    150f,
+    startTurret.missileSpeed,
     Color(0.2f, 1f, 0.2f, 1f),
     Color(0.2f, 1f, 0.2f, 0.5f),
     startTurret.position.cpy().add(0f, Turret.HEIGHT),
     target
 )
 
-class EnemyMissile(start: Vector2, public val targetCity: City): Missile(
-    25f,
+class EnemyMissile(speed: Float, start: Vector2, public val targetCity: City): Missile(
+    speed,
     Color(1f, 0.2f, 0.2f, 1f),
     Color(1f, 0.2f, 0.2f, 0.5f),
     start,

@@ -9,6 +9,12 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
     companion object {
         const val MIN_TIME_BETWEEN_ENEMY_MISSILES = 0.5f
         const val MAX_TIME_BETWEEN_ENEMY_MISSILES = 3f
+        const val INITIAL_MISSILE_SPEED = 25f
+        const val SPEED_INCREASE_PER_LEVEL = 0.1f
+        const val BONUS_SCORE_PER_LEVEL = Missile.POINTS * 5
+
+        const val BASE_NUM_MISSILES_FOR_LEVEL = 6 * City.INITIAL_HEALTH
+        const val EXTRA_MISSILES_PER_LEVEL = 2
     }
 
     var score: Long = 0
@@ -19,6 +25,10 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
     var timer = 0f
 
     var nextEnemyMissileTime = -1f
+
+    var level = 1
+    var missileSpeed = INITIAL_MISSILE_SPEED + (SPEED_INCREASE_PER_LEVEL * level)
+    var numMissilesRemaining = BASE_NUM_MISSILES_FOR_LEVEL + (EXTRA_MISSILES_PER_LEVEL * level)
 
     val cities: List<City>
     val turrets: List<Turret>
@@ -48,9 +58,9 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
         )
 
         turrets = listOf(
-            Turret(Vector2(1 * segments, 0f)),
-            Turret(Vector2(5 * segments, 0f)),
-            Turret(Vector2(9 * segments, 0f))
+            Turret(Vector2(1 * segments, 0f), 150f),
+            Turret(Vector2(5 * segments, 0f), 300f),
+            Turret(Vector2(9 * segments, 0f), 150f)
         )
     }
 
