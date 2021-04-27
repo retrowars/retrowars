@@ -167,10 +167,14 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
             level ++
             missileSpeed = MissileCommandGameState.INITIAL_MISSILE_SPEED + (level * MissileCommandGameState.SPEED_INCREASE_PER_LEVEL)
-            numMissilesRemaining = MissileCommandGameState.BASE_NUM_MISSILES_FOR_LEVEL + (level * MissileCommandGameState.EXTRA_MISSILES_PER_LEVEL)
+            numMissilesRemaining =
+                (MissileCommandGameState.BASE_NUM_MISSILES_FOR_LEVEL + (level * MissileCommandGameState.EXTRA_MISSILES_PER_LEVEL))
+                    .coerceAtMost(MissileCommandGameState.MAX_MISSILES_PER_LEVEL)
 
             turrets.forEach { it.ammunition = Turret.INITIAL_AMMUNITION }
-            cities.forEach { it.health = City.INITIAL_HEALTH }
+
+            // Don't improve the health of cities automatically at the end of the level.
+            // Rather, wait for a certain amount of points to be reached and then give back a city in response.
         }
     }
 

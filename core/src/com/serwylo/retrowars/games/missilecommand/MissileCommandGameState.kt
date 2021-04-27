@@ -10,11 +10,17 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
         const val MIN_TIME_BETWEEN_ENEMY_MISSILES = 0.5f
         const val MAX_TIME_BETWEEN_ENEMY_MISSILES = 3f
         const val INITIAL_MISSILE_SPEED = 25f
-        const val SPEED_INCREASE_PER_LEVEL = 0.1f
+        const val SPEED_INCREASE_PER_LEVEL = 0.25f
         const val BONUS_SCORE_PER_LEVEL = Missile.POINTS * 5
 
-        const val BASE_NUM_MISSILES_FOR_LEVEL = 6 * City.INITIAL_HEALTH
-        const val EXTRA_MISSILES_PER_LEVEL = 2
+        const val BASE_NUM_MISSILES_FOR_LEVEL = 6 * City.INITIAL_HEALTH // 1 per city.
+        const val EXTRA_MISSILES_PER_LEVEL = 3
+
+        // Force multiple missiles to be taken out together.
+        // By the time we hit this limit, the speed of enemy missiles should have picked up quite a bit, which
+        // should theoretically mean the same blast radius of a friendly missile will be able to
+        // take care of a greater number of incoming missiles.
+        const val MAX_MISSILES_PER_LEVEL = 3 *  Turret.INITIAL_AMMUNITION * 2
     }
 
     var score: Long = 0

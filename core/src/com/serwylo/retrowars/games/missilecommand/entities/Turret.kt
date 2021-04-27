@@ -24,12 +24,13 @@ class Turret(val position: Vector2, val missileSpeed: Float) {
         r.translate(position.x, position.y, 0f)
 
         r.begin(ShapeRenderer.ShapeType.Line)
-        r.color = Color.BLUE
+        r.color = Color.YELLOW
 
         r.rect(-WIDTH / 2f, 0f, WIDTH, HEIGHT)
 
         val perRow = 2
         val spacing = WIDTH / (perRow + 1)
+        r.color = Color.WHITE
         for (i in 0 until ammunition) {
             val row = i / perRow
             val col = i % perRow
