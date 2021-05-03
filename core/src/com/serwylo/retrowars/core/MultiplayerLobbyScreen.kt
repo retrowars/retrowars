@@ -3,10 +3,9 @@ package com.serwylo.retrowars.core
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup
+import com.badlogic.gdx.scenes.scene2d.actions.*
+import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
+import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
@@ -81,11 +80,51 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         client = RetrowarsClient().apply {
             connect()
             startGameListener = {
-                Gdx.app.postRunnable {
-                    game.startGame(AsteroidsGameScreen(game, this))
-                }
+                initiateStartCountdown()
             }
         }
+    }
+
+    private fun initiateStartCountdown() {
+        wrapper.apply {
+            clear()
+
+            var counter = 5
+            val countdown = Label(counter.toString(), game.uiAssets.getStyles().label.huge)
+            val countdownContainer = Container(countdown).apply { isTransform = true }
+
+            row()
+            add(countdownContainer).center().expand()
+
+            countdownContainer.addAction(
+                sequence(
+                    repeat(counter,
+                        parallel(
+                            Actions.run {
+                                counter --
+                                countdown.setText((counter + 1).toString())
+                            },
+                            sequence(
+                                alpha(0f, 0f),
+                                alpha(1f, 0.4f)
+                            ),
+                            sequence(
+                                scaleTo(3f, 3f, 0f),
+                                scaleTo(1f, 1f, 0.75f)
+                            ),
+                            delay(1f)
+                        )
+                    ),
+                    Actions.run {
+                        Gdx.app.postRunnable {
+                            game.startGame(AsteroidsGameScreen(game, client))
+                        }
+                    }
+                )
+            )
+
+        }
+
     }
 
     private fun joinServer() {
@@ -107,27 +146,25 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             row()
             add(Label("Connected to server. Waiting for others to join...", styles.label.large))
 
-            val playersWrapper = HorizontalGroup().apply {
-                space(UI_SPACE)
-                pad(UI_SPACE)
-                renderAvatars().forEach { addActor(it) }
-            }
-
-            row()
-            add(playersWrapper)
-
-            client?.playersChangedListener = {
-                Gdx.app.log(TAG, "Updating list of clients to show.")
-                playersWrapper.clear()
-                renderAvatars().forEach { playersWrapper.addActor(it) }
-            }
+            appendAvatars(this)
         }
     }
 
-    private fun renderAvatars(): List<WidgetGroup> {
-        return client?.players?.mapIndexed { i, player ->
-            AvatarTile(player, game.uiAssets, i == 0)
-        } ?: emptyList()
+    private fun appendAvatars(table: Table) {
+
+        table.row()
+        val avatarCell = table.add().expandY()
+
+        client?.playersChangedListener = { players ->
+            Gdx.app.log(TAG, "Updating list of clients to show.")
+
+            avatarCell
+                .clearActor()
+                .setActor<HorizontalGroup>(makeAvatarTiles(players, game.uiAssets))
+
+            wrapper.invalidate()
+        }
+
     }
 
     private fun showServerLobby() {
@@ -137,21 +174,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             row()
             add(Label("Server started. Waiting for others to join...", styles.label.large))
 
-            val playersWrapper = HorizontalGroup().apply {
-                space(UI_SPACE)
-                pad(UI_SPACE)
-                renderAvatars().forEach { addActor(it) }
-            }
-
-            row()
-            add(playersWrapper).expandY()
-
-            client?.playersChangedListener = {
-                Gdx.app.log(TAG, "Updating list of clients to show.")
-                playersWrapper.clear()
-                renderAvatars().forEach { playersWrapper.addActor(it) }
-                wrapper.invalidate()
-            }
+            appendAvatars(this)
 
             row()
             add(makeLargeButton("Start", styles) {
@@ -178,11 +201,16 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     override fun render(delta: Float) {
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
         stage.act(delta)
         stage.draw()
+
+        Gdx.gl.glDisable(GL20.GL_BLEND)
     }
 
 }

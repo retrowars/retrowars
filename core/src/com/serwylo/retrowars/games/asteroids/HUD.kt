@@ -1,13 +1,18 @@
 package com.serwylo.retrowars.games.asteroids
 
+import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.serwylo.beatgame.ui.AvatarTile
 import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.makeAvatarTiles
 import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.UiAssets
+import com.serwylo.retrowars.net.RetrowarsClient
 
-class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
+class HUD(private val state: AsteroidsGameState, private val assets: UiAssets, private val client: RetrowarsClient?) {
 
     private val styles = assets.getStyles()
 
@@ -22,6 +27,11 @@ class HUD(private val state: AsteroidsGameState, private val assets: UiAssets) {
         table.pad(UI_SPACE)
         table.row().expand()
         table.add(lifeContainer).left().bottom()
+
+        val networkPlayers = client?.players
+        if (networkPlayers != null) {
+            table.add(makeAvatarTiles(networkPlayers, assets)).center().bottom()
+        }
         table.add(scoreLabel).right().bottom()
 
         lifeContainer.space(UI_SPACE * 2)

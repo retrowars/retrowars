@@ -41,7 +41,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame, private val client: R
             state.bullets.add(it)
         }
 
-        hud = HUD(state, game.uiAssets)
+        hud = HUD(state, game.uiAssets, client)
     }
 
     override fun show() {

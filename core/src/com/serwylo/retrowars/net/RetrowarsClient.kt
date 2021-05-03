@@ -9,11 +9,11 @@ import com.serwylo.retrowars.net.Network.register
 class RetrowarsClient {
 
     var me:Player? = null
-    val players = mutableSetOf<Player>()
+    val players = mutableListOf<Player>()
 
     var client = Client()
 
-    var playersChangedListener: ((Collection<Player>) -> Unit)? = null
+    var playersChangedListener: ((List<Player>) -> Unit)? = null
     var startGameListener: (() -> Unit)? = null
 
     init {
@@ -52,12 +52,12 @@ class RetrowarsClient {
         }
 
         players.add(player)
-        playersChangedListener?.invoke(players.toSet())
+        playersChangedListener?.invoke(players.toList())
     }
 
     private fun removePlayer(id: Long) {
         players.removeAll { it.id == id }
-        playersChangedListener?.invoke(players.toSet())
+        playersChangedListener?.invoke(players.toList())
     }
 
     private fun onScore(playerId: Long, score: Int) {
