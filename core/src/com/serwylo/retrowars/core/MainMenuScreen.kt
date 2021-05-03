@@ -30,8 +30,14 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
         )
 
         container.addActor(
-            makeLargeButton(strings["main-menu.btn.play"], styles) {
+            makeLargeButton(strings["main-menu.btn.play-single-player"], styles) {
                 game.showGameSelectMenu()
+            }
+        )
+
+        container.addActor(
+            makeLargeButton(strings["main-menu.btn.play-multiplayer"], styles) {
+                game.showMultiplayerLobby()
             }
         )
 

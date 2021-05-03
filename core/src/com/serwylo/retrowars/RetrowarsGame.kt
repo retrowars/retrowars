@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.serwylo.retrowars.core.GameSelectScreen
 import com.serwylo.retrowars.core.MainMenuScreen
+import com.serwylo.retrowars.core.MultiplayerLobbyScreen
 import java.util.*
 
 class RetrowarsGame : Game() {
@@ -21,6 +22,12 @@ class RetrowarsGame : Game() {
     fun showGameSelectMenu() {
         Gdx.app.postRunnable {
             setScreen(GameSelectScreen(this))
+        }
+    }
+
+    fun showMultiplayerLobby() {
+        Gdx.app.postRunnable {
+            setScreen(MultiplayerLobbyScreen(this))
         }
     }
 

@@ -39,6 +39,16 @@ allprojects {
     }
 }
 
+project(":texture-packer") {
+    apply plugin: "kotlin"
+
+    dependencies {
+        implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
+        api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    }
+}
+
 project(":desktop") {
     apply plugin: "kotlin"
 
@@ -85,5 +95,7 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
+        implementation 'kryonet:kryonet:2.21'
+        implementation 'com.esotericsoftware.kryo:kryo5:5.1.0'
     }
 }

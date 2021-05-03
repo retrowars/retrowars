@@ -63,6 +63,7 @@ com_crashlytics_export_strings.xml
 /android/build/
 /core/build/
 /desktop/build/
+/texture-packer/build/
 /html/build/
 /ios/build/
 

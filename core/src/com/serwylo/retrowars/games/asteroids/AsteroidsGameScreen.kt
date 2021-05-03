@@ -13,8 +13,9 @@ import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
+import com.serwylo.retrowars.net.RetrowarsClient
 
-class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
+class AsteroidsGameScreen(private val game: RetrowarsGame, private val client: RetrowarsClient? = null) : Screen {
 
     companion object {
         const val MIN_WORLD_WIDTH = 400f
@@ -168,6 +169,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
                     state.score += asteroid.size.points
+                    client?.updateScore(state.score.toInt())
                 }
 
             }

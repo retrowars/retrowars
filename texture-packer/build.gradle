@@ -1,0 +1,16 @@
+apply plugin: "kotlin"
+
+sourceCompatibility = 1.7
+sourceSets.main.java.srcDirs = [ "src/" ]
+
+project.ext.mainClassName = "com.serwylo.beatgame.bin.TexturePackerKt"
+
+task packTextures(dependsOn: classes, type: JavaExec) {
+    main = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+}
+
+eclipse.project {
+    name = appName + "-texture-packer"
+}

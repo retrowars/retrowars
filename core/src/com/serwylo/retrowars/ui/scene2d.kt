@@ -1,7 +1,10 @@
 package com.serwylo.beatgame.ui
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
@@ -10,6 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.UiAssets
+import com.serwylo.retrowars.net.Player
+import kotlin.random.Random
 
 fun makeStage() =
     Stage(ExtendViewport(UI_WIDTH, UI_HEIGHT))
@@ -74,3 +79,78 @@ const val UI_SPACE = 10f
 fun calcDensityScaleFactor(): Float {
     return ((Gdx.graphics.density - 1) * 0.8f).coerceAtLeast(1f)
 }
+
+class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
+
+    companion object {
+        const val ICON_SIZE = 64f
+        const val PADDING = UI_SPACE
+        const val SIZE = ICON_SIZE + UI_SPACE * 2f
+    }
+
+    private val beard: TextureRegion
+    private val body: TextureRegion
+    private val hair: TextureRegion
+    private val leg: TextureRegion
+    private val torso: TextureRegion
+    private var hasBeard: Boolean
+
+    init {
+        val random = Random(player.id)
+
+        val sprites = uiAssets.getSprites()
+
+        beard = sprites.beards.random(random)
+        body = sprites.bodies.random(random)
+        hair = sprites.hair.random(random)
+        leg = sprites.legs.random(random)
+        torso = sprites.torsos.random(random)
+
+        // We could equally just store a null in the beard property, but this way it makes it
+        // easier to ensure we always have the same number of calls to the Random object, making
+        // it a little bit easier to reason about the deterministic randomness
+        hasBeard = random.nextFloat() < 0.2
+
+        setBounds(0f, 0f, SIZE, SIZE)
+    }
+
+    override fun draw(batch: Batch?, parentAlpha: Float) {
+        super.draw(batch, parentAlpha)
+
+        if (batch == null) {
+            return
+        }
+
+        batch.draw(body, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+        batch.draw(hair, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+        if (hasBeard) {
+            batch.draw(beard, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+        }
+        batch.draw(torso, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+        batch.draw(leg, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+    }
+}
+
+class AvatarTile(player: Player, uiAssets: UiAssets, highlight: Boolean = false): WidgetGroup() {
+
+    init {
+        val avatar = Avatar(player, uiAssets)
+        val background = Button(uiAssets.getSkin(), "default").apply {
+            isDisabled = true
+            setFillParent(true)
+
+            if (highlight) {
+                style = Button.ButtonStyle(style)
+                style.disabled = uiAssets.getSkin().getDrawable("button-over-c")
+            }
+        }
+
+        addActor(background)
+        addActor(avatar)
+    }
+
+    override fun getPrefWidth() = Avatar.SIZE
+    override fun getPrefHeight() = Avatar.SIZE
+
+}
+
