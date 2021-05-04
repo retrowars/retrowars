@@ -73,13 +73,24 @@ class UiAssets(locale: Locale) {
         }
     }
 
-    class Sprites(atlas: TextureAtlas) {
+    class Sprites(private val atlas: TextureAtlas) {
 
-        val beards = (0..19).toList().map { i -> atlas.findRegion("beard_${i}_") }
-        val bodies = (0..7).toList().map { i -> atlas.findRegion("body_${i}_") }
-        val hair = (0..59).toList().map { i -> atlas.findRegion("hair_${i}_") }
-        val legs = (0..19).toList().map { i -> atlas.findRegion("legs_${i}_") }
-        val torsos = (0..120).toList().map { i -> atlas.findRegion("torso_${i}_") }
+        val icons = Icons()
+        val characters = Characters()
+
+        inner class Characters {
+            val beards = (0..19).toList().map { i -> atlas.findRegion("beard_${i}_")!! }
+            val bodies = (0..7).toList().map { i -> atlas.findRegion("body_${i}_")!! }
+            val hair = (0..59).toList().map { i -> atlas.findRegion("hair_${i}_")!! }
+            val legs = (0..19).toList().map { i -> atlas.findRegion("legs_${i}_")!! }
+            val torsos = (0..119).toList().map { i -> atlas.findRegion("torso_${i}_")!! }
+        }
+
+        inner class Icons {
+            val asteroids = atlas.findRegion("icon_asteroids")!!
+            val missileCommand = atlas.findRegion("icon_missile_command")!!
+            val unknown = atlas.findRegion("icon_unknown")!!
+        }
 
     }
 

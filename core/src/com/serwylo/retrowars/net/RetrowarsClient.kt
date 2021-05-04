@@ -31,7 +31,7 @@ class RetrowarsClient {
             override fun received(connection: Connection, obj: Any) {
                 println("Received: $obj")
                 when(obj) {
-                    is Network.Client.PlayerAdded -> addPlayer(obj.id)
+                    is Network.Client.PlayerAdded -> addPlayer(obj.id, obj.game)
                     is Network.Client.PlayerRemoved -> removePlayer(obj.id)
                     is Network.Client.PlayerScored -> onScore(obj.id, obj.score)
                     is Network.Client.StartGame -> startGameListener?.invoke()
@@ -43,8 +43,8 @@ class RetrowarsClient {
 
     }
 
-    private fun addPlayer(id: Long) {
-        val player = Player(id)
+    private fun addPlayer(id: Long, game: String) {
+        val player = Player(id, game)
 
         // By convention, the first player sent to a newly registered client is always themselves.
         if (players.size == 0) {

@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
+import com.badlogic.gdx.utils.Scaling
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeHeading
 import com.serwylo.beatgame.ui.makeIcon
@@ -23,6 +24,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
     private val styles = game.uiAssets.getStyles()
     private val skin = game.uiAssets.getSkin()
     private val strings = game.uiAssets.getStrings()
+    private val sprites = game.uiAssets.getSprites()
 
     init {
         setupStage()
@@ -65,7 +67,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         var x = 0
         var y = 0
 
-        Games.all.forEachIndexed { i, game ->
+        Games.all.values.forEachIndexed { i, game ->
 
             if (i % gamesPerRow == 0) {
                 table.row()
@@ -145,21 +147,28 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         val gameLabel = Label(labelString, styles.label.medium).apply {
             wrap = true
             color = textColor
-            setAlignment(Align.topLeft)
+            setAlignment(Align.center)
         }
 
         val table = Table().apply {
             setFillParent(true)
             touchable = Touchable.disabled // Let the button in the background do the interactivity.
-            pad(Value.percentWidth(0.125f))
+            pad(UI_SPACE)
 
-            add(gameLabel).expand().fill().colspan(4)
+            add(gameLabel).expandX().fillX()
         }
 
         if (!game.isAvailable) {
             table.row()
-            table.add(Label(strings["unimplemented-game.coming-soon"], styles.label.small))
+            table.add(Label(strings["unimplemented-game.coming-soon"], styles.label.small)).expandX().center()
         }
+
+        val icon = Image(game.icon(sprites)).apply {
+            setScaling(Scaling.fit)
+        }
+
+        table.row()
+        table.add(icon).expand().fill().pad(UI_SPACE * 2)
 
         return WidgetGroup(button, table)
 

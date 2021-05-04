@@ -1,11 +1,8 @@
 package com.serwylo.retrowars.games.asteroids
 
-import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.serwylo.beatgame.ui.AvatarTile
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeAvatarTiles
 import com.serwylo.beatgame.ui.makeStage

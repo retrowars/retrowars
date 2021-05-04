@@ -13,6 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.UiAssets
+import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player
 import kotlin.random.Random
 
@@ -100,11 +102,11 @@ class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
 
         val sprites = uiAssets.getSprites()
 
-        beard = sprites.beards.random(random)
-        body = sprites.bodies.random(random)
-        hair = sprites.hair.random(random)
-        leg = sprites.legs.random(random)
-        torso = sprites.torsos.random(random)
+        beard = sprites.characters.beards.random(random)
+        body = sprites.characters.bodies.random(random)
+        hair = sprites.characters.hair.random(random)
+        leg = sprites.characters.legs.random(random)
+        torso = sprites.characters.torsos.random(random)
 
         // We could equally just store a null in the beard property, but this way it makes it
         // easier to ensure we always have the same number of calls to the Random object, making
@@ -144,12 +146,21 @@ class AvatarTile(player: Player, uiAssets: UiAssets, highlight: Boolean = false)
                 style.disabled = uiAssets.getSkin().getDrawable("button-over-c")
             }
         }
+        val icons = uiAssets.getSprites().icons
+        val gameDetails = Games.all[player.game]
+        val iconSprite = if (gameDetails == null) icons.unknown else gameDetails.icon(uiAssets.getSprites())
+        val icon = Image(iconSprite).apply {
+            setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
+            x = Avatar.SIZE + UI_SPACE
+            y = 0f
+        }
 
         addActor(background)
         addActor(avatar)
+        addActor(icon)
     }
 
-    override fun getPrefWidth() = Avatar.SIZE
+    override fun getPrefWidth() = Avatar.SIZE * 2
     override fun getPrefHeight() = Avatar.SIZE
 
 }
@@ -163,7 +174,7 @@ fun makeAvatarTiles(players: List<Player>, uiAssets: UiAssets): HorizontalGroup 
 
         if (players.size > 1) {
             addActor(Label("vs", uiAssets.getStyles().label.huge))
-            players.subList(1, players.size).forEachIndexed { i, player ->
+            players.subList(1, players.size).forEach { player ->
                 addActor(AvatarTile(player, uiAssets, false))
             }
         }

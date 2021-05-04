@@ -18,9 +18,12 @@ object Network {
     }
 
     object Server {
-        class RegisterPlayer
+        class RegisterPlayer {
+            override fun toString(): String = "RegisterPlayer"
+        }
+
         class UnregisterPlayer
-        class UpdateScore(var score: Int) { constructor() : this(0) }
+        class UpdateScore(val score: Int) { constructor() : this(0) }
     }
 
     object Client {
@@ -32,8 +35,16 @@ object Network {
          * Also, the newly added player will receive a sequence of [PlayerAdded] messages, one for each
          * already registered player.
          */
-        class PlayerAdded(var id: Long) { constructor() : this(0) }
-        class PlayerRemoved(var id: Long) { constructor() : this(0) }
+        class PlayerAdded(var id: Long, var game: String) {
+            constructor() : this(0, "")
+            override fun toString(): String = "PlayerAdded[player id: $id, game type: $game]"
+        }
+
+        class PlayerRemoved(var id: Long) {
+            constructor() : this(0)
+            override fun toString(): String = "PlayerRemoved[player id: $id]"
+        }
+
         class PlayerScored(var id: Long, var score: Int) { constructor() : this(0, 0) }
         class StartGame
 

@@ -3,6 +3,7 @@ package com.serwylo.retrowars.net
 import com.esotericsoftware.kryonet.Connection
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Server
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
 import kotlin.random.Random
 
@@ -69,18 +70,18 @@ class RetrowarsServer {
         }
 
         // TODO: Ensure this ID doesn't already exist on the server.
-        val player = Player(Random.nextLong())
+        val player = Player(Random.nextLong(), Games.allSupported.random().id)
 
         connection.player = player
 
         // First tell people about the new player (before sending a list of all existing players to
         // this newly registered client). That means that the first PlayerAdded message received by
         // a new client will always be for themselves.
-        server.sendToAllTCP(Network.Client.PlayerAdded(player.id))
+        server.sendToAllTCP(Network.Client.PlayerAdded(player.id, player.game))
 
         // Then notify the current player about all others.
         players.forEach { existingPlayer ->
-            connection.sendTCP(Network.Client.PlayerAdded(existingPlayer.id))
+            connection.sendTCP(Network.Client.PlayerAdded(existingPlayer.id, existingPlayer.game))
         }
 
         players.add(player)

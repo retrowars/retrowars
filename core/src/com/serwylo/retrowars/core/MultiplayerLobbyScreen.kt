@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
-import com.serwylo.retrowars.net.Player
+import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
 
@@ -89,8 +89,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         wrapper.apply {
             clear()
 
-            var counter = 5
-            val countdown = Label(counter.toString(), game.uiAssets.getStyles().label.huge)
+            var count = 5
+
+            // After some experimentation, it seems the only way to get this label to animate from
+            // within a table is to wrap it in a Container with isTransform = true (and don't forget
+            // to enable GL_BLEND somewhere for the alpha transitions).
+            val countdown = Label(count.toString(), game.uiAssets.getStyles().label.huge)
             val countdownContainer = Container(countdown).apply { isTransform = true }
 
             row()
@@ -98,26 +102,35 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
             countdownContainer.addAction(
                 sequence(
-                    repeat(counter,
+
+                    repeat(count,
                         parallel(
                             Actions.run {
-                                counter --
-                                countdown.setText((counter + 1).toString())
+                                countdown.setText((count).toString())
+                                count --
                             },
                             sequence(
-                                alpha(0f, 0f),
-                                alpha(1f, 0.4f)
+                                alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
+                                alpha(1f, 0.4f) // ... and animate to 1.0f quite quickly.
                             ),
                             sequence(
-                                scaleTo(3f, 3f, 0f),
-                                scaleTo(1f, 1f, 0.75f)
+                                scaleTo(3f, 3f, 0f), // Start at 3x size (hence duration 0f)...
+                                scaleTo(1f, 1f, 0.75f) // ... and scale back to normal size.
                             ),
-                            delay(1f)
+                            delay(1f) // The other actions finish before the full second is up. Therefore ensure we show the counter for a full second before continuing.
                         )
                     ),
+
                     Actions.run {
                         Gdx.app.postRunnable {
-                            game.startGame(AsteroidsGameScreen(game, client))
+                            val gameDetails = client?.me?.getGameDetails()
+                            if (gameDetails == null) {
+                                // TODO: Handle this better
+                                Gdx.app.log(TAG, "Unable to figure out which game to start.")
+                                game.showMainMenu()
+                            } else {
+                                game.startGame(gameDetails.createScreen(game, gameDetails))
+                            }
                         }
                     }
                 )
