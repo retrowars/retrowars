@@ -36,6 +36,7 @@ allprojects {
         google()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -89,18 +90,11 @@ project(":android") {
 project(":core") {
     apply plugin: "kotlin"
 
-
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
-        implementation 'kryonet:kryonet:2.21'
-        implementation('com.esotericsoftware.kryo:kryo:2.24.0') {
-            // Both kryonet and kryo depend on the same libraries, but they shade them which causes issues such as:
-            // java.lang.RuntimeException: Duplicate class com.esotericsoftware.reflectasm.AccessClassLoader found in modules kryo-2.24.0.jar (com.esotericsoftware.kryo:kryo:2.24.0) and reflectasm-1.07-shaded-shaded.jar (com.esotericsoftware.reflectasm:reflectasm:1.07)
-            exclude group: 'com.esotericsoftware.minlog', module: 'minilog'
-            exclude group: 'org.objenesis', module: 'objenesis'
-        }
+        implementation 'com.github.crykn:kryonet:2.22.7'
     }
 }

@@ -15,7 +15,7 @@ import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 import com.serwylo.retrowars.net.RetrowarsClient
 
-class AsteroidsGameScreen(private val game: RetrowarsGame, private val client: RetrowarsClient? = null) : Screen {
+class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     companion object {
         const val MIN_WORLD_WIDTH = 400f
@@ -30,6 +30,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame, private val client: R
 
     private val hud: HUD
 
+    private val client = RetrowarsClient.get()
+
     init {
         viewport.apply(true)
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
@@ -41,7 +43,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame, private val client: R
             state.bullets.add(it)
         }
 
-        hud = HUD(state, game.uiAssets, client)
+        hud = HUD(state, game.uiAssets)
     }
 
     override fun show() {

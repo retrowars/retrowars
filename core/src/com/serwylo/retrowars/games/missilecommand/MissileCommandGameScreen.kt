@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.missilecommand.entities.*
+import com.serwylo.retrowars.net.RetrowarsClient
 import kotlin.math.abs
 
 class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
@@ -28,6 +29,8 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     private val state: MissileCommandGameState
 
     private val hud: HUD
+
+    private val client = RetrowarsClient.get()
 
     init {
         viewport.apply(true)
@@ -114,7 +117,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
                     val missile = enemyMissiles.next()
                     if (missile.isColliding(explosion)) {
                         enemyMissiles.remove()
-                        state.score += Missile.POINTS
+                        incrementScore(Missile.POINTS)
                     }
                 }
             }
@@ -161,7 +164,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
     private fun completeLevel() {
         with(state) {
-            score += MissileCommandGameState.BONUS_SCORE_PER_LEVEL
+            incrementScore(MissileCommandGameState.BONUS_SCORE_PER_LEVEL)
 
             nextEnemyMissileTime = timer + (MissileCommandGameState.MAX_TIME_BETWEEN_ENEMY_MISSILES * 1.5f)
 
@@ -176,6 +179,11 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
             // Don't improve the health of cities automatically at the end of the level.
             // Rather, wait for a certain amount of points to be reached and then give back a city in response.
         }
+    }
+
+    private fun incrementScore(amount: Int) {
+        state.score += amount
+        client?.updateScore(state.score)
     }
 
     private fun fireEnemyMissile() {

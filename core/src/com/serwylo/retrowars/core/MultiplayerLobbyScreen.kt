@@ -8,8 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
-import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
-import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
 
@@ -24,9 +22,6 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     private val styles = game.uiAssets.getStyles()
     private val strings = game.uiAssets.getStrings()
-
-    private var server: RetrowarsServer? = null
-    private var client: RetrowarsClient? = null
 
     init {
         val table = Table().apply {
@@ -67,7 +62,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         Gdx.app.log(TAG, "Starting a new multiplayer server.")
 
-        server = RetrowarsServer()
+        RetrowarsServer.start()
         createClient()
 
         Gdx.app.log(TAG, "Server started.")
@@ -77,10 +72,13 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun createClient() {
-        client = RetrowarsClient().apply {
-            connect()
+        RetrowarsClient.connect().apply {
             startGameListener = {
                 initiateStartCountdown()
+
+                // If we play multiple games in succession, don't want to have old listeners
+                // floating around.
+                startGameListener = null
             }
         }
     }
@@ -123,7 +121,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
                     Actions.run {
                         Gdx.app.postRunnable {
-                            val gameDetails = client?.me?.getGameDetails()
+                            val gameDetails = RetrowarsClient.get()?.me?.getGameDetails()
                             if (gameDetails == null) {
                                 // TODO: Handle this better
                                 Gdx.app.log(TAG, "Unable to figure out which game to start.")
@@ -168,7 +166,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         table.row()
         val avatarCell = table.add().expandY()
 
-        client?.playersChangedListener = { players ->
+        RetrowarsClient.get()?.playersChangedListener = { players ->
             Gdx.app.log(TAG, "Updating list of clients to show.")
 
             avatarCell
@@ -191,7 +189,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
             row()
             add(makeLargeButton("Start", styles) {
-                server?.startGame()
+                RetrowarsServer.get()?.startGame()
             })
         }
     }
@@ -205,8 +203,8 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun close() {
-        server?.close()
-        client?.close()
+        RetrowarsServer.stop()
+        RetrowarsClient.disconnect()
     }
 
     override fun hide() {

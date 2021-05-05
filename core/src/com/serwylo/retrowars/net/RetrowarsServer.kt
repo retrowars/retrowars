@@ -1,13 +1,40 @@
 package com.serwylo.retrowars.net
 
+import com.badlogic.gdx.Gdx
 import com.esotericsoftware.kryonet.Connection
+import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Server
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
+import java.lang.IllegalStateException
 import kotlin.random.Random
 
 class RetrowarsServer {
+
+    companion object {
+
+        private const val TAG = "RetrowarsServer"
+        private var server: RetrowarsServer? = null
+
+        fun start(): RetrowarsServer {
+            if (server != null) {
+                throw IllegalStateException("Cannot start a server, one has already been started.")
+            }
+
+            val newServer = RetrowarsServer()
+            server = newServer
+            return newServer
+        }
+
+        fun get(): RetrowarsServer? = server
+
+        fun stop() {
+            server?.close()
+            server = null
+        }
+
+    }
 
     private var players = mutableSetOf<Player>()
 
@@ -24,10 +51,13 @@ class RetrowarsServer {
 
         register(server)
 
-        server.addListener(object : Listener() {
+        server.addListener(object : Listener {
             override fun received(c: Connection, obj: Any) {
                 val connection = c as PlayerConnection
-                println("Received message: $obj")
+                if (obj !is FrameworkMessage.KeepAlive) {
+                    Gdx.app.log(TAG, "Received message from client: $obj")
+                }
+
                 when (obj) {
                     is Network.Server.RegisterPlayer -> newPlayer(connection)
                     is Network.Server.UnregisterPlayer -> removePlayer(connection.player)
@@ -45,7 +75,7 @@ class RetrowarsServer {
         server.start()
     }
 
-    private fun updateScore(player: Player?, score: Int) {
+    private fun updateScore(player: Player?, score: Long) {
         if (player == null) {
             return
         }

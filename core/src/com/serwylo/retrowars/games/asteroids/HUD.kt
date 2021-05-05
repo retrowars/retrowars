@@ -9,13 +9,15 @@ import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.net.RetrowarsClient
 
-class HUD(private val state: AsteroidsGameState, private val assets: UiAssets, private val client: RetrowarsClient?) {
+class HUD(private val state: AsteroidsGameState, assets: UiAssets) {
 
     private val styles = assets.getStyles()
 
     private val stage = makeStage()
     private val lifeContainer = HorizontalGroup()
     private val scoreLabel = Label("", styles.label.large)
+
+    private val client = RetrowarsClient.get()
 
     init {
 

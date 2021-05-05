@@ -17,15 +17,21 @@ object Network {
         kryo.register(Client.StartGame::class.java)
     }
 
+    /**
+     * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
+     */
     object Server {
         class RegisterPlayer {
             override fun toString(): String = "RegisterPlayer"
         }
 
         class UnregisterPlayer
-        class UpdateScore(val score: Int) { constructor() : this(0) }
+        class UpdateScore(val score: Long) { constructor() : this(0) }
     }
 
+    /**
+     * Messages sent *to* the [RetrowarsClient] sent *from* the [RetrowarsServer].
+     */
     object Client {
 
         /**
@@ -45,7 +51,7 @@ object Network {
             override fun toString(): String = "PlayerRemoved[player id: $id]"
         }
 
-        class PlayerScored(var id: Long, var score: Int) { constructor() : this(0, 0) }
+        class PlayerScored(var id: Long, var score: Long) { constructor() : this(0, 0) }
         class StartGame
 
     }
