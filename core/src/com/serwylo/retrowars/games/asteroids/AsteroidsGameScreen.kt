@@ -171,7 +171,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
                     state.score += asteroid.size.points
-                    client?.updateScore(state.score.toInt())
+                    client?.updateScore(state.score)
                 }
 
             }
@@ -193,8 +193,15 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
         state.numLives--
 
         if (state.numLives <= 0) {
-            // TODO: Record high score, show end of game screen.
-            game.showGameSelectMenu()
+            if (client == null) {
+                // TODO: Record high score, show end of game screen.
+                Gdx.app.log(TAG, "No more lives left... Loading game select menu (no network game)")
+                game.showGameSelectMenu()
+            } else {
+                Gdx.app.log(TAG, "No more lives left... Off to the end-game lobby.")
+                client.died()
+                game.showEndMultiplayerGame()
+            }
         } else {
             state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
         }

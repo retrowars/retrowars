@@ -121,7 +121,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
                     Actions.run {
                         Gdx.app.postRunnable {
-                            val gameDetails = RetrowarsClient.get()?.me?.getGameDetails()
+                            val gameDetails = RetrowarsClient.get()?.me()?.getGameDetails()
                             if (gameDetails == null) {
                                 // TODO: Handle this better
                                 Gdx.app.log(TAG, "Unable to figure out which game to start.")

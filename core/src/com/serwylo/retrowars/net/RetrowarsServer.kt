@@ -62,6 +62,7 @@ class RetrowarsServer {
                     is Network.Server.RegisterPlayer -> newPlayer(connection)
                     is Network.Server.UnregisterPlayer -> removePlayer(connection.player)
                     is Network.Server.UpdateScore -> updateScore(connection.player, obj.score)
+                    is Network.Server.Died -> died(connection.player)
                 }
             }
 
@@ -73,6 +74,14 @@ class RetrowarsServer {
 
         server.bind(Network.defaultPort)
         server.start()
+    }
+
+    private fun died(player: Player?) {
+        if (player == null) {
+            return
+        }
+
+        server.sendToAllTCP(Network.Client.PlayerDied(player.id))
     }
 
     private fun updateScore(player: Player?, score: Long) {
@@ -100,7 +109,7 @@ class RetrowarsServer {
         }
 
         // TODO: Ensure this ID doesn't already exist on the server.
-        val player = Player(Random.nextLong(), Games.allSupported.random().id)
+        val player = Player(Random.nextLong(), Games.asteroids.id /* Games.allSupported.random().id */)
 
         connection.player = player
 

@@ -82,6 +82,8 @@ fun calcDensityScaleFactor(): Float {
     return ((Gdx.graphics.density - 1) * 0.8f).coerceAtLeast(1f)
 }
 
+// TODO: When players are no longer playing, show a red cross over their name.
+// TODO: Even better, when they are doing very well, e.g. scoring frequently, indicate that they are on fire or something.
 class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
 
     companion object {
@@ -152,7 +154,7 @@ class AvatarTile(player: Player, uiAssets: UiAssets, highlight: Boolean = false)
         val icon = Image(iconSprite).apply {
             setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
             x = Avatar.SIZE + UI_SPACE
-            y = 0f
+            y = UI_SPACE
         }
 
         addActor(background)

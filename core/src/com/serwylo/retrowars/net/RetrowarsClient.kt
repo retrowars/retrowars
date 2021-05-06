@@ -7,7 +7,6 @@ import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.net.Network.register
-import java.lang.IllegalStateException
 
 class RetrowarsClient {
 
@@ -36,13 +35,28 @@ class RetrowarsClient {
 
     }
 
-    var me:Player? = null
     val players = mutableListOf<Player>()
+    val scores = mutableMapOf<Player, Long>()
+
+    /**
+     * By convention, the server always tells a client about themselves first before then passing
+     * through details of all other players. Thus, the first player corresponds to the client in question.
+     */
+    fun me():Player? =
+        if (players.size == 0) null else players[0]
+
+    /**
+     * Opposite of [me]. All players but the first.
+     */
+    fun otherPlayers(): List<Player> =
+        if (players.size == 0) emptyList() else players.subList(1, players.size)
 
     var client = Client()
 
     var playersChangedListener: ((List<Player>) -> Unit)? = null
     var startGameListener: (() -> Unit)? = null
+    var scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null
+    var playerDiedListener: ((player: Player) -> Unit)? = null
 
     init {
 
@@ -62,7 +76,8 @@ class RetrowarsClient {
                     is Network.Client.PlayerAdded -> addPlayer(obj.id, obj.game)
                     is Network.Client.PlayerRemoved -> removePlayer(obj.id)
                     is Network.Client.PlayerScored -> onScore(obj.id, obj.score)
-                    is Network.Client.StartGame -> startGameListener?.invoke()
+                    is Network.Client.PlayerDied -> onDied(obj.id)
+                    is Network.Client.StartGame -> onStartGame()
                 }
             }
         }))
@@ -72,15 +87,14 @@ class RetrowarsClient {
 
     }
 
+
+    private fun onStartGame() {
+        players.forEach { it.status = Player.Status.playing }
+        startGameListener?.invoke()
+    }
+
     private fun addPlayer(id: Long, game: String) {
-        val player = Player(id, game)
-
-        // By convention, the first player sent to a newly registered client is always themselves.
-        if (players.size == 0) {
-            me = player
-        }
-
-        players.add(player)
+        players.add(Player(id, game))
         playersChangedListener?.invoke(players.toList())
     }
 
@@ -92,13 +106,32 @@ class RetrowarsClient {
     private fun onScore(playerId: Long, score: Long) {
         val player = players.find { it.id == playerId } ?: return
 
-        println("Received score for player $playerId: $score")
+        Gdx.app.log(TAG, "Updating player $playerId score to $score")
+        scores[player] = score
+        scoreChangedListener?.invoke(player, score)
+    }
+
+    private fun onDied(playerId: Long) {
+        val player = players.find { it.id == playerId } ?: return
+
+        Gdx.app.log(TAG, "Received death notice for player $playerId")
+        player.status = Player.Status.dead
+        playerDiedListener?.invoke(player)
+    }
+
+    fun died() {
+        me()?.status = Player.Status.dead
+        client.sendTCP(Network.Server.Died())
     }
 
     fun updateScore(score: Long) = client.sendTCP(Network.Server.UpdateScore(score))
 
     fun close() {
         client.close()
+    }
+
+    fun getScoreFor(player: Player): Long {
+        return scores[player] ?: 0
     }
 
 }

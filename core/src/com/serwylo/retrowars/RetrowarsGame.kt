@@ -3,6 +3,7 @@ package com.serwylo.retrowars
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
+import com.serwylo.retrowars.core.EndMultiplayerGameScreen
 import com.serwylo.retrowars.core.GameSelectScreen
 import com.serwylo.retrowars.core.MainMenuScreen
 import com.serwylo.retrowars.core.MultiplayerLobbyScreen
@@ -44,6 +45,12 @@ class RetrowarsGame : Game() {
     fun showMainMenu() {
         Gdx.app.postRunnable {
             setScreen(MainMenuScreen(this))
+        }
+    }
+
+    fun showEndMultiplayerGame() {
+        Gdx.app.postRunnable {
+            setScreen(EndMultiplayerGameScreen(this))
         }
     }
 
