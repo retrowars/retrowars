@@ -3,19 +3,16 @@ package com.serwylo.retrowars.core
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
+import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.AvatarTile
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeHeading
-import com.serwylo.beatgame.ui.makeStage
+import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.net.RetrowarsServer
 
-class EndMultiplayerGameScreen(game: RetrowarsGame): ScreenAdapter() {
+class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     companion object {
         const val TAG = "EndMultiplayerGameScreen"
@@ -23,7 +20,8 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): ScreenAdapter() {
 
     private val stage = makeStage()
     private val subheading: Label
-    private val playerSummaries = Table()
+    private val playerSummaries: Cell<Actor>
+    private val actionButtons: Cell<Actor>
 
     private val uiAssets = game.uiAssets
     private val styles = game.uiAssets.getStyles()
@@ -37,21 +35,27 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): ScreenAdapter() {
             pad(UI_SPACE)
 
             val heading = makeHeading(strings["end-multiplayer.title"], styles, strings)
-            add(heading).center()
+            add(heading)
 
             row()
             // Will be updated immediately using "refreshScreen()", and subsequently when we get fresh info from the server.
             subheading = Label("", styles.label.large)
-            add(subheading).center()
+            add(subheading)
 
             row()
-            add(playerSummaries)
+            playerSummaries = add()
+
+            // When the game is finished, populate this with some sensible defaults.
+            // Prior to that, we'll allow people to leave the game if they get sick of watching
+            // others get really good scores after we died early.
+            row()
+            actionButtons = add()
 
             // TODO: During the game, listen for these events and then show the data in the HUD in realtime.
             client.scoreChangedListener = { _, _ -> showPlayerSummaries() }
             client.playerDiedListener = { _ -> refreshScreen() }
 
-            showPlayerSummaries()
+            refreshScreen()
         }
 
         stage.addActor(table)
@@ -67,36 +71,63 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun showFinalResults() {
-        subheading.setText("And the winner is:")
+
+        subheading.setText("Congratulations!")
+
         showPlayerSummaries()
+
+        val group = HorizontalGroup().apply {
+
+            space(UI_SPACE)
+
+            addActor(
+                makeButton("Play again", styles) {
+                    game.showMultiplayerLobby()
+                }
+            )
+
+            addActor(
+                makeButton(if (RetrowarsServer.get() == null) "Leave game" else "End game for all players", styles) {
+                    RetrowarsClient.disconnect()
+                    RetrowarsServer.stop()
+                    game.showMainMenu()
+                }
+            )
+
+        }
+
+        actionButtons.clearActor()
+        actionButtons.setActor(group)
     }
 
     private fun showPlayerSummaries() {
 
-        playerSummaries.clear()
+        val table = Table()
 
         client.players
             .sortedByDescending { client.getScoreFor(it) }
             .forEach { player ->
 
-               playerSummaries.apply {
+               table.pad(UI_SPACE)
 
-                   row()
-                   add(AvatarTile(player, uiAssets, player == client.me())).right()
+               table.row().space(UI_SPACE).pad(UI_SPACE)
 
-                   val group = VerticalGroup()
-                   group.align(Align.left)
-                   add(group).left()
+               table.add(AvatarTile(player, uiAssets, player == client.me())).right()
 
-                   if (player.status == Player.Status.playing) {
-                       group.addActor(Label(strings["end-multiplayer.still-playing"], styles.label.medium))
-                   }
+               val group = VerticalGroup()
+               group.align(Align.left)
+               table.add(group).left()
 
-                   group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
-
+               if (player.status == Player.Status.playing) {
+                   group.addActor(Label(strings["end-multiplayer.still-playing"], styles.label.medium))
                }
 
-            }
+               group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
+
+           }
+
+        playerSummaries.clearActor()
+        playerSummaries.setActor(table)
 
     }
 

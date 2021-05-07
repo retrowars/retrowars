@@ -89,6 +89,10 @@ class RetrowarsClient {
 
 
     private fun onStartGame() {
+        // We reuse the same servers/clients many time over if you finish a game and immediately
+        // start a new one. Therefore we need to forget all we know about peoples scores before
+        // continuing with a new game.
+        scores.clear()
         players.forEach { it.status = Player.Status.playing }
         startGameListener?.invoke()
     }

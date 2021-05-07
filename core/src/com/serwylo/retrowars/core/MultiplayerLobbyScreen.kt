@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
 
@@ -24,6 +25,35 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     private val strings = game.uiAssets.getStrings()
 
     init {
+        // If returning from the end of one game after hitting "play again", then we should go
+        // straight to the correct screen with our existing client/server details
+        val client = RetrowarsClient.get()
+        val server = RetrowarsServer.get()
+
+        // TODO: This should go into the else part of the below checks so we don't build more UI than neccesary.
+        showMainLobby()
+
+        if (server != null) {
+            // TODO: But don't allow 'start' yet because all players are not yet ready... Some may be playing, some may not yet be back in the lobby yet.
+            Gdx.app.log(TAG, "Returning to the lobby with an active server connection.")
+
+            if (client == null) {
+                // TODO: Something went pretty bad here, we should either kill the server and start again,
+                //       or join the server again.
+                Gdx.app.error(TAG, "Returned to lobby after a game, but no active client connection to go with our active server one.")
+            } else {
+                listenToClient(client)
+                showServerLobby()
+            }
+        } else if (client != null) {
+            Gdx.app.log(TAG, "Returning to the lobby with an active client connection.")
+            listenToClient(client)
+            showClientLobby()
+        }
+    }
+
+    private fun showMainLobby() {
+
         val table = Table().apply {
             setFillParent(true)
             pad(UI_SPACE)
@@ -72,14 +102,17 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun createClient() {
-        RetrowarsClient.connect().apply {
-            startGameListener = {
-                initiateStartCountdown()
+        val client = RetrowarsClient.connect()
+        listenToClient(client)
+    }
 
-                // If we play multiple games in succession, don't want to have old listeners
-                // floating around.
-                startGameListener = null
-            }
+    private fun listenToClient(client: RetrowarsClient) {
+        client.startGameListener = {
+            initiateStartCountdown()
+
+            // If we play multiple games in succession, don't want to have old listeners
+            // floating around.
+            client.startGameListener = null
         }
     }
 
@@ -165,6 +198,14 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         table.row()
         val avatarCell = table.add().expandY()
+
+        // If returning to a game, we already have a list of players.
+        // If it is a new game, we will have zero (not even outselves) and will need to
+        // rely on the playersChangedListener below.
+        val players: List<Player> = RetrowarsClient.get()?.players ?: emptyList()
+        if (players.isNotEmpty()) {
+            avatarCell.setActor<HorizontalGroup>(makeAvatarTiles(players, game.uiAssets))
+        }
 
         RetrowarsClient.get()?.playersChangedListener = { players ->
             Gdx.app.log(TAG, "Updating list of clients to show.")
