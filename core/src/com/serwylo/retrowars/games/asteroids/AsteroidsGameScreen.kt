@@ -13,6 +13,7 @@ import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
+import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 
 class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
@@ -199,7 +200,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
                 game.showGameSelectMenu()
             } else {
                 Gdx.app.log(TAG, "No more lives left... Off to the end-game lobby.")
-                client.died()
+                client.chagneStatus(Player.Status.dead)
                 game.showEndMultiplayerGame()
             }
         } else {

@@ -166,20 +166,3 @@ class AvatarTile(player: Player, uiAssets: UiAssets, highlight: Boolean = false)
     override fun getPrefHeight() = Avatar.SIZE
 
 }
-
-fun makeAvatarTiles(players: List<Player>, uiAssets: UiAssets): HorizontalGroup {
-    return HorizontalGroup().apply {
-        space(UI_SPACE)
-        pad(UI_SPACE)
-
-        addActor(AvatarTile(players[0], uiAssets, true))
-
-        if (players.size > 1) {
-            addActor(Label("vs", uiAssets.getStyles().label.huge))
-            players.subList(1, players.size).forEach { player ->
-                addActor(AvatarTile(player, uiAssets, false))
-            }
-        }
-
-    }
-}

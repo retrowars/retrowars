@@ -29,6 +29,10 @@ class Player(
         const val lobby = "lobby"
         const val playing = "playing"
         const val dead = "dead"
+
+        private val all = listOf(lobby, playing, dead)
+
+        fun isValid(status: String) = all.contains(status)
     }
 
     fun getGameDetails(): GameDetails = Games.all[game]!!

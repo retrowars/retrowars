@@ -3,11 +3,13 @@ package com.serwylo.retrowars.core
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
@@ -199,22 +201,67 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         table.row()
         val avatarCell = table.add().expandY()
 
-        // If returning to a game, we already have a list of players.
-        // If it is a new game, we will have zero (not even outselves) and will need to
-        // rely on the playersChangedListener below.
-        val players: List<Player> = RetrowarsClient.get()?.players ?: emptyList()
-        if (players.isNotEmpty()) {
-            avatarCell.setActor<HorizontalGroup>(makeAvatarTiles(players, game.uiAssets))
+        val renderPlayers = { toShow: List<Player> ->
+            avatarCell.clearActor()
+            avatarCell.setActor<Actor>(makeAvatarTiles(toShow, game.uiAssets))
+
+            // TODO: table.invalidate() so the function just depends on its input??
+            wrapper.invalidate()
         }
 
-        RetrowarsClient.get()?.playersChangedListener = { players ->
-            Gdx.app.log(TAG, "Updating list of clients to show.")
+        // If returning to a game, we already have a list of players.
+        // If it is a new game, we will have zero (not even ourselves) and will need to
+        // rely on the playersChangedListener below.
+        val originalPlayers: List<Player> = RetrowarsClient.get()?.players ?: emptyList()
+        if (originalPlayers.isNotEmpty()) {
+            Gdx.app.log(TAG, "Showing list of existing clients.")
+            renderPlayers(originalPlayers)
+        }
 
-            avatarCell
-                .clearActor()
-                .setActor<HorizontalGroup>(makeAvatarTiles(players, game.uiAssets))
+        RetrowarsClient.get()?.playersChangedListener = { updatedPlayers ->
+            Gdx.app.log(TAG, "Player list changed. Updating list of clients to show.")
+            renderPlayers(updatedPlayers)
+        }
 
-            wrapper.invalidate()
+        RetrowarsClient.get()?.playerStatusChangedListener = { _, _ ->
+            Gdx.app.log(TAG, "Player status changed. Updating list of clients to show.")
+            renderPlayers(RetrowarsClient.get()?.players ?: emptyList())
+        }
+
+    }
+
+    private fun makeAvatarTiles(players: List<Player>, uiAssets: UiAssets) = Table().apply {
+
+        pad(UI_SPACE)
+
+        row()
+        add(AvatarTile(players[0], uiAssets, true))
+        add(Label("You", uiAssets.getStyles().label.large))
+
+        if (players.size > 1) {
+
+            row()
+            add(Label("vs", uiAssets.getStyles().label.huge)).colspan(2)
+
+            players.subList(1, players.size).forEach { player ->
+
+                row()
+
+                add(AvatarTile(player, uiAssets, false))
+
+                add(
+                    Label(
+                        when(player.status) {
+                            Player.Status.playing -> "Playing"
+                            Player.Status.dead -> "Dead"
+                            Player.Status.lobby -> "Ready"
+                            else -> "?"
+                        },
+                        uiAssets.getStyles().label.medium
+                    )
+                )
+
+            }
         }
 
     }

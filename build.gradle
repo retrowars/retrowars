@@ -38,6 +38,14 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url 'https://jitpack.io' }
     }
+
+    // Newer versions of objenesis (used by kryonet to deserialize classes) requires minSdk 26.
+    // Not particularly interested in bumping from 14 just to solve this issue.
+    // https://github.com/mockk/mockk/issues/281#issuecomment-483329039
+    configurations.all {
+        resolutionStrategy.force 'org.objenesis:objenesis:2.6'
+    }
+
 }
 
 project(":texture-packer") {

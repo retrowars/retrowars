@@ -62,7 +62,7 @@ class RetrowarsServer {
                     is Network.Server.RegisterPlayer -> newPlayer(connection)
                     is Network.Server.UnregisterPlayer -> removePlayer(connection.player)
                     is Network.Server.UpdateScore -> updateScore(connection.player, obj.score)
-                    is Network.Server.Died -> died(connection.player)
+                    is Network.Server.UpdateStatus -> updateStatus(connection.player, obj.status)
                 }
             }
 
@@ -76,12 +76,15 @@ class RetrowarsServer {
         server.start()
     }
 
-    private fun died(player: Player?) {
+    private fun updateStatus(player: Player?, status: String) {
         if (player == null) {
             return
         }
 
-        server.sendToAllTCP(Network.Client.PlayerDied(player.id))
+        player.status = status
+
+        // TODO: Don't send back to the client that originally reported their own death.
+        server.sendToAllTCP(Network.Client.PlayerStatusChange(player.id, status))
     }
 
     private fun updateScore(player: Player?, score: Long) {
@@ -89,6 +92,7 @@ class RetrowarsServer {
             return
         }
 
+        // TODO: Don't send back to the client that originally reported their own score.
         server.sendToAllTCP(Network.Client.PlayerScored(player.id, score))
     }
 

@@ -56,7 +56,7 @@ class RetrowarsClient {
     var playersChangedListener: ((List<Player>) -> Unit)? = null
     var startGameListener: (() -> Unit)? = null
     var scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null
-    var playerDiedListener: ((player: Player) -> Unit)? = null
+    var playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
 
     init {
 
@@ -73,10 +73,10 @@ class RetrowarsClient {
                 }
 
                 when(obj) {
-                    is Network.Client.PlayerAdded -> addPlayer(obj.id, obj.game)
-                    is Network.Client.PlayerRemoved -> removePlayer(obj.id)
-                    is Network.Client.PlayerScored -> onScore(obj.id, obj.score)
-                    is Network.Client.PlayerDied -> onDied(obj.id)
+                    is Network.Client.PlayerAdded -> onPlayerAdded(obj.id, obj.game)
+                    is Network.Client.PlayerRemoved -> onPlayerRemoved(obj.id)
+                    is Network.Client.PlayerScored -> onScoreChanged(obj.id, obj.score)
+                    is Network.Client.PlayerStatusChange -> onStatusChanged(obj.id, obj.status)
                     is Network.Client.StartGame -> onStartGame()
                 }
             }
@@ -97,17 +97,17 @@ class RetrowarsClient {
         startGameListener?.invoke()
     }
 
-    private fun addPlayer(id: Long, game: String) {
+    private fun onPlayerAdded(id: Long, game: String) {
         players.add(Player(id, game))
         playersChangedListener?.invoke(players.toList())
     }
 
-    private fun removePlayer(id: Long) {
+    private fun onPlayerRemoved(id: Long) {
         players.removeAll { it.id == id }
         playersChangedListener?.invoke(players.toList())
     }
 
-    private fun onScore(playerId: Long, score: Long) {
+    private fun onScoreChanged(playerId: Long, score: Long) {
         val player = players.find { it.id == playerId } ?: return
 
         Gdx.app.log(TAG, "Updating player $playerId score to $score")
@@ -115,20 +115,31 @@ class RetrowarsClient {
         scoreChangedListener?.invoke(player, score)
     }
 
-    private fun onDied(playerId: Long) {
+    private fun onStatusChanged(playerId: Long, status: String) {
         val player = players.find { it.id == playerId } ?: return
 
-        Gdx.app.log(TAG, "Received death notice for player $playerId")
-        player.status = Player.Status.dead
-        playerDiedListener?.invoke(player)
+        if (!Player.Status.isValid(status)) {
+            Gdx.app.error(TAG, "Received unsupported status: $status... will ignore. Is this a client/server that is running the same version?")
+            return
+        }
+
+        Gdx.app.log(TAG, "Received status change for player $playerId: $status")
+        player.status = status
+        playerStatusChangedListener?.invoke(player, status)
     }
 
-    fun died() {
-        me()?.status = Player.Status.dead
-        client.sendTCP(Network.Server.Died())
+    fun chagneStatus(status: String) {
+        me()?.status = status
+        client.sendTCP(Network.Server.UpdateStatus(status))
     }
 
-    fun updateScore(score: Long) = client.sendTCP(Network.Server.UpdateScore(score))
+    fun updateScore(score: Long) {
+        val me = me()
+        if (me != null) {
+            scores[me] = score
+        }
+        client.sendTCP(Network.Server.UpdateScore(score))
+    }
 
     fun close() {
         client.close()

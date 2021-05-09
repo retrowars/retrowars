@@ -53,7 +53,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
             // TODO: During the game, listen for these events and then show the data in the HUD in realtime.
             client.scoreChangedListener = { _, _ -> showPlayerSummaries() }
-            client.playerDiedListener = { _ -> refreshScreen() }
+            client.playerStatusChangedListener = { _, _ -> refreshScreen() }
 
             refreshScreen()
         }
@@ -82,6 +82,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
             addActor(
                 makeButton("Play again", styles) {
+                    client.chagneStatus(Player.Status.lobby)
                     game.showMultiplayerLobby()
                 }
             )
