@@ -74,13 +74,9 @@ fun makeHeading(title: String, styles: UiAssets.Styles, strings: I18NBundle, onB
     }
 }
 
-val UI_WIDTH = 1024f / calcDensityScaleFactor()
-val UI_HEIGHT = 768f / calcDensityScaleFactor()
+val UI_WIDTH = 1024f
+val UI_HEIGHT = 768f
 const val UI_SPACE = 10f
-
-fun calcDensityScaleFactor(): Float {
-    return ((Gdx.graphics.density - 1) * 0.8f).coerceAtLeast(1f)
-}
 
 // TODO: When players are no longer playing, show a red cross over their name.
 // TODO: Even better, when they are doing very well, e.g. scoring frequently, indicate that they are on fire or something.

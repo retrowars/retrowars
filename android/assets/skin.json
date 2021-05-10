@@ -436,7 +436,7 @@ TreeStyle: {
 }
 WindowStyle: {
 	default: {
-		background: window-c
+		background: window
 		titleFont: font_medium
 	}
 }

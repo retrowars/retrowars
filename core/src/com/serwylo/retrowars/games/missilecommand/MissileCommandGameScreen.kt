@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.missilecommand.entities.*
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.ui.GameViewport
+import com.serwylo.retrowars.ui.HUD
 import kotlin.math.abs
 
 class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
@@ -24,7 +26,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     }
 
     private val camera = OrthographicCamera()
-    private val viewport = ExtendViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
+    private val viewport = GameViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
 
     private val state: MissileCommandGameState
 
@@ -39,7 +41,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
         queueEnemyMissile()
 
-        hud = HUD(state, game.uiAssets)
+        hud = HUD(game.uiAssets)
     }
 
     override fun show() {
@@ -47,7 +49,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
 
-                val worldPos = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+                val worldPos = viewport.unproject(Vector2(screenX.toFloat(), screenY.toFloat()))
 
                 val closest = state.turrets
                     .filter { it.ammunition > 0 }
@@ -75,16 +77,19 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
         state.timer += delta
 
+        updateEntities(delta)
+
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
-        updateEntities(delta)
-        renderEntities()
+        viewport.renderIn {
+            renderEntities()
+        }
 
-        hud.render(delta)
+        hud.render(state.score, delta)
 
         Gdx.gl.glDisable(GL20.GL_BLEND)
 

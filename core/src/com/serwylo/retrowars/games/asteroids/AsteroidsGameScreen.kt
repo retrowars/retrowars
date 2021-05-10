@@ -7,7 +7,6 @@ import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
@@ -15,6 +14,8 @@ import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.ui.GameViewport
+import com.serwylo.retrowars.ui.HUD
 
 class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
@@ -25,7 +26,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     }
 
     private val camera = OrthographicCamera()
-    private val viewport = ExtendViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
+    private val viewport = GameViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
 
     private val state: AsteroidsGameState
 
@@ -34,8 +35,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     private val client = RetrowarsClient.get()
 
     init {
-        viewport.apply(true)
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
+        viewport.apply(true)
 
         state = AsteroidsGameState(viewport.worldWidth, viewport.worldHeight)
 
@@ -44,7 +45,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
             state.bullets.add(it)
         }
 
-        hud = HUD(state, game.uiAssets)
+        hud = HUD(game.uiAssets)
     }
 
     override fun show() {
@@ -84,14 +85,16 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     override fun render(delta: Float) {
 
         state.timer += delta
+        updateEntities(delta)
 
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
-        updateEntities(delta)
-        renderEntities()
+        viewport.renderIn {
+            renderEntities()
+        }
 
-        hud.render(delta)
+        hud.render(state.score, delta)
 
     }
 
@@ -237,6 +240,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)
+        hud.resize(width, height)
         state.ship.setWorldSize(camera.viewportWidth, camera.viewportHeight)
         state.bullets.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
         state.asteroids.forEach { it.setWorldSize(camera.viewportWidth, camera.viewportHeight) }
