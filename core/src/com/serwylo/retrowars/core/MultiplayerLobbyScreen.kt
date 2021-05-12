@@ -4,9 +4,12 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.actions.*
+import com.badlogic.gdx.scenes.scene2d.Touchable
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
-import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.ui.Container
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
@@ -45,12 +48,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
                 Gdx.app.error(TAG, "Returned to lobby after a game, but no active client connection to go with our active server one.")
             } else {
                 listenToClient(client)
-                showServerLobby()
+                showServerLobby(client, server)
             }
         } else if (client != null) {
             Gdx.app.log(TAG, "Returning to the lobby with an active client connection.")
             listenToClient(client)
-            showClientLobby()
+            showClientLobby(client)
         }
     }
 
@@ -94,18 +97,19 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         Gdx.app.log(TAG, "Starting a new multiplayer server.")
 
-        RetrowarsServer.start()
-        createClient()
+        val server = RetrowarsServer.start()
+        val client = createClient()
 
         Gdx.app.log(TAG, "Server started.")
 
-        showServerLobby()
+        showServerLobby(client, server)
 
     }
 
-    private fun createClient() {
+    private fun createClient(): RetrowarsClient {
         val client = RetrowarsClient.connect()
         listenToClient(client)
+        return client
     }
 
     private fun listenToClient(client: RetrowarsClient) {
@@ -177,26 +181,39 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         Gdx.app.log(TAG, "Connecting to server.")
 
-        createClient()
+        val client = createClient()
 
         Gdx.app.log(TAG, "Connected")
 
-        showClientLobby()
+        showClientLobby(client)
 
     }
 
-    private fun showClientLobby() {
+    private fun showClientLobby(client: RetrowarsClient) {
         wrapper.apply {
             clear()
 
             row()
-            add(Label("Connected to server. Waiting for others to join...", styles.label.large))
+            add(Label("Connected to server.", styles.label.large))
 
-            appendAvatars(this)
+            appendAvatars(this, client)
         }
     }
 
-    private fun appendAvatars(table: Table) {
+    private fun appendAvatars(table: Table, client: RetrowarsClient, server: RetrowarsServer? = null) {
+
+        val infoLabel = Label("", game.uiAssets.getStyles().label.medium)
+        val startButton = if (server == null) null else makeLargeButton("Start Game", game.uiAssets.getStyles()) {
+            server.startGame()
+        }
+
+        table.row()
+        table.add(infoLabel)
+
+        if (startButton != null) {
+            table.row()
+            table.add(startButton).spaceTop(UI_SPACE)
+        }
 
         table.row()
         val avatarCell = table.add().expandY()
@@ -205,6 +222,28 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             avatarCell.clearActor()
             avatarCell.setActor<Actor>(makeAvatarTiles(toShow, game.uiAssets))
 
+            if (server != null) {
+                when {
+                    toShow.size <= 1 -> {
+                        infoLabel.setText("Waiting for others to join...")
+                        startButton?.isDisabled = true
+                        startButton?.touchable = Touchable.disabled
+                    }
+                    toShow.any { it.status != Player.Status.lobby } -> {
+                        infoLabel.setText("Waiting for all players to return to the lobby...")
+                        startButton?.isDisabled = true
+                        startButton?.touchable = Touchable.disabled
+                    }
+                    else -> {
+                        infoLabel.setText("Ready to play!")
+                        startButton?.isDisabled = false
+                        startButton?.touchable = Touchable.enabled
+                    }
+                }
+            } else {
+                infoLabel.setText("Waiting for server to begin game...")
+            }
+
             // TODO: table.invalidate() so the function just depends on its input??
             wrapper.invalidate()
         }
@@ -212,20 +251,20 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         // If returning to a game, we already have a list of players.
         // If it is a new game, we will have zero (not even ourselves) and will need to
         // rely on the playersChangedListener below.
-        val originalPlayers: List<Player> = RetrowarsClient.get()?.players ?: emptyList()
+        val originalPlayers: List<Player> = client.players
         if (originalPlayers.isNotEmpty()) {
             Gdx.app.log(TAG, "Showing list of existing clients.")
             renderPlayers(originalPlayers)
         }
 
-        RetrowarsClient.get()?.playersChangedListener = { updatedPlayers ->
+        client.playersChangedListener = { updatedPlayers ->
             Gdx.app.log(TAG, "Player list changed. Updating list of clients to show.")
             renderPlayers(updatedPlayers)
         }
 
-        RetrowarsClient.get()?.playerStatusChangedListener = { _, _ ->
+        client.playerStatusChangedListener = { _, _ ->
             Gdx.app.log(TAG, "Player status changed. Updating list of clients to show.")
-            renderPlayers(RetrowarsClient.get()?.players ?: emptyList())
+            renderPlayers(client.players)
         }
 
     }
@@ -234,20 +273,19 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         pad(UI_SPACE)
 
-        row()
-        add(AvatarTile(players[0], uiAssets, true))
+        row().space(UI_SPACE).pad(UI_SPACE)
+        add(Avatar(players[0], uiAssets))
+        add(makeGameIcon(players[0], uiAssets))
         add(Label("You", uiAssets.getStyles().label.large))
 
         if (players.size > 1) {
 
-            row()
-            add(Label("vs", uiAssets.getStyles().label.huge)).colspan(2)
-
             players.subList(1, players.size).forEach { player ->
 
-                row()
+                row().space(UI_SPACE).pad(UI_SPACE)
 
-                add(AvatarTile(player, uiAssets, false))
+                add(Avatar(player, uiAssets))
+                add(makeGameIcon(player, uiAssets))
 
                 add(
                     Label(
@@ -266,19 +304,14 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     }
 
-    private fun showServerLobby() {
+    private fun showServerLobby(client: RetrowarsClient, server: RetrowarsServer) {
         wrapper.apply {
             clear()
 
             row()
-            add(Label("Server started. Waiting for others to join...", styles.label.large))
+            add(Label("Server started", styles.label.large))
 
-            appendAvatars(this)
-
-            row()
-            add(makeLargeButton("Start", styles) {
-                RetrowarsServer.get()?.startGame()
-            })
+            appendAvatars(this, client, server)
         }
     }
 

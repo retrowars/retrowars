@@ -23,6 +23,9 @@ Color: {
 	text: {
 		hex: ffffffff
 	}
+	text-disabled: {
+		hex: 747474ff
+	}
 	text-selected: {
 		hex: ecf9eaff
 	}
@@ -372,9 +375,11 @@ TextButtonStyle: {
 		font: font_medium
 		fontColor: text
 		downFontColor: text-selected
+		disabledFontColor: text-disabled
 		up: button
 		down: button-pressed
 		over: button-over
+		disabled: button.locked
 	}
 	small: {
 		parent: default

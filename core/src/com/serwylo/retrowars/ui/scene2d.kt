@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.viewport.ExtendViewport
@@ -131,34 +132,14 @@ class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
     }
 }
 
-class AvatarTile(player: Player, uiAssets: UiAssets, highlight: Boolean = false): WidgetGroup() {
+fun makeGameIcon(player: Player, uiAssets: UiAssets): Image {
 
-    init {
-        val avatar = Avatar(player, uiAssets)
-        val background = Button(uiAssets.getSkin(), "default").apply {
-            isDisabled = true
-            setFillParent(true)
+    val icons = uiAssets.getSprites().icons
+    val gameDetails = Games.all[player.game]
+    val iconSprite = if (gameDetails == null) icons.unknown else gameDetails.icon(uiAssets.getSprites())
 
-            if (highlight) {
-                style = Button.ButtonStyle(style)
-                style.disabled = uiAssets.getSkin().getDrawable("button-over-c")
-            }
-        }
-        val icons = uiAssets.getSprites().icons
-        val gameDetails = Games.all[player.game]
-        val iconSprite = if (gameDetails == null) icons.unknown else gameDetails.icon(uiAssets.getSprites())
-        val icon = Image(iconSprite).apply {
-            setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
-            x = Avatar.SIZE + UI_SPACE
-            y = UI_SPACE
-        }
-
-        addActor(background)
-        addActor(avatar)
-        addActor(icon)
+    return Image(iconSprite).apply {
+        setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
     }
-
-    override fun getPrefWidth() = Avatar.SIZE * 2
-    override fun getPrefHeight() = Avatar.SIZE
 
 }

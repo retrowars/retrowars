@@ -113,7 +113,8 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
                table.row().space(UI_SPACE).pad(UI_SPACE)
 
-               table.add(AvatarTile(player, uiAssets, player == client.me())).right()
+               table.add(Avatar(player, uiAssets)).right()
+               table.add(makeGameIcon(player, uiAssets))
 
                val group = VerticalGroup()
                group.align(Align.left)

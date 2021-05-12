@@ -1865,6 +1865,16 @@ jsonData: {
 		{
 			class: com.ray3k.skincomposer.data.ColorData
 			color: {
+				r: 0.45666686
+				g: 0.45666686
+				b: 0.45666686
+				a: 1
+			}
+			name: text-disabled
+		}
+		{
+			class: com.ray3k.skincomposer.data.ColorData
+			color: {
 				r: 0.92610806
 				g: 0.98000044
 				b: 0.9212004
@@ -2157,7 +2167,7 @@ jsonData: {
 						type: com.badlogic.gdx.graphics.Color
 						name: disabledFontColor
 						optional: true
-						value: null
+						value: text-disabled
 					}
 					up: {
 						type: com.badlogic.gdx.scenes.scene2d.utils.Drawable
@@ -2193,7 +2203,7 @@ jsonData: {
 						type: com.badlogic.gdx.scenes.scene2d.utils.Drawable
 						name: disabled
 						optional: true
-						value: null
+						value: button.locked
 					}
 					pressedOffsetX: {
 						type: float

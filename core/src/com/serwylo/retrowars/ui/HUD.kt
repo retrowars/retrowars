@@ -61,7 +61,6 @@ class HUD(private val assets: UiAssets) {
         }
 
         stage.addActor(windowManager)
-        stage.isDebugAll = true
 
     }
 
