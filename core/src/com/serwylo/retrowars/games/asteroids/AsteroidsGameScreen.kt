@@ -12,7 +12,6 @@ import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
-import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
@@ -22,6 +21,8 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
     companion object {
         const val MIN_WORLD_WIDTH = 400f
         const val MIN_WORLD_HEIGHT = 400f
+
+        @Suppress("unused")
         const val TAG = "AsteroidsGameScreen"
     }
 
@@ -86,6 +87,11 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
         state.timer += delta
         updateEntities(delta)
+
+        // TODO: Record high score, show end of game screen.
+        if (state.numLives <= 0) {
+            game.endGame(client)
+        }
 
         Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
         Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
@@ -195,20 +201,7 @@ class AsteroidsGameScreen(private val game: RetrowarsGame) : Screen {
 
     private fun shipHit() {
         state.numLives--
-
-        if (state.numLives <= 0) {
-            if (client == null) {
-                // TODO: Record high score, show end of game screen.
-                Gdx.app.log(TAG, "No more lives left... Loading game select menu (no network game)")
-                game.showGameSelectMenu()
-            } else {
-                Gdx.app.log(TAG, "No more lives left... Off to the end-game lobby.")
-                client.chagneStatus(Player.Status.dead)
-                game.showEndMultiplayerGame()
-            }
-        } else {
-            state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
-        }
+        state.nextShipRespawnTime = state.timer + AsteroidsGameState.SHIP_RESPAWN_DELAY
     }
 
     private fun queueAsteroidsRespawn() {

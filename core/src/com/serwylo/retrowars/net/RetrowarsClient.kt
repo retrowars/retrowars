@@ -128,7 +128,7 @@ class RetrowarsClient {
         playerStatusChangedListener?.invoke(player, status)
     }
 
-    fun chagneStatus(status: String) {
+    fun changeStatus(status: String) {
         me()?.status = status
         client.sendTCP(Network.Server.UpdateStatus(status))
     }

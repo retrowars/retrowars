@@ -82,7 +82,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
             addActor(
                 makeButton("Play again", styles) {
-                    client.chagneStatus(Player.Status.lobby)
+                    client.changeStatus(Player.Status.lobby)
                     game.showMultiplayerLobby()
                 }
             )

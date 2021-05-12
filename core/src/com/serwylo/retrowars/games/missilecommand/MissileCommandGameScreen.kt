@@ -6,8 +6,6 @@ import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.missilecommand.entities.*
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -79,6 +77,10 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
         updateEntities(delta)
 
+        if (!state.anyCitiesAlive()) {
+            game.endGame(client)
+        }
+
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -148,11 +150,6 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
                 enemyMissiles.remove()
 
                 missile.targetCity.health --
-
-                if (!state.anyCitiesAlive()) {
-                    // TODO: Record high score, show end of game screen.
-                    game.showGameSelectMenu()
-                }
             }
         }
 
