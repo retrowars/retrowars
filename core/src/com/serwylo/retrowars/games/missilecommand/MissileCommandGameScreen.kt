@@ -2,45 +2,24 @@ package com.serwylo.retrowars.games.missilecommand
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.Screen
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.missilecommand.entities.*
-import com.serwylo.retrowars.net.RetrowarsClient
-import com.serwylo.retrowars.ui.GameViewport
-import com.serwylo.retrowars.ui.HUD
 import kotlin.math.abs
 
-class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
+class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
 
     companion object {
-        const val MIN_WORLD_WIDTH = 400f
-        const val MIN_WORLD_HEIGHT = 400f
-
         @Suppress("unused")
         const val TAG = "MissileCommandGameScreen"
     }
 
-    private val camera = OrthographicCamera()
-    private val viewport = GameViewport(MIN_WORLD_WIDTH, MIN_WORLD_HEIGHT, camera)
-
-    private val state: MissileCommandGameState
-
-    private val hud: HUD
-
-    private val client = RetrowarsClient.get()
+    private val state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
 
     init {
-        viewport.update(Gdx.graphics.width, Gdx.graphics.height)
-        viewport.apply(true)
-
-        state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
         queueEnemyMissile()
-
-        hud = HUD(game.uiAssets)
     }
 
     override fun show() {
@@ -72,8 +51,9 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         state.friendlyMissiles.add(FriendlyMissile(turret, target))
     }
 
-    override fun render(delta: Float) {
+    override fun getScore() = state.score
 
+    override fun updateGame(delta: Float) {
         state.timer += delta
 
         updateEntities(delta)
@@ -81,28 +61,9 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         if (!state.anyCitiesAlive()) {
             game.endGame(client)
         }
-
-        Gdx.gl.glEnable(GL20.GL_BLEND)
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-
-        Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-        viewport.renderIn {
-            renderEntities()
-            val r = game.uiAssets.shapeRenderer
-            r.begin(ShapeRenderer.ShapeType.Line)
-            r.line(Vector2(0f, 0f), Vector2(100f, 0f))
-            r.end()
-        }
-
-        hud.render(state.score, delta)
-
-        Gdx.gl.glDisable(GL20.GL_BLEND)
-
     }
 
-    private fun renderEntities() {
+    override fun renderGame(camera: OrthographicCamera) {
 
         val r = game.uiAssets.shapeRenderer
 
@@ -112,6 +73,10 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         Missile.renderBulk(camera, r, state.enemyMissiles)
         Explosion.renderBulk(camera, r, state.explosions)
 
+    }
+
+    override fun resizeViewport(viewportWidth: Float, viewportHeight: Float) {
+        super.resizeViewport(viewportWidth, viewportHeight)
     }
 
     private fun updateEntities(delta: Float) {
@@ -205,8 +170,8 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
         val targetCity = aliveCities.random()
 
-        val startX = (Math.random() * camera.viewportWidth).toFloat()
-        val missile = EnemyMissile(state.missileSpeed, Vector2(startX, camera.viewportHeight), targetCity)
+        val startX = (Math.random() * viewport.worldWidth).toFloat()
+        val missile = EnemyMissile(state.missileSpeed, Vector2(startX, viewport.worldHeight), targetCity)
 
         state.enemyMissiles.add(missile)
         state.numMissilesRemaining --
@@ -216,23 +181,6 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
         val max = MissileCommandGameState.MAX_TIME_BETWEEN_ENEMY_MISSILES
         val min = MissileCommandGameState.MIN_TIME_BETWEEN_ENEMY_MISSILES
         state.nextEnemyMissileTime = state.timer + ((Math.random() * (max - min)) + min).toFloat()
-    }
-
-    override fun resize(width: Int, height: Int) {
-        viewport.update(width, height, true)
-        hud.resize(width, height)
-    }
-
-    override fun pause() {
-    }
-
-    override fun resume() {
-    }
-
-    override fun hide() {
-    }
-
-    override fun dispose() {
     }
 
 }
