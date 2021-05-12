@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid

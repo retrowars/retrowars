@@ -5,6 +5,7 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.missilecommand.entities.*
@@ -33,8 +34,8 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
     private val client = RetrowarsClient.get()
 
     init {
-        viewport.apply(true)
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
+        viewport.apply(true)
 
         state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
         queueEnemyMissile()
@@ -89,6 +90,10 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
         viewport.renderIn {
             renderEntities()
+            val r = game.uiAssets.shapeRenderer
+            r.begin(ShapeRenderer.ShapeType.Line)
+            r.line(Vector2(0f, 0f), Vector2(100f, 0f))
+            r.end()
         }
 
         hud.render(state.score, delta)
@@ -215,6 +220,7 @@ class MissileCommandGameScreen(private val game: RetrowarsGame) : Screen {
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)
+        hud.resize(width, height)
     }
 
     override fun pause() {
