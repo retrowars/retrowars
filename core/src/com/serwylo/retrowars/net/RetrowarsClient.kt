@@ -73,11 +73,11 @@ class RetrowarsClient {
                 }
 
                 when(obj) {
-                    is Network.Client.PlayerAdded -> onPlayerAdded(obj.id, obj.game)
-                    is Network.Client.PlayerRemoved -> onPlayerRemoved(obj.id)
-                    is Network.Client.PlayerScored -> onScoreChanged(obj.id, obj.score)
-                    is Network.Client.PlayerStatusChange -> onStatusChanged(obj.id, obj.status)
-                    is Network.Client.StartGame -> onStartGame()
+                    is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game)
+                    is Network.Client.OnPlayerRemoved -> onPlayerRemoved(obj.id)
+                    is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
+                    is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
+                    is Network.Client.OnStartGame -> onStartGame()
                 }
             }
         }))

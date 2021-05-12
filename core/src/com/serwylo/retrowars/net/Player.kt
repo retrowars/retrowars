@@ -10,7 +10,7 @@ class Player(
     /**
      * Lookup the corresponding [GameDetails] in [Games.all]
      */
-    val game: String
+    var game: String
 
 ) {
 

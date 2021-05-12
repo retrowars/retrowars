@@ -83,8 +83,13 @@ class RetrowarsServer {
 
         player.status = status
 
+        // If returning to the lobby, then decide on a new random game to give this player.
+        if (status == Player.Status.lobby) {
+            player.game = Games.allSupported.random().id
+        }
+
         // TODO: Don't send back to the client that originally reported their own death.
-        server.sendToAllTCP(Network.Client.PlayerStatusChange(player.id, status))
+        server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))
     }
 
     private fun updateScore(player: Player?, score: Long) {
@@ -93,7 +98,7 @@ class RetrowarsServer {
         }
 
         // TODO: Don't send back to the client that originally reported their own score.
-        server.sendToAllTCP(Network.Client.PlayerScored(player.id, score))
+        server.sendToAllTCP(Network.Client.OnPlayerScored(player.id, score))
     }
 
     private fun removePlayer(player: Player?) {
@@ -102,7 +107,7 @@ class RetrowarsServer {
         }
 
         players.remove(player)
-        server.sendToAllTCP(Network.Client.PlayerRemoved(player.id))
+        server.sendToAllTCP(Network.Client.OnPlayerRemoved(player.id))
     }
 
 
@@ -113,18 +118,18 @@ class RetrowarsServer {
         }
 
         // TODO: Ensure this ID doesn't already exist on the server.
-        val player = Player(Random.nextLong(), Games.asteroids.id /* Games.allSupported.random().id */)
+        val player = Player(Random.nextLong(), Games.allSupported.random().id)
 
         connection.player = player
 
         // First tell people about the new player (before sending a list of all existing players to
         // this newly registered client). That means that the first PlayerAdded message received by
         // a new client will always be for themselves.
-        server.sendToAllTCP(Network.Client.PlayerAdded(player.id, player.game))
+        server.sendToAllTCP(Network.Client.OnPlayerAdded(player.id, player.game))
 
         // Then notify the current player about all others.
         players.forEach { existingPlayer ->
-            connection.sendTCP(Network.Client.PlayerAdded(existingPlayer.id, existingPlayer.game))
+            connection.sendTCP(Network.Client.OnPlayerAdded(existingPlayer.id, existingPlayer.game))
         }
 
         players.add(player)
@@ -135,7 +140,7 @@ class RetrowarsServer {
     }
 
     fun startGame() {
-        server.sendToAllTCP(Network.Client.StartGame())
+        server.sendToAllTCP(Network.Client.OnStartGame())
     }
 
 }

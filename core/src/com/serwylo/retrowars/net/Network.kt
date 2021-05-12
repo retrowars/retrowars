@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.net
 
 import com.esotericsoftware.kryonet.EndPoint
+import com.sun.xml.internal.fastinfoset.util.StringArray
 
 // TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
 //       upgrade to the same (latest) version.
@@ -14,11 +15,12 @@ object Network {
         kryo.register(Server.UnregisterPlayer::class.java)
         kryo.register(Server.UpdateScore::class.java)
         kryo.register(Server.UpdateStatus::class.java)
-        kryo.register(Client.PlayerAdded::class.java)
-        kryo.register(Client.PlayerRemoved::class.java)
-        kryo.register(Client.PlayerScored::class.java)
-        kryo.register(Client.StartGame::class.java)
-        kryo.register(Client.PlayerStatusChange::class.java)
+
+        kryo.register(Client.OnPlayerAdded::class.java)
+        kryo.register(Client.OnPlayerRemoved::class.java)
+        kryo.register(Client.OnPlayerScored::class.java)
+        kryo.register(Client.OnStartGame::class.java)
+        kryo.register(Client.OnPlayerStatusChange::class.java)
     }
 
     /**
@@ -40,35 +42,35 @@ object Network {
     object Client {
 
         /**
-         * When a new player is registered, every other player will receive a corresponding [PlayerAdded]
+         * When a new player is registered, every other player will receive a corresponding [OnPlayerAdded]
          * message referencing the new player.
          *
-         * Also, the newly added player will receive a sequence of [PlayerAdded] messages, one for each
+         * Also, the newly added player will receive a sequence of [OnPlayerAdded] messages, one for each
          * already registered player.
          */
-        class PlayerAdded(var id: Long, var game: String) {
+        class OnPlayerAdded(var id: Long, var game: String) {
             constructor() : this(0, "")
-            override fun toString(): String = "PlayerAdded[player id: $id, game type: $game]"
+            override fun toString(): String = "OnPlayerAdded[player id: $id, game type: $game]"
         }
 
-        class PlayerRemoved(var id: Long) {
+        class OnPlayerRemoved(var id: Long) {
             constructor() : this(0)
-            override fun toString(): String = "PlayerRemoved[player id: $id]"
+            override fun toString(): String = "OnPlayerRemoved[player id: $id]"
         }
 
-        class PlayerScored(var id: Long, var score: Long) {
+        class OnPlayerScored(var id: Long, var score: Long) {
             constructor() : this(0, 0)
 
-            override fun toString(): String = "PlayerScored[player id: $id, score: $score]"
+            override fun toString(): String = "OnPlayerScored[player id: $id, score: $score]"
         }
 
-        class PlayerStatusChange(var id: Long, var status: String) {
+        class OnPlayerStatusChange(var id: Long, var status: String) {
             constructor() : this(0, "")
 
-            override fun toString(): String = "PlayerStatusChange[player id: $id, status: $status]"
+            override fun toString(): String = "OnPlayerStatusChange[player id: $id, status: $status]"
         }
 
-        class StartGame
+        class OnStartGame
 
     }
 
