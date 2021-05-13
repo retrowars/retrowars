@@ -1,21 +1,16 @@
 package com.serwylo.beatgame.ui
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
-import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player
 import kotlin.random.Random
 
@@ -132,11 +127,9 @@ class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
     }
 }
 
-fun makeGameIcon(player: Player, uiAssets: UiAssets): Image {
+fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {
 
-    val icons = uiAssets.getSprites().icons
-    val gameDetails = Games.all[player.game]
-    val iconSprite = if (gameDetails == null) icons.unknown else gameDetails.icon(uiAssets.getSprites())
+    val iconSprite = gameDetails.icon(uiAssets.getSprites())
 
     return Image(iconSprite).apply {
         setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)

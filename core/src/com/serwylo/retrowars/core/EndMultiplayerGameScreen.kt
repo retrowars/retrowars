@@ -8,6 +8,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
@@ -28,6 +30,16 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
     private val strings = game.uiAssets.getStrings()
 
     private val client = RetrowarsClient.get()!! // TODO: Verify this and bail with message to user if assumption is incorrect.
+
+    /**
+     * Capture the games each player is playing as we enter this end game screen, because as people
+     * leave this screen and return to the lobby in preparation for the next game, the server will
+     * provide a newly selected random game for each player.
+     *
+     * We don't want to reflect that in this screen, as we should only ever show the game they just
+     * played on this screen.
+     */
+    private val playerGames = client.players.associateWith { it.game }
 
     init {
         val table = Table().apply {
@@ -109,22 +121,28 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
             .sortedByDescending { client.getScoreFor(it) }
             .forEach { player ->
 
-               table.pad(UI_SPACE)
+                table.pad(UI_SPACE)
 
-               table.row().space(UI_SPACE).pad(UI_SPACE)
+                table.row().space(UI_SPACE).pad(UI_SPACE)
 
-               table.add(Avatar(player, uiAssets)).right()
-               table.add(makeGameIcon(player, uiAssets))
+                table.add(Avatar(player, uiAssets)).right()
 
-               val group = VerticalGroup()
-               group.align(Align.left)
-               table.add(group).left()
+                val playerGameId = playerGames[player]
+                val gameDetails = Games.all[playerGameId]
+                if (gameDetails != null) {
+                    Gdx.app.error(TAG, "Unsupported game for player ${player.id}: ${player.game}")
+                    table.add(makeGameIcon(gameDetails, uiAssets))
+                }
 
-               if (player.status == Player.Status.playing) {
-                   group.addActor(Label(strings["end-multiplayer.still-playing"], styles.label.medium))
-               }
+                val group = VerticalGroup()
+                group.align(Align.left)
+                table.add(group).left()
 
-               group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
+                if (player.status == Player.Status.playing) {
+                    group.addActor(Label(strings["end-multiplayer.still-playing"], styles.label.medium))
+                }
+
+                group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
 
            }
 

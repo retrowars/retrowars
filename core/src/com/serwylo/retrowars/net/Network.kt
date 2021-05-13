@@ -1,7 +1,6 @@
 package com.serwylo.retrowars.net
 
 import com.esotericsoftware.kryonet.EndPoint
-import com.sun.xml.internal.fastinfoset.util.StringArray
 
 // TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
 //       upgrade to the same (latest) version.
@@ -21,6 +20,7 @@ object Network {
         kryo.register(Client.OnPlayerScored::class.java)
         kryo.register(Client.OnStartGame::class.java)
         kryo.register(Client.OnPlayerStatusChange::class.java)
+        kryo.register(Client.OnPlayerReturnedToLobby::class.java)
     }
 
     /**
@@ -68,6 +68,12 @@ object Network {
             constructor() : this(0, "")
 
             override fun toString(): String = "OnPlayerStatusChange[player id: $id, status: $status]"
+        }
+
+        class OnPlayerReturnedToLobby(var id: Long, var game: String) {
+            constructor() : this(0, "")
+
+            override fun toString(): String = "OnPlayerReturnedToLobby[player id: $id, game: $game]"
         }
 
         class OnStartGame

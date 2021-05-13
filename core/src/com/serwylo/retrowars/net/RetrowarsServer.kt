@@ -86,10 +86,11 @@ class RetrowarsServer {
         // If returning to the lobby, then decide on a new random game to give this player.
         if (status == Player.Status.lobby) {
             player.game = Games.allSupported.random().id
+            server.sendToAllTCP(Network.Client.OnPlayerReturnedToLobby(player.id, player.game))
+        } else {
+            server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))
         }
 
-        // TODO: Don't send back to the client that originally reported their own death.
-        server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))
     }
 
     private fun updateScore(player: Player?, score: Long) {

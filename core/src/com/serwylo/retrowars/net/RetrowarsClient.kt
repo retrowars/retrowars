@@ -77,6 +77,7 @@ class RetrowarsClient {
                     is Network.Client.OnPlayerRemoved -> onPlayerRemoved(obj.id)
                     is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
                     is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
+                    is Network.Client.OnPlayerReturnedToLobby -> onReturnedToLobby(obj.id, obj.game)
                     is Network.Client.OnStartGame -> onStartGame()
                 }
             }
@@ -86,7 +87,6 @@ class RetrowarsClient {
         client.sendTCP(Network.Server.RegisterPlayer())
 
     }
-
 
     private fun onStartGame() {
         // We reuse the same servers/clients many time over if you finish a game and immediately
@@ -128,6 +128,17 @@ class RetrowarsClient {
         playerStatusChangedListener?.invoke(player, status)
     }
 
+    private fun onReturnedToLobby(playerId: Long, playersNewGame: String) {
+        val player = players.find { it.id == playerId } ?: return
+
+        // TODO: Validate game.
+
+        Gdx.app.log(TAG, "Received return to lobby request for player $playerId. New game: $playersNewGame")
+        player.status = Player.Status.lobby
+        player.game = playersNewGame
+        playerStatusChangedListener?.invoke(player, Player.Status.lobby)
+    }
+
     fun changeStatus(status: String) {
         me()?.status = status
         client.sendTCP(Network.Server.UpdateStatus(status))
@@ -150,4 +161,3 @@ class RetrowarsClient {
     }
 
 }
-

@@ -194,7 +194,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             clear()
 
             row()
-            add(Label("Connected to server.", styles.label.large))
+            add(Label("Connected to server", styles.label.large))
 
             appendAvatars(this, client)
         }
@@ -275,7 +275,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         row().space(UI_SPACE).pad(UI_SPACE)
         add(Avatar(players[0], uiAssets))
-        add(makeGameIcon(players[0], uiAssets))
+        add(makeGameIcon(players[0].getGameDetails(), uiAssets))
         add(Label("You", uiAssets.getStyles().label.large))
 
         if (players.size > 1) {
@@ -285,7 +285,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
                 row().space(UI_SPACE).pad(UI_SPACE)
 
                 add(Avatar(player, uiAssets))
-                add(makeGameIcon(player, uiAssets))
+                add(makeGameIcon(player.getGameDetails(), uiAssets))
 
                 add(
                     Label(
