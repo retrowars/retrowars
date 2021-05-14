@@ -1,6 +1,8 @@
 package com.serwylo.retrowars.ui
 
+import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.serwylo.beatgame.ui.Avatar
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -24,6 +26,7 @@ class HUD(private val assets: UiAssets) {
     private val stage = makeStage()
     private val gameSpecificContainer = HorizontalGroup()
     private val scoreLabel = Label("", styles.label.large)
+    private var gameOverlay: Cell<Actor>
 
     private val client = RetrowarsClient.get()
 
@@ -33,6 +36,8 @@ class HUD(private val assets: UiAssets) {
         // amount of space is managed by the game via the [GameViewport].
         val gameWindow = Table()
         gameWindow.background = assets.getSkin().getDrawable("window")
+        gameWindow.debugAll()
+        gameOverlay = gameWindow.add().expand().fill()
 
         val infoWindow = Table().apply {
             background = assets.getSkin().getDrawable("window")
@@ -47,7 +52,7 @@ class HUD(private val assets: UiAssets) {
             // parts of the UI.
             avatarCell = if (client == null) null else add(makeAvatarTiles(client)).expandX().left().pad(UI_SPACE)
 
-            add(gameSpecificContainer).right().pad(UI_SPACE)
+            add(gameSpecificContainer).right().expandX().pad(UI_SPACE)
         }
 
         val windowManager = Table().apply {
@@ -64,6 +69,8 @@ class HUD(private val assets: UiAssets) {
 
     }
 
+    fun getInputProcessor(): InputProcessor = stage
+
     fun render(score: Long, delta: Float) {
 
         scoreLabel.setText(score.toString())
@@ -77,6 +84,10 @@ class HUD(private val assets: UiAssets) {
         stage.act(delta)
         stage.draw()
 
+    }
+
+    fun addGameOverlay(overlay: Actor) {
+        gameOverlay.setActor(overlay)
     }
 
     private fun calcInfoHeight(): Float {

@@ -3,8 +3,18 @@ package com.serwylo.retrowars.games.asteroids
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.scenes.scene2d.InputEvent
+import com.badlogic.gdx.scenes.scene2d.InputListener
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.ui.Button
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.makeLargeButton
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
@@ -19,53 +29,62 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
         const val TAG = "AsteroidsGameScreen"
     }
 
+    private val controllerLeft: Button
+    private val controllerThrust: Button
+    private val controllerRight: Button
+    private val controllerShoot: Button
+
     private val state = AsteroidsGameState(viewport.worldWidth, viewport.worldHeight)
 
+    /**
+     * Used to provide an on-screen controller for driving the ship. Left, Right, Thrust, and Fire.
+     */
+    private val softController = Table()
+
     init {
+
         state.ship.onShoot {
             it.setWorldSize(viewport.worldWidth, viewport.worldHeight)
             state.bullets.add(it)
         }
+
+        controllerLeft = TextButton("  <  ", game.uiAssets.getStyles().textButton.huge)
+        controllerThrust = TextButton("  ^  ", game.uiAssets.getStyles().textButton.huge)
+        controllerShoot = TextButton("  *  ", game.uiAssets.getStyles().textButton.huge)
+        controllerRight = TextButton("  >  ", game.uiAssets.getStyles().textButton.huge)
+
+        controllerLeft.addAction(Actions.alpha(0.4f))
+        controllerThrust.addAction(Actions.alpha(0.4f))
+        controllerShoot.addAction(Actions.alpha(0.4f))
+        controllerRight.addAction(Actions.alpha(0.4f))
+
+        val buttonSize = UI_SPACE * 15
+        softController.apply {
+            bottom().pad(UI_SPACE * 4)
+            add(controllerLeft).space(UI_SPACE * 2).size(buttonSize)
+            add(controllerRight).space(UI_SPACE * 2).size(buttonSize)
+            add().expandX()
+            add(controllerShoot).space(UI_SPACE * 2).size(buttonSize)
+            add(controllerThrust).space(UI_SPACE * 2).size(buttonSize)
+        }
+
+        addGameOverlayToHUD(softController)
+
     }
 
     override fun show() {
-        Gdx.input.inputProcessor = object: InputAdapter() {
-            override fun keyDown(keycode: Int): Boolean {
-                when (keycode) {
-                    Input.Keys.LEFT -> state.ship.left = true
-                    Input.Keys.A -> state.ship.left = true
-                    Input.Keys.RIGHT -> state.ship.right = true
-                    Input.Keys.D -> state.ship.right = true
-                    Input.Keys.UP -> state.ship.thrust = true
-                    Input.Keys.W -> state.ship.thrust = true
-                    Input.Keys.SPACE -> state.ship.shooting = true
-                    else -> return false
-                }
-
-                return true
-            }
-
-            override fun keyUp(keycode: Int): Boolean {
-                when (keycode) {
-                    Input.Keys.LEFT -> state.ship.left = false
-                    Input.Keys.A -> state.ship.left = false
-                    Input.Keys.RIGHT -> state.ship.right = false
-                    Input.Keys.D -> state.ship.right = false
-                    Input.Keys.UP -> state.ship.thrust = false
-                    Input.Keys.W -> state.ship.thrust = false
-                    Input.Keys.SPACE -> state.ship.shooting = false
-                    else -> return false
-                }
-
-                return true
-            }
-        }
+        Gdx.input.inputProcessor = getInputProcessor()
     }
 
     override fun getScore() = state.score
 
     override fun updateGame(delta: Float) {
         state.timer += delta
+
+        state.ship.left = controllerLeft.isPressed || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+        state.ship.right = controllerRight.isPressed || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        state.ship.shooting = controllerShoot.isPressed || Gdx.input.isKeyPressed(Input.Keys.SPACE)
+        state.ship.thrust = controllerThrust.isPressed || Gdx.input.isKeyPressed(Input.Keys.UP)
 
         updateEntities(delta)
 

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.scenes.scene2d.Actor
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.ui.GameViewport
@@ -47,6 +48,16 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
 
         Gdx.gl.glDisable(GL20.GL_BLEND)
 
+    }
+
+    fun getInputProcessor() = hud.getInputProcessor()
+
+    /**
+     * Provided an actor here, it will be added to the HUD over the section of the screen
+     * responsible for showing the game contents.
+     */
+    protected fun addGameOverlayToHUD(overlay: Actor) {
+        hud.addGameOverlay(overlay)
     }
 
     override fun resize(width: Int, height: Int) {
