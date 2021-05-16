@@ -9,7 +9,7 @@ import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.missilecommand.entities.*
 import kotlin.math.abs
 
-class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
+class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 250f) {
 
     companion object {
         @Suppress("unused")

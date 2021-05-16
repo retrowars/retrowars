@@ -12,7 +12,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
  * Note: Will need to apply this viewport prior to rendering game things, and reset to the
  * regular full screen viewport after so that Scene2d and our HUD can render appropriately.
  */
-class GameViewport(minWorldWidth: Float, maxWorldHeight: Float, camera: Camera) : ExtendViewport(minWorldWidth, maxWorldHeight, camera) {
+class GameViewport(minWorldWidth: Float, minWorldHeight: Float, camera: Camera) : ExtendViewport(minWorldWidth, minWorldHeight, camera) {
 
     companion object {
         const val BOTTOM_OFFSET_SCREEN_PROPORTION = 1f / 10f

@@ -11,7 +11,6 @@ import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeHeading
-import com.serwylo.beatgame.ui.makeIcon
 import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
@@ -35,8 +34,8 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         // density independent pixel calculations (even though the math is simple, it didn't
         // seem to set proper breakpoints, perhaps because of the arbitrary math in calcDensityScaleFactor()
         // from before it occurred we could use DIPs).
-        val gamesPerRow = if (Gdx.app.type == Application.ApplicationType.Desktop) 4 else 3
-        val width = (stage.width - UI_SPACE * 2) / gamesPerRow
+        val gamesPerRow = if (Gdx.app.type == Application.ApplicationType.Desktop) 5 else 4
+        val width = (stage.width - UI_SPACE * 4) / gamesPerRow
         val height = width * 3 / 4
 
         val container = VerticalGroup().apply {

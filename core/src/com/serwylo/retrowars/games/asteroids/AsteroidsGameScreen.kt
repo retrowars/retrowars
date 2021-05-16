@@ -9,9 +9,7 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
-import com.badlogic.gdx.scenes.scene2d.ui.Button
-import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
+import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeLargeButton
@@ -41,6 +39,8 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
      */
     private val softController = Table()
 
+    private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
     init {
 
         state.ship.onShoot {
@@ -69,6 +69,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
         }
 
         addGameOverlayToHUD(softController)
+        addGameScoreToHUD(lifeContainer)
 
     }
 
@@ -219,6 +220,17 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
 
         Bullet.renderBulk(camera, r, state.bullets)
         Asteroid.renderBulk(camera, r, state.asteroids)
+
+        if (lifeContainer.children.size != state.numLives) {
+            redrawLives()
+        }
+    }
+
+    private fun redrawLives() {
+        lifeContainer.clear()
+        for (i in 0 until state.numLives) {
+            lifeContainer.addActor(Label("x", game.uiAssets.getStyles().label.large))
+        }
     }
 
     override fun resizeViewport(viewportWidth: Float, viewportHeight: Float) {

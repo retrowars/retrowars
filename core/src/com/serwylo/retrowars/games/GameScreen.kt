@@ -60,6 +60,10 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
         hud.addGameOverlay(overlay)
     }
 
+    protected fun addGameScoreToHUD(score: Actor) {
+        hud.addGameScore(score)
+    }
+
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)
         hud.resize(width, height)

@@ -8,7 +8,6 @@ import com.serwylo.beatgame.ui.Avatar
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.UiAssets
-import com.serwylo.retrowars.games.asteroids.AsteroidsGameState
 import com.serwylo.retrowars.net.RetrowarsClient
 
 class HUD(private val assets: UiAssets) {
@@ -24,9 +23,9 @@ class HUD(private val assets: UiAssets) {
     private val styles = assets.getStyles()
 
     private val stage = makeStage()
-    private val gameSpecificContainer = HorizontalGroup()
     private val scoreLabel = Label("", styles.label.large)
     private var gameOverlay: Cell<Actor>
+    private val gameScore: Cell<Actor>
 
     private val client = RetrowarsClient.get()
 
@@ -51,7 +50,7 @@ class HUD(private val assets: UiAssets) {
             // parts of the UI.
             avatarCell = if (client == null) null else add(makeAvatarTiles(client)).expandX().left().pad(UI_SPACE)
 
-            add(gameSpecificContainer).right().expandX().pad(UI_SPACE)
+            gameScore = add().right().expandX().pad(UI_SPACE)
         }
 
         val windowManager = Table().apply {
@@ -74,12 +73,6 @@ class HUD(private val assets: UiAssets) {
 
         scoreLabel.setText(score.toString())
 
-/*
-        if (lifeContainer.children.size != state.numLives) {
-            redrawLives()
-        }
-*/
-
         stage.act(delta)
         stage.draw()
 
@@ -87,6 +80,10 @@ class HUD(private val assets: UiAssets) {
 
     fun addGameOverlay(overlay: Actor) {
         gameOverlay.setActor(overlay)
+    }
+
+    fun addGameScore(overlay: Actor) {
+        gameScore.setActor(overlay)
     }
 
     private fun calcInfoHeight(): Float {
@@ -101,15 +98,6 @@ class HUD(private val assets: UiAssets) {
         stage.viewport.update(screenWidth, screenHeight, true)
         infoCell.height(calcInfoHeight())
     }
-
-/*
-    private fun redrawLives() {
-        lifeContainer.clear()
-        for (i in 0 until state.numLives) {
-            lifeContainer.addActor(Label("x", styles.label.large))
-        }
-    }
-*/
 
     private fun makeAvatarTiles(client: RetrowarsClient): WidgetGroup {
         return Table().apply {

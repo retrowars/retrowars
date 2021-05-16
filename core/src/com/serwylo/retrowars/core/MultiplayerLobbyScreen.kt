@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
@@ -63,8 +64,6 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             setFillParent(true)
             pad(UI_SPACE)
 
-            row()
-
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
                 close()
                 game.showMainMenu()
@@ -76,8 +75,11 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             add(wrapper).expand()
 
             wrapper.apply {
-                val description = Label("Play with others on the same local network", game.uiAssets.getStyles().label.small)
-                add(description).colspan(2)
+
+                val description = Label("Play with others\non the same local network", game.uiAssets.getStyles().label.medium)
+                description.setAlignment(Align.center)
+
+                add(description).colspan(2).spaceBottom(UI_SPACE)
                 row()
 
                 add(makeButton("Start Server", styles) {

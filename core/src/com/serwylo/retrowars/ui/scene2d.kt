@@ -70,8 +70,8 @@ fun makeHeading(title: String, styles: UiAssets.Styles, strings: I18NBundle, onB
     }
 }
 
-val UI_WIDTH = 1024f
-val UI_HEIGHT = 768f
+val UI_WIDTH = 800f
+val UI_HEIGHT = 600f
 const val UI_SPACE = 10f
 
 // TODO: When players are no longer playing, show a red cross over their name.

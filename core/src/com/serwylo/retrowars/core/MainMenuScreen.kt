@@ -29,26 +29,30 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
             makeHeading(strings["app.name"], styles, strings)
         )
 
-        container.addActor(
-            makeLargeButton(strings["main-menu.btn.play-single-player"], styles) {
-                game.showGameSelectMenu()
-            }
-        )
-
-        container.addActor(
-            makeLargeButton(strings["main-menu.btn.play-multiplayer"], styles) {
-                game.showMultiplayerLobby()
-            }
-        )
-
-
-        if (Gdx.app.type == Application.ApplicationType.Desktop) {
-            container.addActor(
-                makeButton(strings["main-menu.btn.quit"], styles) {
-                    Gdx.app.exit()
+        container.addActor(Table().apply {
+            add(
+                makeLargeButton(strings["main-menu.btn.play-single-player"], styles) {
+                    game.showGameSelectMenu()
                 }
-            )
-        }
+            ).fillX()
+
+            row()
+            add(
+                makeLargeButton(strings["main-menu.btn.play-multiplayer"], styles) {
+                    game.showMultiplayerLobby()
+                }
+            ).fillX()
+
+
+            if (Gdx.app.type == Application.ApplicationType.Desktop) {
+                row()
+                add(
+                    makeButton(strings["main-menu.btn.quit"], styles) {
+                        Gdx.app.exit()
+                    }
+                ).fillX()
+            }
+        })
 
         stage.addActor(container)
 
