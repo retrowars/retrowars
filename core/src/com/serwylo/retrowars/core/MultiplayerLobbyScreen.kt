@@ -75,17 +75,19 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             row()
             add(wrapper).expand()
 
-            wrapper.add(
-                makeButton("Start Server", styles) {
-                    startServer()
-                }
-            )
+            wrapper.apply {
+                val description = Label("Play with others on the same local network", game.uiAssets.getStyles().label.small)
+                add(description).colspan(2)
+                row()
 
-            wrapper.add(
-                makeButton("Join Server", styles) {
+                add(makeButton("Start Server", styles) {
+                    startServer()
+                }).right()
+
+                add(makeButton("Join Server", styles) {
                     joinServer()
-                }
-            )
+                }).left()
+            }
 
         }
 
@@ -98,9 +100,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         Gdx.app.log(TAG, "Starting a new multiplayer server.")
 
         val server = RetrowarsServer.start()
+
+        Gdx.app.log(TAG, "Server started. Now connecting as a client.")
+
         val client = createClient()
 
-        Gdx.app.log(TAG, "Server started.")
+        Gdx.app.log(TAG, "Client connected.")
 
         showServerLobby(client, server)
 

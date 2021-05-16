@@ -1,12 +1,14 @@
 package com.serwylo.retrowars.net
 
 import com.esotericsoftware.kryonet.EndPoint
+import com.esotericsoftware.kryonet.UdpConnection
 
 // TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
 //       upgrade to the same (latest) version.
 object Network {
 
     const val defaultPort = 6263
+    const val defaultUdpPort = 6264
 
     fun register(endPoint: EndPoint) {
         val kryo = endPoint.kryo;

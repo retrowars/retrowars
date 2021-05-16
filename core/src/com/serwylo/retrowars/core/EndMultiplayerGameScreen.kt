@@ -129,8 +129,9 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
                 val playerGameId = playerGames[player]
                 val gameDetails = Games.all[playerGameId]
-                if (gameDetails != null) {
+                if (gameDetails == null) {
                     Gdx.app.error(TAG, "Unsupported game for player ${player.id}: ${player.game}")
+                } else {
                     table.add(makeGameIcon(gameDetails, uiAssets))
                 }
 

@@ -5,6 +5,7 @@ import com.esotericsoftware.kryonet.Connection
 import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Server
+import com.esotericsoftware.minlog.Log
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
 import java.lang.IllegalStateException
@@ -49,6 +50,8 @@ class RetrowarsServer {
 
     init {
 
+        Log.set(Log.LEVEL_TRACE)
+
         register(server)
 
         server.addListener(object : Listener {
@@ -68,11 +71,10 @@ class RetrowarsServer {
 
             override fun disconnected(c: Connection) {
                 removePlayer((c as PlayerConnection).player)
-
             }
         })
 
-        server.bind(Network.defaultPort)
+        server.bind(Network.defaultPort, Network.defaultUdpPort)
         server.start()
     }
 

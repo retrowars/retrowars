@@ -36,7 +36,6 @@ class HUD(private val assets: UiAssets) {
         // amount of space is managed by the game via the [GameViewport].
         val gameWindow = Table()
         gameWindow.background = assets.getSkin().getDrawable("window")
-        gameWindow.debugAll()
         gameOverlay = gameWindow.add().expand().fill()
 
         val infoWindow = Table().apply {

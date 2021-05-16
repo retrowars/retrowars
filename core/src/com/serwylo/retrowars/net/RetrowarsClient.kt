@@ -83,7 +83,9 @@ class RetrowarsClient {
             }
         }))
 
-        client.connect(5000, "localhost", Network.defaultPort)
+        val address = client.discoverHost(Network.defaultUdpPort, 10000)
+        // TODO: Error if no server found
+        client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
         client.sendTCP(Network.Server.RegisterPlayer())
 
     }

@@ -109,22 +109,18 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
 
         if (shooting) {
             if (!isReloading) {
-                Gdx.app.log("Ship", "Shooting...")
                 onShootListener?.invoke(Bullet(position.cpy(), rotationInDegrees - 90))
                 isReloading = true
             }
         }
 
         if (left && !right) {
-            Gdx.app.log("Ship", "Left...")
             rotationInDegrees += ROTATION_SPEED * delta
         } else if (right && !left) {
-            Gdx.app.log("Ship", "Right...")
             rotationInDegrees -= ROTATION_SPEED * delta
         }
 
         if (thrust) {
-            Gdx.app.log("Ship", "Thrust...")
             acceleration.set(ACCEL, 0f)
             acceleration.setAngleDeg(rotationInDegrees)
             velocity.mulAdd(acceleration, delta)
