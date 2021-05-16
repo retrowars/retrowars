@@ -20,7 +20,7 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
 
         const val ACCEL = 200f
 
-        const val MAX_SPEED = 400f
+        const val MAX_SPEED = 250f
         const val MAX_SPEED_2 = MAX_SPEED * MAX_SPEED
 
     }
