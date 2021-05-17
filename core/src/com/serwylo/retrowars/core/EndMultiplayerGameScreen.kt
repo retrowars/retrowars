@@ -142,13 +142,20 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
                 group.align(Align.left)
                 table.add(group).left()
 
-                if (player.status == Player.Status.playing) {
-                    group.addActor(Label(strings["end-multiplayer.still-playing"], styles.label.medium))
+                val label: Label? = when {
+                    player.status == Player.Status.playing -> Label(strings["end-multiplayer.still-playing"], styles.label.medium)
+                    player.id == client.me()?.id -> Label("You", styles.label.large)
+                    else -> null
+                }
+
+                if (label != null) {
+                    label.setAlignment(Align.left)
+                    group.addActor(label)
                 }
 
                 group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
 
-           }
+            }
 
         playerSummaries.clearActor()
         playerSummaries.setActor(table)
