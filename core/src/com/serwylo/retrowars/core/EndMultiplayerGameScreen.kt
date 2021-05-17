@@ -64,8 +64,11 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
             actionButtons = add()
 
             // TODO: During the game, listen for these events and then show the data in the HUD in realtime.
-            client.scoreChangedListener = { _, _ -> showPlayerSummaries() }
-            client.playerStatusChangedListener = { _, _ -> refreshScreen() }
+            client.listen(
+                scoreChangedListener = { _, _ -> showPlayerSummaries() },
+                playerStatusChangedListener = { _, _ -> refreshScreen() },
+                networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
+            )
 
             refreshScreen()
         }

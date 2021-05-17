@@ -51,12 +51,47 @@ class RetrowarsClient {
     fun otherPlayers(): List<Player> =
         if (players.size == 0) emptyList() else players.subList(1, players.size)
 
-    var client = Client()
+    private var client = Client()
 
-    var playersChangedListener: ((List<Player>) -> Unit)? = null
-    var startGameListener: (() -> Unit)? = null
-    var scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null
-    var playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
+    /**
+     * Record if we receive a nice graceful message from the server.
+     * If we *haven't* but we still get disconnected, we can show an error message to the user.
+     * If we *have* shut down gracefully by the time we receive the disconnect event, then we can display a friendlier message.
+     */
+    private var hasShutdownGracefully = false
+
+    private var playersChangedListener: ((List<Player>) -> Unit)? = null
+    private var startGameListener: (() -> Unit)? = null
+    private var scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null
+    private var playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
+    private var networkCloseListener: ((wasGraceful: Boolean) -> Unit)? = null
+
+    /**
+     * The only wayt o listen to network events is via this function. It ensures that no previous
+     * listeners will be left dangling around in previous views, by updating every single
+     * listener (potentially to null).
+     *
+     * The intent is to:
+     *  - Call this once per screen during the initialization phase.
+     *  - Use named arguments so that you can those which are unneeded.
+     *
+     *  All are optional except for [networkCloseListener], if you choose to interact with the
+     *  client, then you need to make sure you handle disconnections properly, because we don't
+     *  know when these could happen.
+     */
+    fun listen(
+        networkCloseListener: ((wasGraceful: Boolean) -> Unit),
+        playersChangedListener: ((List<Player>) -> Unit)? = null,
+        startGameListener: (() -> Unit)? = null,
+        scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null,
+        playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
+    ) {
+        this.playersChangedListener = playersChangedListener
+        this.startGameListener = startGameListener
+        this.scoreChangedListener = scoreChangedListener
+        this.playerStatusChangedListener = playerStatusChangedListener
+        this.networkCloseListener = networkCloseListener
+    }
 
     init {
 
@@ -66,7 +101,16 @@ class RetrowarsClient {
 
         client.addListener(ThreadedListener(object : Listener {
             override fun connected(connection: Connection) {}
-            override fun disconnected(connection: Connection) {}
+
+            override fun disconnected(connection: Connection) {
+                if (hasShutdownGracefully) {
+                    Gdx.app.log(TAG, "Client received disconnected event. Previously received a graceful shutdown so will broadcast that.")
+                } else {
+                    Gdx.app.log(TAG, "Client received disconnected event. No graceful shutdown from server, so will broadcast that.")
+                }
+                networkCloseListener?.invoke(hasShutdownGracefully)
+            }
+
             override fun received(connection: Connection, obj: Any) {
                 if (obj !is FrameworkMessage.KeepAlive) {
                     Gdx.app.log(TAG, "Received message from server: $obj")
@@ -79,6 +123,7 @@ class RetrowarsClient {
                     is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
                     is Network.Client.OnPlayerReturnedToLobby -> onReturnedToLobby(obj.id, obj.game)
                     is Network.Client.OnStartGame -> onStartGame()
+                    is Network.Client.OnServerStopped -> onServerStopped()
                 }
             }
         }))
@@ -88,6 +133,11 @@ class RetrowarsClient {
         client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
         client.sendTCP(Network.Server.RegisterPlayer())
 
+    }
+
+    private fun onServerStopped() {
+        Gdx.app.log(TAG, "Recording that server stopped somewhat-gracefully.")
+        hasShutdownGracefully = true
     }
 
     private fun onStartGame() {

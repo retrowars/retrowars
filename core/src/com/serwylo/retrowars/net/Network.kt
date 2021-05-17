@@ -23,6 +23,7 @@ object Network {
         kryo.register(Client.OnStartGame::class.java)
         kryo.register(Client.OnPlayerStatusChange::class.java)
         kryo.register(Client.OnPlayerReturnedToLobby::class.java)
+        kryo.register(Client.OnServerStopped::class.java)
     }
 
     /**
@@ -79,6 +80,7 @@ object Network {
         }
 
         class OnStartGame
+        class OnServerStopped
 
     }
 

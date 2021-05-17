@@ -3,10 +3,7 @@ package com.serwylo.retrowars
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
-import com.serwylo.retrowars.core.EndMultiplayerGameScreen
-import com.serwylo.retrowars.core.GameSelectScreen
-import com.serwylo.retrowars.core.MainMenuScreen
-import com.serwylo.retrowars.core.MultiplayerLobbyScreen
+import com.serwylo.retrowars.core.*
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -70,6 +67,12 @@ class RetrowarsGame : Game() {
             Gdx.app.log(TAG, "Ending multiplayer game... Off to the end-game lobby.")
             client.changeStatus(Player.Status.dead)
             showEndMultiplayerGame()
+        }
+    }
+
+    fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
+        Gdx.app.postRunnable {
+            setScreen(NetworkErrorScreen(this, wasGraceful))
         }
     }
 

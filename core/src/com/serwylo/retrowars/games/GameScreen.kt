@@ -23,6 +23,10 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
         hud = HUD(game.uiAssets)
+
+        client?.listen(
+            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful)}
+        )
     }
 
     protected abstract fun getScore(): Long

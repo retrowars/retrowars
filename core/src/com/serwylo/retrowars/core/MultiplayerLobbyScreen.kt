@@ -65,6 +65,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             pad(UI_SPACE)
 
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
+                Gdx.app.log(TAG, "Returning from lobby to main screen. Will close of anny server and/or client connection.")
                 close()
                 game.showMainMenu()
             }
@@ -120,13 +121,10 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun listenToClient(client: RetrowarsClient) {
-        client.startGameListener = {
-            initiateStartCountdown()
-
-            // If we play multiple games in succession, don't want to have old listeners
-            // floating around.
-            client.startGameListener = null
-        }
+        client.listen(
+            startGameListener = { initiateStartCountdown() },
+            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
+        )
     }
 
     private fun initiateStartCountdown() {
@@ -264,15 +262,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             renderPlayers(originalPlayers)
         }
 
-        client.playersChangedListener = { updatedPlayers ->
-            Gdx.app.log(TAG, "Player list changed. Updating list of clients to show.")
-            renderPlayers(updatedPlayers)
-        }
-
-        client.playerStatusChangedListener = { _, _ ->
-            Gdx.app.log(TAG, "Player status changed. Updating list of clients to show.")
-            renderPlayers(client.players)
-        }
+        client.listen(
+            startGameListener = { initiateStartCountdown() },
+            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
+            playersChangedListener = { updatedPlayers -> renderPlayers(updatedPlayers) },
+            playerStatusChangedListener = { _, _ -> renderPlayers(client.players) }
+        )
 
     }
 

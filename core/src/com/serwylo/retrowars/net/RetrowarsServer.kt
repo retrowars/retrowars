@@ -16,6 +16,7 @@ class RetrowarsServer {
     companion object {
 
         private const val TAG = "RetrowarsServer"
+
         private var server: RetrowarsServer? = null
 
         fun start(): RetrowarsServer {
@@ -139,6 +140,7 @@ class RetrowarsServer {
     }
 
     fun close() {
+        server.sendToAllTCP(Network.Client.OnServerStopped())
         server.close()
     }
 
