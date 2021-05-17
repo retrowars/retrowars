@@ -6,11 +6,16 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
 
 abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
+
+    companion object {
+        const val TAG = "GameScreen"
+    }
 
     private val camera = OrthographicCamera()
     protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
@@ -25,8 +30,22 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
         hud = HUD(game.uiAssets)
 
         client?.listen(
-            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful)}
+            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
+            playerStatusChangedListener = { player, status -> handlePlayerStatusChange(player, status) }
         )
+    }
+
+    private fun handlePlayerStatusChange(player: Player, status: String) {
+        val client = this.client ?: return
+
+        if (player.id != client.me()?.id) {
+            return
+        }
+
+        if (status == Player.Status.dead) {
+            Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")
+            game.endGame(client)
+        }
     }
 
     protected abstract fun getScore(): Long

@@ -87,7 +87,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
     private fun showFinalResults() {
 
-        subheading.setText("Congratulations!")
+        subheading.setText("Final scores:")
 
         showPlayerSummaries()
 

@@ -39,6 +39,7 @@ class RetrowarsServer {
     }
 
     private var players = mutableSetOf<Player>()
+    private val scores = mutableMapOf<Player, Long>()
 
     private var server = object : Server() {
         override fun newConnection() = PlayerConnection()
@@ -50,8 +51,6 @@ class RetrowarsServer {
     }
 
     init {
-
-        Log.set(Log.LEVEL_TRACE)
 
         register(server)
 
@@ -94,6 +93,43 @@ class RetrowarsServer {
             server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))
         }
 
+        checkForWinner()
+
+    }
+
+    /**
+     * If there is only one player left (all the rest are either in the end game screen or removed
+     * removed from the game), and the sole remaining player has the highest score, tell them to
+     * die so that we can all return to the end game screen and celebrate.
+     *
+     * Letting that player go on forever smashing everyone else in scores will be not very fun for
+     * the others to watch, especially because they can't actually watch the game, only the score.
+     */
+    private fun checkForWinner() {
+        val stillPlaying = players.filter { it.status == Player.Status.playing }
+
+        if (stillPlaying.size != 1) {
+            return
+        }
+
+        val survivingPlayer = stillPlaying[0]
+
+        val highestScore = scores.maxBy { it.value }?.value ?: 0
+        val playersWithHighestScore = scores.filterValues { it == highestScore }.keys
+
+        if (playersWithHighestScore.size != 1 || !playersWithHighestScore.contains(survivingPlayer)) {
+            return
+        }
+
+        Gdx.app.log(TAG, "Only one player remaining and their score is the highest. Ask them to end their game so we can all continue playing a new game.")
+
+        val connection = server.connections.find { (it as PlayerConnection).player?.id == survivingPlayer.id }
+        if (connection == null) {
+            Gdx.app.error(TAG, "Could not find connection for player ${survivingPlayer.id}, so could not ask them to return to the lobby")
+            return
+        }
+
+        updateStatus(survivingPlayer, Player.Status.dead)
     }
 
     private fun updateScore(player: Player?, score: Long) {
@@ -101,8 +137,12 @@ class RetrowarsServer {
             return
         }
 
+        scores[player] = score
+
         // TODO: Don't send back to the client that originally reported their own score.
         server.sendToAllTCP(Network.Client.OnPlayerScored(player.id, score))
+
+        checkForWinner()
     }
 
     private fun removePlayer(player: Player?) {
@@ -112,6 +152,8 @@ class RetrowarsServer {
 
         players.remove(player)
         server.sendToAllTCP(Network.Client.OnPlayerRemoved(player.id))
+
+        checkForWinner()
     }
 
 
@@ -145,6 +187,8 @@ class RetrowarsServer {
     }
 
     fun startGame() {
+        scores.clear()
+        players.onEach { it.status = Player.Status.playing }
         server.sendToAllTCP(Network.Client.OnStartGame())
     }
 
