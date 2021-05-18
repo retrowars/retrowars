@@ -134,6 +134,13 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 250
 
     }
 
+    override fun onReceiveDamage(strength: Int) {
+        for (i in 0..strength * 2) {
+            queueEnemyMissile()
+            state.numMissilesRemaining ++
+        }
+    }
+
     private fun completeLevel() {
         with(state) {
             incrementScore(MissileCommandGameState.BONUS_SCORE_PER_LEVEL)

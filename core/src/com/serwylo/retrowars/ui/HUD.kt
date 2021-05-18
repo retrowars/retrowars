@@ -1,16 +1,26 @@
 package com.serwylo.retrowars.ui
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.ui.Cell
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup
 import com.serwylo.beatgame.ui.Avatar
+import com.serwylo.beatgame.ui.CustomActions
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.UiAssets
+import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 
 class HUD(private val assets: UiAssets) {
+
+    companion object {
+        private const val TAG = "HUD"
+    }
 
     /**
      * The bottom slither of the stage dedicated to showing stats, multiplayer info, etc.
@@ -20,6 +30,7 @@ class HUD(private val assets: UiAssets) {
      */
     private val infoCell: Cell<Table>
     private val avatarCell: Cell<WidgetGroup>?
+    private val avatars: Map<Player, Avatar>
     private val styles = assets.getStyles()
 
     private val stage = makeStage()
@@ -36,6 +47,7 @@ class HUD(private val assets: UiAssets) {
         val gameWindow = Table()
         gameWindow.background = assets.getSkin().getDrawable("window")
         gameOverlay = gameWindow.add().expand().fill()
+        avatars = client?.players?.associateWith { Avatar(it, assets) } ?: emptyMap()
 
         val infoWindow = Table().apply {
             background = assets.getSkin().getDrawable("window")
@@ -48,7 +60,7 @@ class HUD(private val assets: UiAssets) {
             // Hold a reference to this so that we can update (naively blow away and recreate) the
             // multiplayer info when the client updates us, without having to throw away too many other
             // parts of the UI.
-            avatarCell = if (client == null) null else add(makeAvatarTiles(client)).expandX().left().pad(UI_SPACE)
+            avatarCell = if (client == null) null else add(makeAvatarTiles(client, avatars)).expandX().left().pad(UI_SPACE)
 
             gameScore = add().right().expandX().pad(UI_SPACE)
         }
@@ -99,11 +111,16 @@ class HUD(private val assets: UiAssets) {
         infoCell.height(calcInfoHeight())
     }
 
-    private fun makeAvatarTiles(client: RetrowarsClient): WidgetGroup {
+    private fun makeAvatarTiles(client: RetrowarsClient, avatars: Map<Player, Avatar>): WidgetGroup {
         return Table().apply {
             val me = client.me()
+            val myAvatar = avatars[me]
             if (me != null) {
-                add(Avatar(me, assets))
+                if (myAvatar == null) {
+                    Gdx.app.error(TAG, "Expected avatar for myself (${me.id}), but couldn't find it.")
+                } else {
+                    add(myAvatar)
+                }
             }
 
             val others = client.otherPlayers()
@@ -113,10 +130,20 @@ class HUD(private val assets: UiAssets) {
                 }
 
                 others.onEach { player ->
-                    add(Avatar(player, assets))
+                    val avatar = avatars[player]
+                    if (avatar == null) {
+                        Gdx.app.error(TAG, "Expected avatar for ${player.id}, but couldn't find it.")
+                    } else {
+                        add(avatar)
+                    }
                 }
             }
         }
+    }
+
+    fun showAttackFrom(player: Player, strength: Int) {
+        val avatar = avatars[player] ?: return
+        avatar.addAction(CustomActions.bounce(strength * 3))
     }
 
 }

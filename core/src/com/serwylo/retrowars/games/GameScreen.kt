@@ -31,8 +31,21 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
 
         client?.listen(
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
-            playerStatusChangedListener = { player, status -> handlePlayerStatusChange(player, status) }
+            playerStatusChangedListener = { player, status -> handlePlayerStatusChange(player, status) },
+            scoreBreakpointListener = { player, strength -> handleBreakpointChange(player, strength) }
         )
+    }
+
+    private fun handleBreakpointChange(player: Player, strength: Int) {
+        Gdx.app.log(TAG, "HANDLING BREAKPOINT CHANGE")
+        if (player.id == client?.me()?.id) {
+            // TODO: Show visual feedback that we are attacking other players.
+                Gdx.app.log(TAG, "BAILING")
+            return
+        }
+
+        hud.showAttackFrom(player, strength)
+        onReceiveDamage(strength)
     }
 
     private fun handlePlayerStatusChange(player: Player, status: String) {
@@ -49,9 +62,21 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
     }
 
     protected abstract fun getScore(): Long
-
     protected abstract fun updateGame(delta: Float)
     protected abstract fun renderGame(camera: OrthographicCamera)
+
+    /**
+     * When another player performs well, we will receive a message to tell us to get handicaped in some way.
+     * e.g. for Asteroids you may add more asteroids to the screen, in Missile Command you may add more missiles.
+     * However it could also be more creative, perhaps in asteroids it spins your ship around randomly, or blows you off course.
+     * Perhaps in missile command it changes missiles to zig-zag down to earth, etc.
+     * It is up to the game to decide how to handicap the player in response.
+     *
+     * The [strength] of the attack indicates how much we should handicap the current user in response.
+     * The default is a strength of 1, when the other player increments their score by a certain threshold.
+     * If they do something which makes their score increment by 2 or 3 times this increment, then [strength] will be 2 or 3 respectively.
+     */
+    protected abstract fun onReceiveDamage(strength: Int)
 
     override fun render(delta: Float) {
 

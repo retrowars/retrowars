@@ -2,8 +2,12 @@ package com.serwylo.beatgame.ui
 
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.math.Interpolation
+import com.badlogic.gdx.scenes.scene2d.Action
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
@@ -134,5 +138,17 @@ fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {
     return Image(iconSprite).apply {
         setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
     }
+
+}
+
+object CustomActions {
+
+    fun bounce(numJumps: Int = 3): Action =
+        Actions.repeat(
+            numJumps, Actions.sequence(
+                Actions.moveBy(0f, 10f, 0.15f, Interpolation.bounceOut),
+                Actions.moveBy(0f, -10f, 0.15f, Interpolation.bounceIn)
+            )
+        )
 
 }

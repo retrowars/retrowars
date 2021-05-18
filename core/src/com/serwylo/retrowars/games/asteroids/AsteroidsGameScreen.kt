@@ -209,6 +209,10 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
         state.asteroids.addAll(Asteroid.spawn(numToRespawn, viewport.worldWidth, viewport.worldHeight))
     }
 
+    override fun onReceiveDamage(strength: Int) {
+        state.asteroids.addAll(Asteroid.spawn(strength, viewport.worldWidth, viewport.worldHeight))
+    }
+
     override fun renderGame(camera: OrthographicCamera) {
         val r = game.uiAssets.shapeRenderer
 

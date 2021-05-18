@@ -40,13 +40,14 @@ class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: V
         fun spawn(numOfAsteroids: Int, worldWidth: Float, worldHeight: Float): List<Asteroid> {
 
             val approxDegreesBetween = 360f / numOfAsteroids
+            val startingAngle = (Math.random() * 360).toFloat()
 
             return (0 until numOfAsteroids).map { i ->
 
                 // Project outward from the centre of the screen until we hit the edge, then pull back a little.
                 // The idea is that we litter asteroids around the outside of the screen so they ship can
                 // safely stay in the middle while they spawn.
-                val ray = Vector2(0f, worldWidth / 10).rotateDeg(i * approxDegreesBetween)
+                val ray = Vector2(0f, worldWidth / 10).rotateDeg(startingAngle + i * approxDegreesBetween)
                 while (ray.x > -worldWidth / 2 && ray.x < worldWidth / 2 && ray.y > -worldHeight / 2 && ray.y < worldHeight / 2) {
                     ray.scl(1.2f)
                 }

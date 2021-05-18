@@ -3,6 +3,7 @@ package com.serwylo.retrowars.core
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.math.Interpolation
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
@@ -26,6 +27,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     private val stage = makeStage()
     private val wrapper = Table()
+
+    /**
+     * Keep track of this, so that when we see a new player for the first time,
+     * they can be introduced with a little jump.
+     */
+    private val previouslyRenderedPlayers = mutableSetOf<Player>()
 
     private val styles = game.uiAssets.getStyles()
     private val strings = game.uiAssets.getStrings()
@@ -106,7 +113,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         Gdx.app.log(TAG, "Server started. Now connecting as a client.")
 
-        val client = createClient()
+        val client = createClient(true)
 
         Gdx.app.log(TAG, "Client connected.")
 
@@ -114,12 +121,15 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     }
 
-    private fun createClient(): RetrowarsClient {
-        val client = RetrowarsClient.connect()
+    private fun createClient(isAlsoServer: Boolean): RetrowarsClient {
+        val client = RetrowarsClient.connect(isAlsoServer)
         listenToClient(client)
         return client
     }
 
+    // TODO: Race condition between this and the other client.listen(...) call (after appending avatars)
+    //       seems to cause a condition where you just see "Connected to server" but no information
+    //       about any of the players.
     private fun listenToClient(client: RetrowarsClient) {
         client.listen(
             startGameListener = { initiateStartCountdown() },
@@ -186,7 +196,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         Gdx.app.log(TAG, "Connecting to server.")
 
-        val client = createClient()
+        val client = createClient(false)
 
         Gdx.app.log(TAG, "Connected")
 
@@ -276,7 +286,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         pad(UI_SPACE)
 
         row().space(UI_SPACE).pad(UI_SPACE)
-        add(Avatar(players[0], uiAssets))
+
+        val myAvatar = Avatar(players[0], uiAssets)
+        if (!previouslyRenderedPlayers.contains(players[0])) {
+            myAvatar.addAction(CustomActions.bounce())
+        }
+        add(myAvatar)
         add(makeGameIcon(players[0].getGameDetails(), uiAssets))
         add(Label("You", uiAssets.getStyles().label.large))
 
@@ -286,7 +301,13 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
                 row().space(UI_SPACE).pad(UI_SPACE)
 
-                add(Avatar(player, uiAssets))
+                val avatar = Avatar(player, uiAssets)
+
+                if (!previouslyRenderedPlayers.contains(player)) {
+                    avatar.addAction(CustomActions.bounce())
+                }
+
+                add(avatar)
                 add(makeGameIcon(player.getGameDetails(), uiAssets))
 
                 add(
@@ -303,6 +324,9 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
             }
         }
+
+        previouslyRenderedPlayers.clear()
+        previouslyRenderedPlayers.addAll(players)
 
     }
 
