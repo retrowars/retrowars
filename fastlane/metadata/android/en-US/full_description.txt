@@ -1,0 +1,23 @@
+Enjoy retro games? Want to play Asteroids? or Missile Command? How about realtime multiplayer Asteroids?
+
+Okay, now how about you play Missile Command in realtime against your friends playing Asteroids? When they shoot down asteroids, you have to defend against more missiles. When you shoot down missiles they have to negotiate more asteroids. 
+
+Welcome to Super Retro Mega Wars!
+
+Still in early stage development, but currently supports the following in both single player and multi-player mode:
+
+* Asteroids
+* Missile Command
+
+No ads. No in game purchases. Just retro games and good times.
+
+Any feedback is very welcome at <a href="https://github.com/retrowars/retrowars/issues">GitHub</a>.
+
+Known limitations:
+
+* Only local network play supported.
+* Thorough play testing required to balance the games.
+* Networking can be a little flakey.
+* Untested on multiple screen sizes.
+
+Please support further development at <a href="https://github.com/sponsors/pserwylo>GitHub sponsors</a> or <a href="https://liberapay.com/retrowars/">Liberapay</a>.
