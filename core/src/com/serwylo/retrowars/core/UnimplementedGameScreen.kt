@@ -18,6 +18,7 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
     private val stage = makeStage()
 
     init {
+        val stage = this.stage
         val styles = game.uiAssets.getStyles()
         val strings = game.uiAssets.getStrings()
 
@@ -34,7 +35,19 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
         )
 
         container.addActor(
-            Label(strings["unimplemented-game.description"], styles.label.medium)
+            Label(strings["unimplemented-game.description"], styles.label.medium).apply {
+                wrap = true
+                setAlignment(Align.center)
+                width = stage.width * 2f / 3f
+            }
+        )
+
+        container.addActor(
+            Label(strings["unimplemented-game.next-game-dev"], styles.label.small).apply {
+                wrap = true
+                setAlignment(Align.center)
+                width = stage.width * 2f / 3f
+            }
         )
 
         container.addActor(
@@ -42,7 +55,7 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
                 strings.format("unimplemented-game.vote", strings[gameDetails.nameId]),
                 styles
             ) {
-                Gdx.net.openURI("https://github.com/retrowars/retrowars/issues/12")
+                Gdx.net.openURI("https://github.com/retrowars/retrowars/labels/game-proposal")
             }
         )
 

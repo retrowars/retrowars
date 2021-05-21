@@ -131,6 +131,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     //       seems to cause a condition where you just see "Connected to server" but no information
     //       about any of the players.
     private fun listenToClient(client: RetrowarsClient) {
+        Gdx.app.log(TAG, "Listening to just start game or network close listener from client.")
         client.listen(
             startGameListener = { initiateStartCountdown() },
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
@@ -234,6 +235,9 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         val avatarCell = table.add().expandY()
 
         val renderPlayers = { toShow: List<Player> ->
+
+            Gdx.app.log(TAG, "Showing list of ${toShow.size} players...")
+
             avatarCell.clearActor()
             avatarCell.setActor<Actor>(makeAvatarTiles(toShow, game.uiAssets))
 
@@ -272,6 +276,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             renderPlayers(originalPlayers)
         }
 
+        Gdx.app.log(TAG, "Listening to all events from client about starting game, new players, etc...")
         client.listen(
             startGameListener = { initiateStartCountdown() },
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
@@ -350,6 +355,13 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     private fun close() {
+
+        RetrowarsClient.get()?.listen(
+            // Don't do anything upon network close, because we know we are about to shut down our
+            // own server.
+            networkCloseListener = {}
+        )
+
         RetrowarsServer.stop()
         RetrowarsClient.disconnect()
     }

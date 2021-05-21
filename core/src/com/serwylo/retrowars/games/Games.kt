@@ -27,12 +27,14 @@ object Games {
     )
 
     val spaceInvaders = UnavailableGameDetails("space-invaders", "game.space-invaders.name")
+    val tetris = UnavailableGameDetails("tetris", "game.tetris.name")
     val snake = UnavailableGameDetails("snake", "game.snake.name")
 
     val all = sortedMapOf(
         "asteroids" to asteroids,
         "missile-command" to missileCommand,
         "space-invaders" to spaceInvaders,
+        "tetris" to tetris,
         "snake" to snake
     )
 

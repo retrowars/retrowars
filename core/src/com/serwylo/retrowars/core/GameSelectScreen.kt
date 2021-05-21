@@ -36,7 +36,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         // from before it occurred we could use DIPs).
         val gamesPerRow = if (Gdx.app.type == Application.ApplicationType.Desktop) 5 else 4
         val width = (stage.width - UI_SPACE * 4) / gamesPerRow
-        val height = width * 3 / 4
+        val height = width * 5 / 4
 
         val container = VerticalGroup().apply {
             space(UI_SPACE)
@@ -152,7 +152,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         val table = Table().apply {
             setFillParent(true)
             touchable = Touchable.disabled // Let the button in the background do the interactivity.
-            pad(UI_SPACE)
+            pad(UI_SPACE * 2)
 
             add(gameLabel).expandX().fillX()
         }
@@ -164,10 +164,11 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         val icon = Image(game.icon(sprites)).apply {
             setScaling(Scaling.fit)
+            align = Align.bottom
         }
 
         table.row()
-        table.add(icon).expand().fill().pad(UI_SPACE * 2)
+        table.add(icon).expand().bottom().fill().pad(UI_SPACE * 2)
 
         return WidgetGroup(button, table)
 
