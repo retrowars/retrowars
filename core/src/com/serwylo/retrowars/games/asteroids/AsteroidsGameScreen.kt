@@ -15,12 +15,13 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeLargeButton
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 
-class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
+class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -91,7 +92,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, 400f, 400f) {
 
         // TODO: Record high score, show end of game screen.
         if (state.numLives <= 0) {
-            game.endGame(client)
+            endGame()
         }
     }
 

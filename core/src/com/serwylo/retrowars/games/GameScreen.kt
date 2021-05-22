@@ -8,10 +8,11 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
 
-abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
+abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
 
     companion object {
         const val TAG = "GameScreen"
@@ -57,7 +58,20 @@ abstract class GameScreen(protected val game: RetrowarsGame, minWorldWidth: Floa
 
         if (status == Player.Status.dead) {
             Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")
-            game.endGame(client)
+            endGame()
+        }
+    }
+
+    protected fun endGame() {
+        // TODO: Show end of game screen.
+        if (client == null) {
+            Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
+            saveHighScore(gameDetails, getScore())
+            game.showGameSelectMenu()
+        } else {
+            Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
+            client.changeStatus(Player.Status.dead)
+            game.showEndMultiplayerGame()
         }
     }
 

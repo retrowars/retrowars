@@ -4,9 +4,11 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.serwylo.retrowars.core.*
+import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.scoring.saveHighScore
 import java.util.*
 
 class RetrowarsGame : Game() {
@@ -52,21 +54,9 @@ class RetrowarsGame : Game() {
         }
     }
 
-    private fun showEndMultiplayerGame() {
+    fun showEndMultiplayerGame() {
         Gdx.app.postRunnable {
             setScreen(EndMultiplayerGameScreen(this))
-        }
-    }
-
-    fun endGame(client: RetrowarsClient?) {
-        // TODO: Record high score, show end of game screen.
-        if (client == null) {
-            Gdx.app.log(TAG, "Ending single player game... Loading game select menu.")
-            showGameSelectMenu()
-        } else {
-            Gdx.app.log(TAG, "Ending multiplayer game... Off to the end-game lobby.")
-            client.changeStatus(Player.Status.dead)
-            showEndMultiplayerGame()
         }
     }
 

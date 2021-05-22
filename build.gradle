@@ -104,5 +104,6 @@ project(":core") {
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
         implementation 'com.github.crykn:kryonet:2.22.7'
+        implementation 'com.google.code.gson:gson:2.8.6'
     }
 }

@@ -15,6 +15,7 @@ import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
+import com.serwylo.retrowars.scoring.loadHighScore
 
 class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
@@ -169,6 +170,11 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         table.row()
         table.add(icon).expand().bottom().fill().pad(UI_SPACE * 2)
+
+        val highScore = loadHighScore(game)
+        val scoreText = if (highScore.attempts > 0) "Best: ${highScore.score}" else ""
+        table.row()
+        table.add(Label(scoreText, styles.label.small))
 
         return WidgetGroup(button, table)
 
