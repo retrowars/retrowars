@@ -158,11 +158,6 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             add(gameLabel).expandX().fillX()
         }
 
-        if (!game.isAvailable) {
-            table.row()
-            table.add(Label(strings["unimplemented-game.coming-soon"], styles.label.small)).expandX().center()
-        }
-
         val icon = Image(game.icon(sprites)).apply {
             setScaling(Scaling.fit)
             align = Align.bottom
@@ -172,9 +167,16 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         table.add(icon).expand().bottom().fill().pad(UI_SPACE * 2)
 
         val highScore = loadHighScore(game)
-        val scoreText = if (highScore.attempts > 0) "Best: ${highScore.score}" else ""
+        val subText = if (!game.isAvailable) {
+            strings["unimplemented-game.coming-soon"]
+        } else if (highScore.attempts > 0) {
+            "Best: ${highScore.score}"
+        } else {
+            ""
+        }
+
         table.row()
-        table.add(Label(scoreText, styles.label.small))
+        table.add(Label(subText, styles.label.small))
 
         return WidgetGroup(button, table)
 
