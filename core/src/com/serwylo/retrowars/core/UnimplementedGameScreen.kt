@@ -1,7 +1,6 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.ScreenAdapter
+import com.badlogic.gdx.*
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
@@ -30,7 +29,7 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
 
         container.addActor(
             makeHeading(strings["unimplemented-game.title"], styles, strings) {
-                game.showMainMenu()
+                game.showGameSelectMenu()
             }
         )
 
@@ -68,11 +67,24 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
     }
 
     override fun show() {
-        Gdx.input.inputProcessor = stage
+        Gdx.input.setCatchKey(Input.Keys.BACK, true)
+        Gdx.input.inputProcessor = InputMultiplexer(stage, object : InputAdapter() {
+
+            override fun keyDown(keycode: Int): Boolean {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACK) {
+                    game.showGameSelectMenu()
+                    return true
+                }
+
+                return false
+            }
+
+        })
     }
 
     override fun hide() {
         Gdx.input.inputProcessor = null
+        Gdx.input.setCatchKey(Input.Keys.BACK, false)
     }
 
     override fun render(delta: Float) {

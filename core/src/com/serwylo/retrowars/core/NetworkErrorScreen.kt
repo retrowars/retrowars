@@ -1,9 +1,6 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.Application
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Screen
-import com.badlogic.gdx.ScreenAdapter
+import com.badlogic.gdx.*
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
@@ -60,11 +57,24 @@ class NetworkErrorScreen(private val game: RetrowarsGame, wasGraceful: Boolean):
     }
 
     override fun show() {
-        Gdx.input.inputProcessor = stage
+        Gdx.input.setCatchKey(Input.Keys.BACK, true)
+        Gdx.input.inputProcessor = InputMultiplexer(stage, object : InputAdapter() {
+
+            override fun keyDown(keycode: Int): Boolean {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACK) {
+                    game.showMainMenu()
+                    return true
+                }
+
+                return false
+            }
+
+        })
     }
 
     override fun hide() {
         Gdx.input.inputProcessor = null
+        Gdx.input.setCatchKey(Input.Keys.BACK, false)
     }
 
     override fun render(delta: Float) {

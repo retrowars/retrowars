@@ -1,7 +1,6 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.ScreenAdapter
+import com.badlogic.gdx.*
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.math.Interpolation
 import com.badlogic.gdx.scenes.scene2d.Actor
@@ -134,7 +133,8 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
         Gdx.app.log(TAG, "Listening to just start game or network close listener from client.")
         client.listen(
             startGameListener = { initiateStartCountdown() },
-            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
+            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
+            playersChangedListener = { showClientLobby(client) }
         )
     }
 
@@ -351,7 +351,20 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     override fun show() {
-        Gdx.input.inputProcessor = stage
+        Gdx.input.setCatchKey(Input.Keys.BACK, true)
+        Gdx.input.inputProcessor = InputMultiplexer(stage, object : InputAdapter() {
+
+            override fun keyDown(keycode: Int): Boolean {
+                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACK) {
+                    close()
+                    game.showMainMenu()
+                    return true
+                }
+
+                return false
+            }
+
+        })
     }
 
     private fun close() {
@@ -368,6 +381,7 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     override fun hide() {
         Gdx.input.inputProcessor = null
+        Gdx.input.setCatchKey(Input.Keys.BACK, false)
     }
 
     override fun render(delta: Float) {
