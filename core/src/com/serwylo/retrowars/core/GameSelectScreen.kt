@@ -155,6 +155,9 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             touchable = Touchable.disabled // Let the button in the background do the interactivity.
             pad(UI_SPACE * 2)
 
+            add(Label("Based on", styles.label.small))
+
+            row()
             add(gameLabel).expandX().fillX()
         }
 
