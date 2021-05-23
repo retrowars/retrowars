@@ -114,7 +114,7 @@ class RetrowarsServer {
 
         val survivingPlayer = stillPlaying[0]
 
-        val highestScore = scores.maxBy { it.value }?.value ?: 0
+        val highestScore = scores.maxByOrNull { it.value }?.value ?: 0
         val playersWithHighestScore = scores.filterValues { it == highestScore }.keys
 
         if (playersWithHighestScore.size != 1 || !playersWithHighestScore.contains(survivingPlayer)) {

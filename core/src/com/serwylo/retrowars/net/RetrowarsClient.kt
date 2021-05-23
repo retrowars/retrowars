@@ -7,6 +7,9 @@ import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.net.Network.register
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.net.InetAddress
 
 class RetrowarsClient(host: InetAddress?) {
@@ -28,7 +31,11 @@ class RetrowarsClient(host: InetAddress?) {
                 throw IllegalStateException("Cannot connect to server, client connection has already been opened.")
             }
 
-            val host = if (connectToSelf) InetAddress.getLocalHost() else null
+            val host = if (connectToSelf) {
+                InetAddress.getLocalHost()
+            } else {
+                null
+            }
             val newClient = RetrowarsClient(host)
             client = newClient
             return newClient
@@ -145,10 +152,17 @@ class RetrowarsClient(host: InetAddress?) {
             }
         }))
 
-        val address = host ?: client.discoverHost(Network.defaultUdpPort, 10000)
-        // TODO: Error if no server found
-        client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
-        client.sendTCP(Network.Server.RegisterPlayer())
+        try {
+            val address = host
+                ?: client.discoverHost(Network.defaultUdpPort, 10000)
+                ?: throw IOException("Could not server on the local network to connect to.")
+
+            client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
+            client.sendTCP(Network.Server.RegisterPlayer())
+        } catch (e: IOException) {
+            client.stop()
+            throw IOException(e)
+        }
 
     }
 

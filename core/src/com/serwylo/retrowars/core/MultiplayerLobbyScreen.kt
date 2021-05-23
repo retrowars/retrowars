@@ -17,6 +17,9 @@ import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
+import kotlinx.coroutines.*
+import java.io.IOException
+import java.util.concurrent.CompletableFuture
 
 class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
@@ -71,9 +74,12 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
             pad(UI_SPACE)
 
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
-                Gdx.app.log(TAG, "Returning from lobby to main screen. Will close of anny server and/or client connection.")
-                close()
-                game.showMainMenu()
+                GlobalScope.launch {
+                    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close of anny server and/or client connection.")
+                    showStatus("Disconnecting...")
+                    close()
+                    game.showMainMenu()
+                }
             }
 
             add(heading).center()
@@ -106,18 +112,26 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     private fun startServer() {
 
-        Gdx.app.log(TAG, "Starting a new multiplayer server.")
+        GlobalScope.launch(Dispatchers.IO) {
 
-        val server = RetrowarsServer.start()
+            Gdx.app.log(TAG, "Starting a new multiplayer server.")
+            showStatus("Starting server...")
+            val server = RetrowarsServer.start()
 
-        Gdx.app.log(TAG, "Server started. Now connecting as a client.")
+            Gdx.app.log(TAG, "Server started. Now connecting as a client.")
+            showStatus("Connecting...")
+            val client = createClient(true)
 
-        val client = createClient(true)
+            Gdx.app.log(TAG, "Client connected.")
+            showServerLobby(client, server)
 
-        Gdx.app.log(TAG, "Client connected.")
+        }
 
-        showServerLobby(client, server)
+    }
 
+    private fun showStatus(message: String) {
+        wrapper.clear()
+        wrapper.add(Label(message, styles.label.medium))
     }
 
     private fun createClient(isAlsoServer: Boolean): RetrowarsClient {
@@ -195,13 +209,20 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     private fun joinServer() {
 
-        Gdx.app.log(TAG, "Connecting to server.")
+        GlobalScope.launch(Dispatchers.IO) {
 
-        val client = createClient(false)
+            Gdx.app.log(TAG, "Connecting to server.")
+            showStatus("Searching for server\non the local network...")
+            try {
+                val client = createClient(false)
 
-        Gdx.app.log(TAG, "Connected")
+                Gdx.app.log(TAG, "Connected")
+                showClientLobby(client)
+            } catch (e: IOException) {
+                showStatus("Could not find a server on the local network.")
+            }
 
-        showClientLobby(client)
+        }
 
     }
 

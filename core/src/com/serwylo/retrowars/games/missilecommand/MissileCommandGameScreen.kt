@@ -32,7 +32,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
                 val closest = state.turrets
                     .filter { it.ammunition > 0 }
-                    .minBy { abs(it.position.x - worldPos.x) }
+                    .minByOrNull { abs(it.position.x - worldPos.x) }
 
                 if (closest == null) {
                     // TODO: Show feedback that we are completely out of ammunition
