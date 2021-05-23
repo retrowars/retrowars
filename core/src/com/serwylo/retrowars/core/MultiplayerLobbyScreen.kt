@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
+import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
@@ -114,16 +115,20 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         GlobalScope.launch(Dispatchers.IO) {
 
-            Gdx.app.log(TAG, "Starting a new multiplayer server.")
-            showStatus("Starting server...")
-            val server = RetrowarsServer.start()
+            try {
+                Gdx.app.log(TAG, "Starting a new multiplayer server.")
+                showStatus("Starting server...")
+                val server = RetrowarsServer.start()
 
-            Gdx.app.log(TAG, "Server started. Now connecting as a client.")
-            showStatus("Connecting...")
-            val client = createClient(true)
+                Gdx.app.log(TAG, "Server started. Now connecting as a client.")
+                showStatus("Connecting...")
+                val client = createClient(true)
 
-            Gdx.app.log(TAG, "Client connected.")
-            showServerLobby(client, server)
+                Gdx.app.log(TAG, "Client connected.")
+                showServerLobby(client, server)
+            } catch (e: IOException) {
+                showStatus("Error starting a server.\nIs port ${Network.defaultPort} or ${Network.defaultUdpPort} in use?")
+            }
 
         }
 
