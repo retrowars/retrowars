@@ -22,6 +22,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
     private val stage = makeStage()
 
     private val styles = game.uiAssets.getStyles()
+    private val effects = game.uiAssets.getEffects()
     private val skin = game.uiAssets.getSkin()
     private val strings = game.uiAssets.getStrings()
     private val sprites = game.uiAssets.getSprites()
@@ -110,16 +111,14 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         stage.viewport.update(width, height, true)
         stage.clear()
         setupStage()
+        effects.resize(width, height)
     }
 
     override fun render(delta: Float) {
-
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
         stage.act(delta)
-        stage.draw()
-
+        effects.render {
+            stage.draw()
+        }
     }
 
     override fun dispose() {

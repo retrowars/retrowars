@@ -3,15 +3,19 @@ package com.serwylo.retrowars
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.assets.loaders.I18NBundleLoader
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.utils.I18NBundle
+import com.crashinvaders.vfx.VfxManager
+import com.crashinvaders.vfx.effects.*
+import com.crashinvaders.vfx.effects.util.MixEffect
 import com.gmail.blueboxware.libgdxplugin.annotations.GDXAssets
 import java.util.*
-
 
 @Suppress("PropertyName") // Allow underscores in variable names here, because it better reflects the source files things come from.
 class UiAssets(locale: Locale) {
@@ -22,6 +26,7 @@ class UiAssets(locale: Locale) {
     private lateinit var skin: Skin
     private lateinit var styles: Styles
     private lateinit var sprites: Sprites
+    private lateinit var effects: Effects
 
     @GDXAssets(propertiesFiles = ["android/assets/i18n/messages.properties"])
     private lateinit var strings: I18NBundle
@@ -42,6 +47,7 @@ class UiAssets(locale: Locale) {
         strings = manager.get("i18n/messages")
         skin = manager.get("skin.json")
         sprites = Sprites(manager.get("sprites.atlas"))
+        effects = Effects()
 
         styles = Styles(skin)
 
@@ -53,6 +59,58 @@ class UiAssets(locale: Locale) {
     fun getSkin() = skin
     fun getStyles() = styles
     fun getSprites() = sprites
+    fun getEffects() = effects
+
+    class Effects {
+
+        private val manager: VfxManager
+
+        init {
+            manager = VfxManager(Pixmap.Format.RGBA8888)
+
+            /*manager.addEffect(OldTvEffect().apply {
+
+            })*/
+            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 2f, 0.3f).apply {
+                sizeSource = CrtEffect.SizeSource.VIEWPORT
+            })
+            manager.addEffect(FilmGrainEffect().apply {
+                // noiseAmount = 1f
+            })
+            manager.addEffect(GaussianBlurEffect().apply {
+                amount = 0.8f
+            })
+            manager.addEffect(RadialDistortionEffect().apply {
+                distortion = 0.1f
+                zoom = 0.98f
+            })
+        }
+
+        fun render(closure: () -> Unit) {
+
+            Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
+            Gdx.gl.glEnable(GL20.GL_BLEND)
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+
+            manager.cleanUpBuffers()
+            manager.beginInputCapture()
+
+            closure()
+
+            manager.endInputCapture()
+            manager.applyEffects()
+            manager.renderToScreen()
+
+            Gdx.gl.glDisable(GL20.GL_BLEND)
+        }
+
+        fun resize(width: Int, height: Int) {
+            manager.resize(width, height)
+        }
+
+    }
 
     class Styles(private val skin: Skin) {
         val label = Labels()

@@ -57,6 +57,7 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
+        game.uiAssets.getEffects().resize(width, height)
     }
 
     override fun show() {
@@ -68,11 +69,11 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
     }
 
     override fun render(delta: Float) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
         stage.act(delta)
-        stage.draw()
+
+        game.uiAssets.getEffects().render {
+            stage.draw()
+        }
     }
 
 }

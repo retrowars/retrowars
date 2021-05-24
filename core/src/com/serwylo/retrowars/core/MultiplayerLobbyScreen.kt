@@ -1,8 +1,6 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.*
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.math.Interpolation
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
@@ -18,17 +16,32 @@ import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.concurrent.CompletableFuture
 
-class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
+class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
+    close()
+    game.showMainMenu()
+}) {
 
     companion object {
         const val TAG = "MultiplayerLobby"
+
+        private fun close() {
+            // TODO: Move to coroutine and show status to user...
+            RetrowarsClient.get()?.listen(
+                // Don't do anything upon network close, because we know we are about to shut down our
+                // own server.
+                networkCloseListener = {}
+            )
+
+            RetrowarsServer.stop()
+            RetrowarsClient.disconnect()
+        }
     }
 
-    private val stage = makeStage()
     private val wrapper = Table()
 
     /**
@@ -370,57 +383,6 @@ class MultiplayerLobbyScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
             appendAvatars(this, client, server)
         }
-    }
-
-    override fun resize(width: Int, height: Int) {
-        stage.viewport.update(width, height, true)
-    }
-
-    override fun show() {
-        Gdx.input.setCatchKey(Input.Keys.BACK, true)
-        Gdx.input.inputProcessor = InputMultiplexer(stage, object : InputAdapter() {
-
-            override fun keyDown(keycode: Int): Boolean {
-                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACK) {
-                    close()
-                    game.showMainMenu()
-                    return true
-                }
-
-                return false
-            }
-
-        })
-    }
-
-    private fun close() {
-
-        RetrowarsClient.get()?.listen(
-            // Don't do anything upon network close, because we know we are about to shut down our
-            // own server.
-            networkCloseListener = {}
-        )
-
-        RetrowarsServer.stop()
-        RetrowarsClient.disconnect()
-    }
-
-    override fun hide() {
-        Gdx.input.inputProcessor = null
-        Gdx.input.setCatchKey(Input.Keys.BACK, false)
-    }
-
-    override fun render(delta: Float) {
-        Gdx.gl.glEnable(GL20.GL_BLEND)
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-        stage.act(delta)
-        stage.draw()
-
-        Gdx.gl.glDisable(GL20.GL_BLEND)
     }
 
 }

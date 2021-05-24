@@ -96,19 +96,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         updateGame(delta)
 
-        Gdx.gl.glEnable(GL20.GL_BLEND)
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        game.uiAssets.getEffects().render {
+            viewport.renderIn {
+                renderGame(camera)
+            }
 
-        Gdx.graphics.gL20.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.graphics.gL20.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-        viewport.renderIn {
-            renderGame(camera)
+            hud.render(getScore(), delta)
         }
-
-        hud.render(getScore(), delta)
-
-        Gdx.gl.glDisable(GL20.GL_BLEND)
 
     }
 
@@ -129,6 +123,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)
         hud.resize(width, height)
+        game.uiAssets.getEffects().resize(width, height)
 
         resizeViewport(viewport.worldWidth, viewport.worldHeight)
     }

@@ -26,6 +26,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
     private val actionButtons: Cell<Actor>
 
     private val uiAssets = game.uiAssets
+    private val effects = game.uiAssets.getEffects()
     private val styles = game.uiAssets.getStyles()
     private val strings = game.uiAssets.getStrings()
 
@@ -164,6 +165,7 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
+        effects.resize(width, height)
     }
 
     override fun show() {
@@ -175,16 +177,10 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
     }
 
     override fun render(delta: Float) {
-        Gdx.gl.glEnable(GL20.GL_BLEND)
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
         stage.act(delta)
-        stage.draw()
-
-        Gdx.gl.glDisable(GL20.GL_BLEND)
+        effects.render {
+            stage.draw()
+        }
     }
 
 }

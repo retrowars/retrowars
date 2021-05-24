@@ -1,20 +1,19 @@
 package com.serwylo.retrowars.core
 
-import com.badlogic.gdx.*
-import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
+import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeButton
 import com.serwylo.beatgame.ui.makeHeading
-import com.serwylo.beatgame.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 
-class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameDetails: GameDetails): ScreenAdapter() {
-
-    private val stage = makeStage()
+class UnimplementedGameScreen(game: RetrowarsGame, gameDetails: GameDetails): Scene2dScreen(game, { game.showGameSelectMenu() }) {
 
     init {
         val stage = this.stage
@@ -60,39 +59,6 @@ class UnimplementedGameScreen(private val game: RetrowarsGame, private val gameD
 
             stage.addActor(container)
 
-    }
-
-    override fun resize(width: Int, height: Int) {
-        stage.viewport.update(width, height, true)
-    }
-
-    override fun show() {
-        Gdx.input.setCatchKey(Input.Keys.BACK, true)
-        Gdx.input.inputProcessor = InputMultiplexer(stage, object : InputAdapter() {
-
-            override fun keyDown(keycode: Int): Boolean {
-                if (keycode == Input.Keys.ESCAPE || keycode == Input.Keys.BACK) {
-                    game.showGameSelectMenu()
-                    return true
-                }
-
-                return false
-            }
-
-        })
-    }
-
-    override fun hide() {
-        Gdx.input.inputProcessor = null
-        Gdx.input.setCatchKey(Input.Keys.BACK, false)
-    }
-
-    override fun render(delta: Float) {
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-        stage.act(delta)
-        stage.draw()
     }
 
 }
