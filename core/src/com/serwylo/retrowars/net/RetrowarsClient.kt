@@ -7,6 +7,7 @@ import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.net.Network.register
+import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -158,7 +159,7 @@ class RetrowarsClient(host: InetAddress?) {
                 ?: throw IOException("Could not server on the local network to connect to.")
 
             client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
-            client.sendTCP(Network.Server.RegisterPlayer())
+            client.sendTCP(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
         } catch (e: IOException) {
             client.stop()
             throw IOException(e)

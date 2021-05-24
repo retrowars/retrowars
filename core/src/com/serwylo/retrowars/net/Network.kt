@@ -1,7 +1,6 @@
 package com.serwylo.retrowars.net
 
 import com.esotericsoftware.kryonet.EndPoint
-import com.esotericsoftware.kryonet.UdpConnection
 
 // TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
 //       upgrade to the same (latest) version.
@@ -30,8 +29,8 @@ object Network {
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
      */
     object Server {
-        class RegisterPlayer {
-            override fun toString(): String = "RegisterPlayer"
+        class RegisterPlayer(var appVersionCode: Int = 0) {
+            override fun toString(): String = "RegisterPlayer [app version: $appVersionCode]"
         }
 
         class UnregisterPlayer
@@ -51,9 +50,9 @@ object Network {
          * Also, the newly added player will receive a sequence of [OnPlayerAdded] messages, one for each
          * already registered player.
          */
-        class OnPlayerAdded(var id: Long, var game: String) {
-            constructor() : this(0, "")
-            override fun toString(): String = "OnPlayerAdded[player id: $id, game type: $game]"
+        class OnPlayerAdded(var id: Long, var game: String, var serverVersionCode: Int) {
+            constructor() : this(0, "", 0)
+            override fun toString(): String = "OnPlayerAdded[player id: $id, game type: $game, server version: $serverVersionCode]"
         }
 
         class OnPlayerRemoved(var id: Long) {

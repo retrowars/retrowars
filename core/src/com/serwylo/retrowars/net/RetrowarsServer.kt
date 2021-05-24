@@ -8,6 +8,7 @@ import com.esotericsoftware.kryonet.Server
 import com.esotericsoftware.minlog.Log
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
+import com.serwylo.retrowars.utils.AppProperties
 import java.lang.IllegalStateException
 import kotlin.random.Random
 
@@ -171,11 +172,11 @@ class RetrowarsServer {
         // First tell people about the new player (before sending a list of all existing players to
         // this newly registered client). That means that the first PlayerAdded message received by
         // a new client will always be for themselves.
-        server.sendToAllTCP(Network.Client.OnPlayerAdded(player.id, player.game))
+        server.sendToAllTCP(Network.Client.OnPlayerAdded(player.id, player.game, AppProperties.appVersionCode))
 
         // Then notify the current player about all others.
         players.forEach { existingPlayer ->
-            connection.sendTCP(Network.Client.OnPlayerAdded(existingPlayer.id, existingPlayer.game))
+            connection.sendTCP(Network.Client.OnPlayerAdded(existingPlayer.id, existingPlayer.game, AppProperties.appVersionCode))
         }
 
         players.add(player)

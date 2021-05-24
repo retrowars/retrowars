@@ -20,8 +20,10 @@ android {
         applicationId "com.serwyloretrowars"
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+
+        // Pull these from the parent project build.gradle.
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
     buildTypes {
         release {

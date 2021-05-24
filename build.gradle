@@ -2,6 +2,11 @@ buildscript {
     ext.kotlinVersion = '1.5.0'
     ext.kotlinCoroutinesVersion = '1.4.2'
 
+    // Generally just used for Android app versioning, but we also use it in our networking to
+    // report back to users if they are using an unsupported version.
+    ext.appVersionCode = 1
+    ext.appVersionName = "0.1"
+
     repositories {
         mavenLocal()
         mavenCentral()
@@ -107,5 +112,10 @@ project(":core") {
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
         implementation 'com.github.crykn:kryonet:2.22.7'
         implementation 'com.google.code.gson:gson:2.8.6'
+    }
+
+    // https://stackoverflow.com/a/54006518
+    processResources {
+        expand(['appVersionCode': appVersionCode])
     }
 }
