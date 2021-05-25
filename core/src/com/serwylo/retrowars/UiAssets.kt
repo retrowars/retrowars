@@ -64,15 +64,10 @@ class UiAssets(locale: Locale) {
 
     class Effects {
 
-        private val manager: VfxManager
+        private val manager = VfxManager(Pixmap.Format.RGBA8888)
 
         init {
-            manager = VfxManager(Pixmap.Format.RGBA8888)
-
-            /*manager.addEffect(OldTvEffect().apply {
-
-            })*/
-            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 2f, 0.3f).apply {
+            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 1.7f, 0.3f).apply {
                 sizeSource = CrtEffect.SizeSource.VIEWPORT
             })
             manager.addEffect(FilmGrainEffect().apply {
@@ -82,7 +77,7 @@ class UiAssets(locale: Locale) {
                 amount = 0.8f
             })
             manager.addEffect(RadialDistortionEffect().apply {
-                distortion = 0.1f
+                distortion = 0.08f
                 zoom = 0.98f
             })
         }
