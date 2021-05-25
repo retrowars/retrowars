@@ -113,7 +113,10 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         state.bullets.forEach { it.update(delta) }
         state.bullets.removeAll { it.isExpired() }
 
-        state.asteroids.forEach { it.update(delta) }
+        val iterator = state.asteroids.iterator()
+        while (iterator.hasNext()) {
+            iterator.next().update(delta)
+        }
 
         checkCollisions()
 
@@ -157,7 +160,9 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     private fun checkCollisions() {
         val asteroidsToBreak = mutableListOf<Asteroid>()
 
-        state.asteroids.forEach { asteroid ->
+        val iterator = state.asteroids.iterator()
+        while (iterator.hasNext()) {
+            val asteroid = iterator.next()
 
             if (state.isShipAlive() && asteroid.isColliding(state.ship)) {
 
@@ -241,7 +246,12 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     override fun resizeViewport(viewportWidth: Float, viewportHeight: Float) {
         state.ship.setWorldSize(viewportWidth, viewportHeight)
         state.bullets.forEach { it.setWorldSize(viewportWidth, viewportHeight) }
-        state.asteroids.forEach { it.setWorldSize(viewportWidth, viewportHeight) }
+
+        val iterator = state.asteroids.iterator()
+        while (iterator.hasNext()) {
+            iterator.next().setWorldSize(viewportWidth, viewportHeight)
+        }
+
         SafeRespawnArea.screenCentre.set(viewportWidth / 2f, viewportHeight / 2f)
     }
 

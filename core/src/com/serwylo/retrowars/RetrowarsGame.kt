@@ -38,6 +38,12 @@ class RetrowarsGame : Game() {
         }
     }
 
+    fun showOptions() {
+        Gdx.app.postRunnable {
+            setScreen(OptionsScreen(this))
+        }
+    }
+
     fun startGame(screen: Screen) {
         Gdx.app.postRunnable {
             setScreen(screen)

@@ -74,7 +74,13 @@ class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: V
             r.projectionMatrix = camera.combined
             r.color = Color.WHITE
             r.begin(ShapeRenderer.ShapeType.Line)
-            asteroids.forEach {
+
+            // Use an iterator to avoid ConcurrentModificationExceptions when a network request
+            // asynchronously results in an append to this list appends to this list.
+            val iterator = asteroids.iterator()
+            while (iterator.hasNext()) {
+                val it = iterator.next()
+
                 renderInBatch(r, it, it.position)
 
                 if (it.isPartiallyPastBottom()) {

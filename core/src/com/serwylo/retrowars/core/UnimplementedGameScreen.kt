@@ -57,7 +57,7 @@ class UnimplementedGameScreen(game: RetrowarsGame, gameDetails: GameDetails): Sc
             }
         )
 
-            stage.addActor(container)
+        stage.addActor(container)
 
     }
 

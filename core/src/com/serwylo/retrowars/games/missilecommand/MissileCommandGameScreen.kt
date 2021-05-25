@@ -76,10 +76,6 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     }
 
-    override fun resizeViewport(viewportWidth: Float, viewportHeight: Float) {
-        super.resizeViewport(viewportWidth, viewportHeight)
-    }
-
     private fun updateEntities(delta: Float) {
 
         val explosions = state.explosions.iterator()

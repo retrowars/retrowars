@@ -15,6 +15,7 @@ import com.crashinvaders.vfx.VfxManager
 import com.crashinvaders.vfx.effects.*
 import com.crashinvaders.vfx.effects.util.MixEffect
 import com.gmail.blueboxware.libgdxplugin.annotations.GDXAssets
+import com.serwylo.retrowars.scoring.Options
 import java.util.*
 
 @Suppress("PropertyName") // Allow underscores in variable names here, because it better reflects the source files things come from.
@@ -94,14 +95,18 @@ class UiAssets(locale: Locale) {
             Gdx.gl.glEnable(GL20.GL_BLEND)
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
-            manager.cleanUpBuffers()
-            manager.beginInputCapture()
+            if (Options.useVisualEffects()) {
+                manager.cleanUpBuffers()
+                manager.beginInputCapture()
 
-            closure()
+                closure()
 
-            manager.endInputCapture()
-            manager.applyEffects()
-            manager.renderToScreen()
+                manager.endInputCapture()
+                manager.applyEffects()
+                manager.renderToScreen()
+            } else {
+                closure()
+            }
 
             Gdx.gl.glDisable(GL20.GL_BLEND)
         }

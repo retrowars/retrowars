@@ -40,6 +40,13 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
                 }
             ).fillX()
 
+            row()
+            add(
+                makeButton(strings["main-menu.btn.options"], styles) {
+                    game.showOptions()
+                }
+            ).fillX()
+
 
             if (Gdx.app.type == Application.ApplicationType.Desktop) {
                 row()
