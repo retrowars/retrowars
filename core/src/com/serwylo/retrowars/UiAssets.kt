@@ -67,8 +67,8 @@ class UiAssets(locale: Locale) {
         private val manager = VfxManager(Pixmap.Format.RGBA8888)
 
         init {
-            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 1.7f, 0.3f).apply {
-                sizeSource = CrtEffect.SizeSource.VIEWPORT
+            manager.addEffect(OldTvEffect().apply {
+                time = 0.20f
             })
             manager.addEffect(FilmGrainEffect().apply {
                 // noiseAmount = 1f

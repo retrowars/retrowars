@@ -17,8 +17,11 @@ import kotlin.math.max
 
 data class Stats(val duration: Long, val score: Long, val gameType: String) {
 
-    fun scorePerSecond() = score / (duration / 1000)
-    fun scorePerMin() = score / (duration / 1000 / 60)
+    private val seconds = duration / 1000f
+    private val minutes = seconds / 60f
+
+    fun scorePerSecond() = if (seconds == 0f) 0 else score / seconds
+    fun scorePerMin() = if (minutes == 0f) 0 else score / minutes
 
 }
 
