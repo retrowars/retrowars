@@ -11,6 +11,9 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
         const val MAX_TIME_BETWEEN_ENEMY_MISSILES = 3f
         const val INITIAL_MISSILE_SPEED = 25f
         const val SPEED_INCREASE_PER_LEVEL = 0.25f
+
+        // TODO: Just make this dependent on how many missiles are left. A conservative player who
+        //       is more careful with their missiles will be rewarded more handsomely
         const val BONUS_SCORE_PER_LEVEL = Missile.POINTS * 5
 
         const val BASE_NUM_MISSILES_FOR_LEVEL = 6 * City.INITIAL_HEALTH // 1 per city.

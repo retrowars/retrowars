@@ -16,6 +16,9 @@ object DesktopLauncher {
                 Thread.sleep(1000)
             }
 
+        } else if (arg.contains("--stats")) {
+            val config = LwjglApplicationConfiguration()
+            LwjglApplication(AnalyseStats(), config)
         } else {
             val config = LwjglApplicationConfiguration()
             LwjglApplication(RetrowarsGame(), config)

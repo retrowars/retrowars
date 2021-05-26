@@ -8,6 +8,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import com.serwylo.retrowars.scoring.Stats
+import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
@@ -22,6 +24,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
 
     private val hud: HUD
+
+    private val startTime = System.currentTimeMillis()
 
     protected val client = RetrowarsClient.get()
 
@@ -67,6 +71,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
             saveHighScore(gameDetails, getScore())
+            recordStats(Stats(System.currentTimeMillis() - startTime, getScore(), gameDetails.id))
             game.showGameSelectMenu()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")

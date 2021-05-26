@@ -27,7 +27,7 @@ abstract class Missile(speed: Float, val missileColour: Color, val trailColour: 
     companion object {
 
         private const val SIZE = 2f
-        const val POINTS = 10000
+        const val POINTS = 6000
 
         fun renderBulk(camera: Camera, r: ShapeRenderer, missiles: List<Missile>) {
             r.projectionMatrix = camera.combined
