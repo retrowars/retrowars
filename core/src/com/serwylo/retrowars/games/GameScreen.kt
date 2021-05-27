@@ -41,6 +41,10 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         )
     }
 
+    protected fun showMessage(heading: String, body: String? = null) {
+        hud.showMessage(heading, body)
+    }
+
     private fun handleBreakpointChange(player: Player, strength: Int) {
         Gdx.app.log(TAG, "HANDLING BREAKPOINT CHANGE")
         if (player.id == client?.me()?.id) {

@@ -21,6 +21,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     init {
         queueEnemyMissile()
+        showMessage("Protect the cities", "Conserve your missiles")
     }
 
     override fun show() {

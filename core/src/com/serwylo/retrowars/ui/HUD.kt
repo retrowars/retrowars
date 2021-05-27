@@ -4,10 +4,10 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.ui.Cell
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
+import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.Avatar
 import com.serwylo.beatgame.ui.CustomActions
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -35,7 +35,16 @@ class HUD(private val assets: UiAssets) {
 
     private val stage = makeStage()
     private val scoreLabel = Label("", styles.label.large)
-    private var gameOverlay: Cell<Actor>
+    private var gameOverlay = Container<Actor>().apply { fill() }
+    private var descriptionHeading = Label(null, styles.label.large).apply { setAlignment(Align.center) }
+    private var descriptionBody  = Label(null, styles.label.medium).apply { setAlignment(Align.center) }
+    private var description = VerticalGroup().apply {
+        addActor(descriptionHeading)
+        addActor(descriptionBody)
+        align(Align.top)
+        padTop(UI_SPACE * 10)
+    }
+
     private val gameScore: Cell<Actor>
 
     private val client = RetrowarsClient.get()
@@ -46,7 +55,14 @@ class HUD(private val assets: UiAssets) {
         // amount of space is managed by the game via the [GameViewport].
         val gameWindow = Table()
         gameWindow.background = assets.getSkin().getDrawable("window")
-        gameOverlay = gameWindow.add().expand().fill()
+
+        gameWindow.add(
+            Stack(
+                description,
+                gameOverlay
+            )
+        ).expand().fill()
+
         avatars = client?.players?.associateWith { Avatar(it, assets) } ?: emptyMap()
 
         val infoWindow = Table().apply {
@@ -96,6 +112,23 @@ class HUD(private val assets: UiAssets) {
 
     fun addGameScore(overlay: Actor) {
         gameScore.setActor(overlay)
+    }
+
+    /**
+     * Overlay a message in large text with an optional description below.
+     * Examples include a nice single line of text when first starting the game (e.g. "Defend the cities" or "Destroy the asteroids")
+     */
+    fun showMessage(heading: String, body: String? = null) {
+        this.descriptionHeading.setText(heading)
+        this.descriptionBody.setText(body)
+        this.description.addAction(
+            sequence(
+                alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
+                alpha(1f, 0.2f), // ... and animate to 1.0f quite quickly.
+                delay(2f),
+                alpha(0f, 0.5f)
+            )
+        )
     }
 
     private fun calcInfoHeight(): Float {

@@ -71,6 +71,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
 
         addGameOverlayToHUD(softController)
         addGameScoreToHUD(lifeContainer)
+        showMessage("Destroy the asteroids", "Protect your ship")
 
     }
 
