@@ -20,4 +20,4 @@ Known limitations:
 * Networking can be a little flakey.
 * Untested on multiple screen sizes.
 
-Please support further development at <a href="https://github.com/sponsors/pserwylo>GitHub sponsors</a> or <a href="https://liberapay.com/retrowars/">Liberapay</a>.
+Please support further development at <a href="https://github.com/sponsors/pserwylo">GitHub sponsors</a> or <a href="https://liberapay.com/retrowars/">Liberapay</a>.
