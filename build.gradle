@@ -2,11 +2,6 @@ buildscript {
     ext.kotlinVersion = '1.5.0'
     ext.kotlinCoroutinesVersion = '1.4.2'
 
-    // Generally just used for Android app versioning, but we also use it in our networking to
-    // report back to users if they are using an unsupported version.
-    ext.appVersionCode = 1
-    ext.appVersionName = "0.1"
-
     repositories {
         mavenLocal()
         mavenCentral()
@@ -27,12 +22,14 @@ allprojects {
 
     version = '1.0'
     ext {
-        appName = "retrowars"
+        appName = "Super Retro Mega Wars"
+
+        // Generally just used for Android app versioning, but we also use it in our networking to
+        // report back to users if they are using an unsupported version.
+        appVersionCode = 1
+        appVersionName = "0.1.0"
+
         gdxVersion = '1.9.12'
-        roboVMVersion = '2.3.11'
-        box2DLightsVersion = '1.5'
-        ashleyVersion = '1.7.3'
-        aiVersion = '1.8.2'
     }
 
     repositories {
@@ -71,7 +68,6 @@ project(":desktop") {
         implementation project(":core")
         api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-        api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     }
 }
@@ -90,12 +86,6 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
-        api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi"
-        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
-        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"
-        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
-        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutinesVersion"
     }
@@ -106,7 +96,6 @@ project(":core") {
 
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
-        api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
