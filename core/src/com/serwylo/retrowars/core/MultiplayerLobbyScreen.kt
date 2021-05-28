@@ -60,6 +60,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         val server = RetrowarsServer.get()
 
         // TODO: This should go into the else part of the below checks so we don't build more UI than neccesary.
+        Gdx.app.log(TAG, "Showing main lobby with client $client and server $server")
         showMainLobby()
 
         if (server != null) {
@@ -71,7 +72,11 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 //       or join the server again.
                 Gdx.app.error(TAG, "Returned to lobby after a game, but no active client connection to go with our active server one.")
             } else {
+
+                Gdx.app.log(TAG, "Returned to the lobby after a game, and we have an active client $client and active server $server")
                 listenToClient(client)
+
+                Gdx.app.log(TAG, "Finished listening to client, will now show server lobby with client $client and server $server")
                 showServerLobby(client, server)
             }
         } else if (client != null) {
@@ -137,7 +142,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 showStatus("Connecting...")
                 val client = createClient(true)
 
-                Gdx.app.log(TAG, "Client connected.")
+                Gdx.app.log(TAG, "Client connected. Will now show the server for client $client and server $server")
                 showServerLobby(client, server)
             } catch (e: IOException) {
                 showStatus("Error starting a server.\nIs port ${Network.defaultPort} or ${Network.defaultUdpPort} in use?")
@@ -251,11 +256,14 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             row()
             add(Label("Connected to server", styles.label.large))
 
+            Gdx.app.log(TAG, "Showing client lobby. Connected to server. Will now show avatars for client $client")
             appendAvatars(this, client)
         }
     }
 
     private fun appendAvatars(table: Table, client: RetrowarsClient, server: RetrowarsServer? = null) {
+
+        Gdx.app.log(TAG, "Appending avatars for client $client and server $server")
 
         val infoLabel = Label("", game.uiAssets.getStyles().label.medium)
         val startButton = if (server == null) null else makeLargeButton("Start Game", game.uiAssets.getStyles()) {
@@ -380,6 +388,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
             row()
             add(Label("Server started", styles.label.large))
+
+            Gdx.app.log(TAG, "Showing server lobby. Server started. Will now show avatars for client $client and server $server")
 
             appendAvatars(this, client, server)
         }
