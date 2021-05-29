@@ -395,4 +395,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
+    override fun dispose() {
+        super.dispose()
+
+        Gdx.app.log(TAG, "Disposing multiplayer lobby, will ask stage to dispose itself.")
+        stage.dispose()
+    }
 }

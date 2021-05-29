@@ -134,7 +134,10 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     override fun onReceiveDamage(strength: Int) {
         for (i in 0..strength * 2) {
-            queueEnemyMissile()
+            fireEnemyMissile()
+
+            // These are not counted as normal missiles from this level, so extend the length of
+            // the level in response.
             state.numMissilesRemaining ++
         }
     }
