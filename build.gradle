@@ -1,13 +1,8 @@
 buildscript {
     ext.kotlinVersion = '1.5.0'
-    ext.kotlinCoroutinesVersion = '1.4.2'
 
     repositories {
-        mavenLocal()
         mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        jcenter()
         google()
     }
     dependencies {
@@ -26,10 +21,15 @@ allprojects {
 
         // Generally just used for Android app versioning, but we also use it in our networking to
         // report back to users if they are using an unsupported version.
+        //
+        // The format here must remain consistent in order for the F-Droid checkupdates bot to pick
+        // them up. Normally it just checks the android apps build.gradle or AndroidManifest, but
+        // we dynamically inject them via these properties.
         appVersionCode = 1
         appVersionName = "0.1.0"
 
         gdxVersion = '1.9.12'
+        kotlinCoroutinesVersion = '1.4.2'
     }
 
     repositories {

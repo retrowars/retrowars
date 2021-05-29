@@ -17,7 +17,7 @@ android {
         exclude 'META-INF/robovm/ios/robovm.xml'
     }
     defaultConfig {
-        applicationId "com.serwyloretrowars"
+        applicationId "com.serwylo.retrowars"
         minSdkVersion 14
         targetSdkVersion 29
 
