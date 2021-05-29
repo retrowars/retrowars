@@ -2,6 +2,8 @@
 
 [![Liberapay receiving](https://img.shields.io/liberapay/receives/retrowars)](https://liberapay.com/retrowars/donate)
 
+<img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/01_in_game.png" alt="Asteroids game play" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/03_multiplayer_lobby.png" alt="Multiplayer lobby" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_a.png" alt="Asteroids" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_b.png" alt="Missile Command" width="400">
+
 Enjoy retro games? Want to play Asteroids? or Missile Command? How about realtime multiplayer Asteroids?
 
 Okay, now how about you play Missile Command in realtime against your friends playing Asteroids? When they shoot down asteroids, you have to defend against more missiles. When you shoot down missiles they have to negotiate more asteroids. 
