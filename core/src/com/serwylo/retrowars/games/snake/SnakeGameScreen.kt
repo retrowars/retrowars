@@ -68,11 +68,31 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
 
         state.timer += delta
 
+        recordInput()
+        decideNextDirection()
+        moveSnake()
+
+        // TODO: Record high score, show end of game screen.
+        if (false /* Ran into obstacle */) {
+            endGame()
+        }
+
+    }
+
+    private fun recordInput() {
         state.left = controllerLeft.isPressed || Gdx.input.isKeyPressed(Input.Keys.LEFT)
         state.right = controllerRight.isPressed || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
         state.up = controllerUp.isPressed || Gdx.input.isKeyPressed(Input.Keys.UP)
         state.down = controllerDown.isPressed || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+    }
 
+    /**
+     * Based on the current keys pressed and the current direction, queue up the next direction to
+     * travel. This will be applied the next time the snake needs to inch forward. If you press one
+     * direction then another very fast, you can queue up the next direction many times before the
+     * snake actually moves.
+      */
+    private fun decideNextDirection() {
         if (state.left && state.currentDirection != Direction.RIGHT && !state.right && !state.up && !state.down) {
             state.nextDirection = Direction.LEFT
         } else if (state.right && state.currentDirection != Direction.LEFT && !state.left && !state.up && !state.down) {
@@ -82,51 +102,72 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         } else if (state.down && state.currentDirection != Direction.UP && !state.left && !state.right && !state.up) {
             state.nextDirection = Direction.DOWN
         }
-
-        updateEntities(delta)
-
-        // TODO: Record high score, show end of game screen.
-        if (false /* Ran into obstacle */) {
-            endGame()
-        }
-
     }
 
-    private fun updateEntities(delta: Float) {
+    private fun moveSnake() {
         if (state.timer < state.nextTimeStep) {
             return
         }
 
         state.nextTimeStep = state.nextTimeStep + state.timeStep
-
         state.currentDirection = state.nextDirection
 
         val currentHead = state.snake.first
-        val newHead = when(state.nextDirection) {
-            Direction.UP -> state.cells[currentHead.y + 1][currentHead.x]
-            Direction.DOWN -> state.cells[currentHead.y - 1][currentHead.x]
-            Direction.LEFT -> state.cells[currentHead.y][currentHead.x - 1]
-            Direction.RIGHT -> state.cells[currentHead.y][currentHead.x + 1]
+        val newHead = moveTo(state.currentDirection, currentHead)
+
+        if (newHead == null || state.snake.contains(newHead)) {
+            endGame()
+            return
         }
 
         Gdx.app.log(TAG, "Moving ${state.currentDirection} from $currentHead -> $newHead")
+        state.snake.addFirst(newHead)
 
         if (newHead == state.food) {
-            state.timeStep = (state.timeStep - 0.02f).coerceAtLeast(state.minTimeStep)
 
-            val x = (0 until 30).random()
-            val y = (0 until 30).random()
-            state.food = state.cells[y][x]
+            increaseSpeed()
+            spawnFood()
 
             state.score += 10000
 
+        } else if (state.queuedGrowth > 0) {
+
+            // In response to receiving a handicap from the network.
+            // Move the head forward, but leave the tail where it was. Do this as many time
+            // steps as necessary.
+            state.queuedGrowth --
+
         } else {
+
             state.snake.removeLast()
+
         }
-        state.snake.addFirst(newHead)
+
+    }
+
+    private fun moveTo(direction: Direction, current: SnakeGameState.Cell) =
+        when(direction) {
+            Direction.UP -> if (current.y < SnakeGameState.CELLS_HIGH - 1) state.cells[current.y + 1][current.x] else null
+            Direction.DOWN -> if (current.y > 0) state.cells[current.y - 1][current.x] else null
+            Direction.LEFT -> if (current.x > 0) state.cells[current.y][current.x - 1] else null
+            Direction.RIGHT -> if (current.x < SnakeGameState.CELLS_WIDE - 1) state.cells[current.y][current.x + 1] else null
+        }
+
+    private fun increaseSpeed() {
+        // state.timeStep = (state.timeStep - 0.02f).coerceAtLeast(state.minTimeStep)
+    }
+
+    private fun spawnFood() {
+        // Keep respawning food until we find a place that doesn't clash with the snakes tail.
+        do {
+            val x = (0 until SnakeGameState.CELLS_WIDE).random()
+            val y = (0 until SnakeGameState.CELLS_HIGH).random()
+            state.food = state.cells[y][x]
+        } while (state.snake.contains(state.food))
     }
 
     override fun onReceiveDamage(strength: Int) {
+        state.queuedGrowth += strength
     }
 
     override fun renderGame(camera: OrthographicCamera) {

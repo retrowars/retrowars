@@ -4,10 +4,21 @@ import java.util.*
 
 class SnakeGameState() {
 
-    var timeStep = 0.5f
+    companion object {
+        const val CELLS_WIDE = 29
+        const val CELLS_HIGH = 19
+    }
+
+    var timeStep = 0.15f
     val minTimeStep = 0.075f
     var nextTimeStep = timeStep
     var timer = 0f
+
+    /**
+     * If this is greater than one, then we will extend the length of the snake for this many time
+     * steps regardless of whether you have eaten anything or not.
+     */
+    var queuedGrowth = 0
 
     var cells: List<List<Cell>>
     var score: Long = 0
@@ -29,15 +40,14 @@ class SnakeGameState() {
     var nextDirection = Direction.UP
 
     init {
-        cells = (0 until 30).map { y ->
-            (0 until 30).map { x ->
+        cells = (0 until CELLS_HIGH).map { y ->
+            (0 until CELLS_WIDE).map { x ->
                 Cell(x, y)
             }
         }
 
-        snake.add(cells[15][15])
-
-        food = cells[20][15]
+        snake.add(cells[CELLS_HIGH / 2][CELLS_WIDE / 2])
+        food = cells[CELLS_HIGH * 2 / 3][CELLS_WIDE / 2]
     }
 
     class Cell(val x: Int, val y: Int) {
