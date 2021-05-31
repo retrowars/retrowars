@@ -40,3 +40,14 @@
    boolean reportFixture(long);
    float   reportRayFixture(long, float, float, float, float, float);
 }
+
+# Just a little too much reflection when loading skins for scene2d, so
+# lets not pro-guard-ify anything from libgdx.
+# If size becomes an issue in the future, we can revisit a less-blunt
+# solution.
+# There error here: https://stackoverflow.com/a/40703181 regarding lack
+# of the 'BitmapFont' class is the exact error we faced.
+-keep class com.badlogic.**{
+   **[] $VALUES;
+    *;
+}
