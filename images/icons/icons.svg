@@ -29,10 +29,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6"
-     inkscape:cx="18.449877"
-     inkscape:cy="-10.593988"
+     inkscape:cx="-36.725732"
+     inkscape:cy="-1.2270387"
      inkscape:document-units="mm"
-     inkscape:current-layer="g1004"
+     inkscape:current-layer="layer1"
      showgrid="false"
      units="px"
      inkscape:window-width="1916"
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -259,6 +259,132 @@
            x="3.606595"
            y="294.11371"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';fill:#ffffff;stroke-width:0.26458332">?</tspan></text>
+    </g>
+    <g
+       id="g140"
+       inkscape:export-xdpi="186.18182"
+       inkscape:export-ydpi="186.18182">
+      <rect
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect47"
+         width="8.4666662"
+         height="8.4666662"
+         x="0.070870675"
+         y="300.75613"
+         rx="0"
+         ry="0" />
+      <rect
+         y="307.57858"
+         x="1.2189733"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect73"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect75"
+         width="0.51971728"
+         height="0.51971728"
+         x="1.2189733"
+         y="306.52023" />
+      <rect
+         y="305.46188"
+         x="1.2189733"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect77"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect79"
+         width="0.51971728"
+         height="0.51971728"
+         x="2.2773066"
+         y="305.46188" />
+      <rect
+         y="305.46188"
+         x="3.33564"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect81"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect83"
+         width="0.51971728"
+         height="0.51971728"
+         x="4.3939734"
+         y="305.46188" />
+      <rect
+         y="304.40353"
+         x="4.3939734"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect85"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect87"
+         width="0.51971728"
+         height="0.51971728"
+         x="5.4523067"
+         y="304.40353" />
+      <rect
+         y="304.40353"
+         x="6.5106406"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect107"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect109"
+         width="0.51971728"
+         height="0.51971728"
+         x="6.5106406"
+         y="303.34518" />
+      <rect
+         y="302.28683"
+         x="6.5106406"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect111"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect113"
+         width="0.51971728"
+         height="0.51971728"
+         x="5.4523072"
+         y="302.28683" />
+      <rect
+         y="302.28683"
+         x="4.3939738"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect115"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect117"
+         width="0.51971728"
+         height="0.51971728"
+         x="3.3356404"
+         y="302.28683" />
+      <rect
+         y="302.28683"
+         x="2.277307"
+         height="0.51971728"
+         width="0.51971728"
+         id="rect119"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect121"
+         width="0.51971728"
+         height="0.51971728"
+         x="2.2773066"
+         y="307.57858" />
     </g>
   </g>
 </svg>

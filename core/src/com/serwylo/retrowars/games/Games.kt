@@ -31,7 +31,7 @@ object Games {
         "snake",
         "game.snake.name",
         true,
-        { s -> s.icons.unknown },
+        { s -> s.icons.snake },
         { app, _ -> SnakeGameScreen(app) }
     )
 
