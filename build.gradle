@@ -62,6 +62,20 @@ project(":texture-packer") {
     }
 }
 
+project(":server") {
+    apply plugin: "kotlin"
+
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        implementation "io.javalin:javalin:3.13.7"
+        implementation "org.slf4j:slf4j-simple:1.7.30" // Required for Javalin
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3" // Required for Javalin
+    }
+}
+
 project(":desktop") {
     apply plugin: "kotlin"
 
@@ -103,6 +117,9 @@ project(":core") {
         implementation 'com.google.code.gson:gson:2.8.6'
         implementation 'com.crashinvaders.vfx:gdx-vfx-core:0.5.0'
         implementation 'com.crashinvaders.vfx:gdx-vfx-effects:0.5.0'
+        implementation "io.ktor:ktor-client-core:1.6.0"
+        implementation "io.ktor:ktor-client-cio:1.6.0"
+        implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.3'
     }
 
     // https://stackoverflow.com/a/54006518
