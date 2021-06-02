@@ -8,17 +8,11 @@ import com.serwylo.retrowars.net.RetrowarsServer
 object DesktopLauncher {
     @JvmStatic
     fun main(arg: Array<String>) {
-        if (arg.contains("--server")) {
+        if (arg.contains("--stats")) {
 
-            println("Starting server...")
-            val server = RetrowarsServer()
-            while (true) {
-                Thread.sleep(1000)
-            }
-
-        } else if (arg.contains("--stats")) {
             val config = LwjglApplicationConfiguration()
             LwjglApplication(AnalyseStats(), config)
+
         } else {
 
             val verbose = arg.contains("--verbose")

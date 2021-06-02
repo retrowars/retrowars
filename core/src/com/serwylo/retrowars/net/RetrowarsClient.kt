@@ -292,4 +292,8 @@ class RetrowarsClient(host: InetAddress?) {
         return counter
     }
 
+    fun startGame() {
+        client.sendTCP(Network.Server.StartGame())
+    }
+
 }

@@ -10,9 +10,13 @@ import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.net.OnlineServerDetails
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -56,22 +60,16 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         stage.addActor(makeStageDecoration())
 
         val client = RetrowarsClient.get()
-        val hasServer = RetrowarsServer.get() != null
 
-        currentState = if (hasServer && client != null) {
+        currentState = if (client != null) {
 
             listenToClient(client)
 
-            // A bit of a hack, but we want to use the same business logic that the ServerWaitingForAllToReturnToLobby
+            // A bit of a hack, but we want to use the same business logic that the WaitingForAllToReturnToLobby
             // uses to decide whether or not we are waiting for players to return, or ready to start. Therefore,
             // start with the premise we are waiting, and then provide a list of players and see what that state
             // transition logic has to say about the matter.
-            ServerWaitingForAllToReturnToLobby(client.players).consumeAction(Action.PlayersChanged(client.players))
-
-        } else if (client != null) {
-
-            listenToClient(client)
-            ClientReady(client.players, listOf())
+            WaitingForAllToReturnToLobby(client.players).consumeAction(Action.PlayersChanged(client.players))
 
         } else {
 
@@ -127,10 +125,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 is Splash -> showSplash()
                 is ConnectingToServer -> showConnectingToServer()
                 is StartingServer -> showStartingServer()
-                is ClientReady -> showClientReady(new.players, new.previousPlayers)
-                is ServerReadyToStart -> showServerReadyToStart(new.players, new.previousPlayers)
-                is ServerWaitingForClients -> showServerWaitingForClients(new.me)
-                is ServerWaitingForAllToReturnToLobby -> showServerWaitingForAllToReturnToLobby(new.players)
+                is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
+                is WaitingForOtherPlayers -> showServerWaitingForClients(new.me)
+                is WaitingForAllToReturnToLobby -> showServerWaitingForAllToReturnToLobby(new.players)
                 is CountdownToGame -> showCountdownToGame()
                 is LaunchingGame -> game.launchGame(new.gameDetails)
             }
@@ -166,6 +163,21 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.row()
 
+        wrapper.add(
+            makeButton("Find public game", styles) {
+
+                GlobalScope.launch(Dispatchers.IO) {
+
+                    val c = HttpClient()
+                    val response: HttpResponse = c.request("http://localhost:8080/games")
+
+
+                }
+            }
+        )
+
+        wrapper.row()
+
         wrapper.add(makeButton("Join server", styles) {
             changeState(Action.AttemptToJoinServer)
 
@@ -191,17 +203,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(Label("Starting server", styles.label.medium))
     }
 
-    private fun showClientReady(players: List<Player>, previousPlayers: List<Player>) {
-        wrapper.clear()
-
-        wrapper.add(Label("Waiting for server to start game", styles.label.medium))
-
-        wrapper.row()
-
-        wrapper.add(makeAvatarTiles(players, previousPlayers))
-    }
-
-    private fun showServerReadyToStart(players: List<Player>, previousPlayers: List<Player>) {
+    private fun showReadyToStart(players: List<Player>, previousPlayers: List<Player>) {
         wrapper.clear()
 
         wrapper.add(Label("Ready to start", styles.label.medium))
@@ -209,7 +211,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row().spaceTop(UI_SPACE)
 
         wrapper.add(makeButton("Start game", styles) {
-            RetrowarsServer.get()?.startGame()
+            RetrowarsClient.get()?.startGame()
         })
 
         wrapper.row()
@@ -220,7 +222,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     private fun showServerWaitingForClients(me: Player) {
         wrapper.clear()
 
-        wrapper.add(Label("Waiting for clients to connect", styles.label.medium))
+        wrapper.add(Label("Waiting for other players to join", styles.label.medium))
 
         wrapper.row()
 
@@ -230,19 +232,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     private fun showServerWaitingForAllToReturnToLobby(players: List<Player>) {
         wrapper.clear()
 
-        wrapper.add(Label("Waiting for players to return to lobby", styles.label.medium))
+        wrapper.add(Label("Waiting for everyone to return to lobby", styles.label.medium))
 
         wrapper.row()
 
         wrapper.add(makeAvatarTiles(players, listOf()))
 
         wrapper.row()
-
-        val button = makeButton("Start game", styles) {}
-        button.isDisabled = true
-        button.touchable = Touchable.disabled
-
-        wrapper.add(button)
     }
 
     private fun makeAvatarTiles(players: List<Player>, previousPlayers: List<Player>) = Table().apply {
@@ -378,6 +374,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 sealed class Action {
     object AttemptToStartServer : Action()
+    class ShowPublicServers(val servers: List<OnlineServerDetails>) : Action()
     class PlayersChanged(val players: List<Player>): Action()
 
     object AttemptToJoinServer : Action()
@@ -394,6 +391,7 @@ class Splash: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.AttemptToStartServer -> StartingServer()
+            is Action.ShowPublicServers -> StartingServer()
             is Action.AttemptToJoinServer -> ConnectingToServer()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
@@ -403,16 +401,16 @@ class Splash: UiState {
 class StartingServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> ServerWaitingForClients(action.players[0])
+            is Action.PlayersChanged -> WaitingForOtherPlayers(action.players[0])
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
 }
 
-class ServerWaitingForClients(val me: Player): UiState {
+class WaitingForOtherPlayers(val me: Player): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> if (action.players.size == 1) this else ServerReadyToStart(action.players, listOf(me))
+            is Action.PlayersChanged -> if (action.players.size == 1) this else ReadyToStart(action.players, listOf(me))
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
@@ -423,26 +421,26 @@ class ServerWaitingForClients(val me: Player): UiState {
  *                        set of players which were shown so that we can animate new players coming into
  *                        the screen.
  */
-class ServerReadyToStart(val players: List<Player>, val previousPlayers: List<Player>) : UiState {
+class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> ServerReadyToStart(action.players, this.players)
+            is Action.PlayersChanged -> ReadyToStart(action.players, this.players)
             is Action.BeginGame -> CountdownToGame()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
 }
 
-class ServerWaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
+class WaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         if (action !is Action.PlayersChanged) {
             throw IllegalStateException("Invalid action $action passed to state $this")
         }
 
         return when {
-            action.players.size == 1 -> ServerWaitingForClients(action.players[0])
-            action.players.any { it.status != Player.Status.lobby } -> ServerWaitingForAllToReturnToLobby(action.players)
-            else -> return ServerReadyToStart(action.players, this.players)
+            action.players.size == 1 -> WaitingForOtherPlayers(action.players[0])
+            action.players.any { it.status != Player.Status.lobby } -> WaitingForAllToReturnToLobby(action.players)
+            else -> return ReadyToStart(action.players, this.players)
         }
     }
 }
@@ -450,22 +448,7 @@ class ServerWaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
 class ConnectingToServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> ClientReady(action.players, listOf())
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
-        }
-    }
-}
-
-/**
- * @param previousPlayers Given that we can regularly update the list of players, we record the previous
- *                        set of players which were shown so that we can animate new players coming into
- *                        the screen.
- */
-class ClientReady(val players: List<Player>, val previousPlayers: List<Player>) : UiState {
-    override fun consumeAction(action: Action): UiState {
-        return when(action) {
-            is Action.PlayersChanged -> ClientReady(action.players, this.players)
-            is Action.BeginGame -> CountdownToGame()
+            is Action.PlayersChanged -> if (action.players.size == 1) WaitingForOtherPlayers(action.players[0]) else ReadyToStart(action.players, listOf())
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }

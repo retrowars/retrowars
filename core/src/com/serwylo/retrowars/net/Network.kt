@@ -7,14 +7,15 @@ import com.esotericsoftware.kryonet.EndPoint
 object Network {
 
     const val defaultPort = 6263
-    const val defaultUdpPort = 6264
+    const val defaultUdpPort = defaultPort + 1
 
     fun register(endPoint: EndPoint) {
-        val kryo = endPoint.kryo;
+        val kryo = endPoint.kryo
         kryo.register(Server.RegisterPlayer::class.java)
         kryo.register(Server.UnregisterPlayer::class.java)
         kryo.register(Server.UpdateScore::class.java)
         kryo.register(Server.UpdateStatus::class.java)
+        kryo.register(Server.StartGame::class.java)
 
         kryo.register(Client.OnPlayerAdded::class.java)
         kryo.register(Client.OnPlayerRemoved::class.java)
@@ -29,13 +30,21 @@ object Network {
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
      */
     object Server {
-        class RegisterPlayer(var appVersionCode: Int = 0) {
-            override fun toString(): String = "RegisterPlayer [app version: $appVersionCode]"
+
+        /**
+         * If a [roomId] is not specified, then it will request a new room to be created. If it is
+         * a LAN server then it will use the default room.
+         */
+        class RegisterPlayer(var appVersionCode: Int = 0, var roomId: Long = 0) {
+            override fun toString(): String = "RegisterPlayer [app version: $appVersionCode, room id; $roomId]"
         }
+
+        class StartGame
 
         class UnregisterPlayer
         class UpdateScore(val score: Long) { constructor() : this(0) }
         class UpdateStatus(val status: String) { constructor() : this("") }
+
     }
 
     /**
@@ -50,9 +59,9 @@ object Network {
          * Also, the newly added player will receive a sequence of [OnPlayerAdded] messages, one for each
          * already registered player.
          */
-        class OnPlayerAdded(var id: Long, var game: String, var serverVersionCode: Int) {
-            constructor() : this(0, "", 0)
-            override fun toString(): String = "OnPlayerAdded[player id: $id, game type: $game, server version: $serverVersionCode]"
+        class OnPlayerAdded(var roomId: Long, var id: Long, var game: String, var serverVersionCode: Int) {
+            constructor() : this(0, 0, "", 0)
+            override fun toString(): String = "OnPlayerAdded[room id: $roomId, player id: $id, game type: $game, server version: $serverVersionCode]"
         }
 
         class OnPlayerRemoved(var id: Long) {
