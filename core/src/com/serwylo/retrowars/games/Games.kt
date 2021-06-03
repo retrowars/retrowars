@@ -8,6 +8,7 @@ import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.tetris.TetrisGameScreen
 
 object Games {
 
@@ -35,15 +36,22 @@ object Games {
         { app, _ -> SnakeGameScreen(app) }
     )
 
+    val tetris = GameDetails(
+        "tetris",
+        "game.tetris.name",
+        true,
+        { s -> s.icons.unknown },
+        { app, _ -> TetrisGameScreen(app) }
+    )
+
     val spaceInvaders = UnavailableGameDetails("space-invaders", "game.space-invaders.name")
-    val tetris = UnavailableGameDetails("tetris", "game.tetris.name")
 
     val all = sortedMapOf(
         "asteroids" to asteroids,
         "missile-command" to missileCommand,
         "snake" to snake,
-        "space-invaders" to spaceInvaders,
         "tetris" to tetris,
+        "space-invaders" to spaceInvaders,
     )
 
     val allSupported = all.values.filter { it !is UnavailableGameDetails }
