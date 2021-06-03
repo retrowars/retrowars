@@ -10,7 +10,6 @@ class SnakeGameState() {
     }
 
     var timeStep = 0.15f
-    val minTimeStep = 0.075f
     var nextTimeStep = timeStep
     var timer = 0f
 
@@ -24,12 +23,7 @@ class SnakeGameState() {
     var score: Long = 0
 
     val snake = LinkedList<Cell>()
-    val obstacles = mutableListOf<Cell>()
     var food: Cell? = null
-
-    // TODO: Speed
-
-    // TODO: Direction (including dealing with multitouch sensibly as we can only move one direction)
 
     var left = false
     var right = false

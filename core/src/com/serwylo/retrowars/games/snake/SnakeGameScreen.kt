@@ -72,11 +72,6 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         decideNextDirection()
         moveSnake()
 
-        // TODO: Record high score, show end of game screen.
-        if (false /* Ran into obstacle */) {
-            endGame()
-        }
-
     }
 
     private fun recordInput() {
