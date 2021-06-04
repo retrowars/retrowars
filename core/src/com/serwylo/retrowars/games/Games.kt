@@ -40,7 +40,7 @@ object Games {
         "tetris",
         "game.tetris.name",
         true,
-        { s -> s.icons.unknown },
+        { s -> s.icons.tetris },
         { app, _ -> TetrisGameScreen(app) }
     )
 
