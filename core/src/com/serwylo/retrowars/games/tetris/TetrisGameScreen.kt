@@ -210,7 +210,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             newY ++
         }
 
-        storeTetronimoInGrid(state.currentPiece, state.currentX, newY)
+        storeTetronimoInGrid(state.currentPiece, state.currentX, newY + 1)
         chooseNewTetronimo()
 
         if (!isLegalMove(state.currentPiece, state.currentX, state.currentY)) {
@@ -374,10 +374,12 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         val numCellsHigh = state.cells.size
         val numCellsWide = state.cells[0].size
 
-        val cellWidth = viewport.worldWidth / 3 / numCellsWide
-        val cellHeight = viewport.worldHeight / numCellsHigh
+        // Leave one cell worth of space at the top and the bottom, hence numCellsHigh + 2.
+        val cellHeight = viewport.worldHeight / (numCellsHigh + 2)
+        val cellWidth = cellHeight
 
-        val startX = viewport.worldWidth / 3
+        val startX = (viewport.worldWidth - (cellWidth * numCellsWide)) / 2
+        val startY = cellHeight
 
         val r = game.uiAssets.shapeRenderer
         r.projectionMatrix = camera.combined
@@ -385,20 +387,13 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         r.begin(ShapeRenderer.ShapeType.Filled)
         r.color = Color.WHITE
 
+        // Draw all full cells first, so they can be overlayed with the grid afterwards.
         state.cells.forEachIndexed { y, row ->
             row.forEachIndexed { x, isFull ->
                 if (isFull) {
-                    r.rect(startX + x * cellWidth, viewport.worldHeight - (y * cellHeight), cellWidth, cellHeight)
-                }
-            }
-        }
-
-        state.currentPiece.forEachIndexed { y, row ->
-            row.forEachIndexed { x, present ->
-                if (present) {
                     r.rect(
-                        startX + (state.currentX + x) * cellWidth,
-                        viewport.worldHeight - (state.currentY + y) * cellHeight,
+                        startX + (x * cellWidth),
+                        viewport.worldHeight - startY - ((y + 1) * cellHeight),
                         cellWidth,
                         cellHeight
                     )
@@ -406,12 +401,27 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             }
         }
 
+        // Then draw the current tetronimo (again, so it can be overlayed with the grid afterwards).
+        state.currentPiece.forEachIndexed { y, row ->
+            row.forEachIndexed { x, present ->
+                if (present) {
+                    r.rect(
+                        startX + ((state.currentX + x) * cellWidth),
+                        viewport.worldHeight - startY - ((state.currentY + y + 1) * cellHeight),
+                        cellWidth,
+                        cellHeight
+                    )
+                }
+            }
+        }
+
+        // Off to the side of the grid draw the next tetronimo
         state.nextPieceRotations[0].forEachIndexed { y, row ->
             row.forEachIndexed { x, present ->
                 if (present) {
                     r.rect(
-                        (viewport.worldWidth * 2 / 3) + (cellWidth * 2) + (x * cellWidth),
-                        viewport.worldHeight - (cellHeight * 2) - (y * cellHeight),
+                        startX + (numCellsWide * cellWidth) + (cellWidth * 2) + (x * cellWidth),
+                        viewport.worldHeight - startY - (cellHeight) - (y * cellHeight),
                         cellWidth,
                         cellHeight
                     )
@@ -426,8 +436,13 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         r.color = Color.DARK_GRAY
 
         state.cells.forEachIndexed { y, row ->
-            row.forEachIndexed { x, cell ->
-                r.rect(startX + x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+            for (x in 0 until row.size) {
+                r.rect(
+                    startX + x * cellWidth,
+                    viewport.worldHeight - startY - ((y + 1) * cellHeight),
+                    cellWidth,
+                    cellHeight
+                )
             }
         }
 
@@ -435,8 +450,8 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             row.forEachIndexed { x, present ->
                 if (present) {
                     r.rect(
-                        (viewport.worldWidth * 2 / 3) + (cellWidth * 2) + (x * cellWidth),
-                        viewport.worldHeight - (cellHeight * 2) - (y * cellHeight),
+                        startX + (numCellsWide * cellWidth) + (cellWidth * 2) + (x * cellWidth),
+                        viewport.worldHeight - startY - (cellHeight) - (y * cellHeight),
                         cellWidth,
                         cellHeight
                     )
@@ -444,7 +459,6 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             }
         }
 
-        // Draw piece
         r.end()
     }
 
