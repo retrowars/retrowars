@@ -39,7 +39,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
      */
     private val softController = Table()
 
-    private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.medium)
+    private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
     init {
 
@@ -128,16 +128,13 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         clearLines()
         resetInput()
 
-        // TODO: Record high score, show end of game screen.
-        if (false /* Hit roof */) {
-            endGame()
-        }
-
     }
 
     private fun recordInput() {
 
         // TODO: Holding a key should result in a single action, then a pause, then continued movement.
+        //       This is referred to as Delayed Auto Shift (DAS) and is extremely well documented:
+        //       https://harddrop.com/wiki/DAS
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
             state.moveLeft = ButtonState.JustPressed
@@ -205,12 +202,12 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             return true
         }
 
-        var newY = state.currentY
+        var newY = state.currentY + 1
         while (isLegalMove(state.currentPiece, state.currentX, newY + 1)) {
             newY ++
         }
 
-        storeTetronimoInGrid(state.currentPiece, state.currentX, newY + 1)
+        storeTetronimoInGrid(state.currentPiece, state.currentX, newY)
         chooseNewTetronimo()
 
         if (!isLegalMove(state.currentPiece, state.currentX, state.currentY)) {
@@ -230,7 +227,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
                 if (present) {
                     // Would constitute a move off screen, so not okay.
-                    if (x < 0 || x >= TetrisGameState.CELLS_WIDE || y >= TetrisGameState.CELLS_HIGH - 1) {
+                    if (x < 0 || x >= TetrisGameState.CELLS_WIDE || y >= TetrisGameState.CELLS_HIGH) {
                         return false
                     }
 
@@ -255,7 +252,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             return true
         }
 
-        state.nextTimeStep = state.nextTimeStep + state.timeStep
+        state.nextTimeStep = state.nextTimeStep + state.timeStep()
 
         if (isLegalMove(state.currentPiece, state.currentX, state.currentY + 1)) {
 
