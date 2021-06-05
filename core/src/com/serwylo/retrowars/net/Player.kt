@@ -35,7 +35,7 @@ class Player(
         fun isValid(status: String) = all.contains(status)
     }
 
-    fun getGameDetails(): GameDetails = Games.all[game]!!
+    fun getGameDetails(): GameDetails = Games.all.find { it.id == game }!!
 
     override fun toString(): String = "Player[id: $id, game: $game, status: $status]"
 

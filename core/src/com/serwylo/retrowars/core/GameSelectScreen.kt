@@ -68,7 +68,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         var x = 0
         var y = 0
 
-        Games.all.values.forEachIndexed { i, game ->
+        Games.all.forEachIndexed { i, game ->
 
             if (i % gamesPerRow == 0) {
                 table.row()
@@ -129,7 +129,6 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         val isLocked = false
         val buttonStyle = if (isLocked) "locked" else "default"
-        val textColor = if (isLocked) Color.GRAY else Color.WHITE
 
         val button = Button(skin, buttonStyle).apply {
             isDisabled = isLocked
@@ -141,28 +140,15 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             })
         }
 
-        val labelString = strings[game.nameId]
-
-        val gameLabel = Label(labelString, styles.label.medium).apply {
-            wrap = true
-            color = textColor
-            setAlignment(Align.center)
-        }
-
         val table = Table().apply {
             setFillParent(true)
             touchable = Touchable.disabled // Let the button in the background do the interactivity.
             pad(UI_SPACE * 2)
-
-            add(Label("Based on", styles.label.small))
-
-            row()
-            add(gameLabel).expandX().fillX()
         }
 
         val icon = Image(game.icon(sprites)).apply {
             setScaling(Scaling.fit)
-            align = Align.bottom
+            align = Align.top
         }
 
         table.row()

@@ -4,26 +4,23 @@
 
 <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/01_in_game.png" alt="Asteroids game play" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/03_multiplayer_lobby.png" alt="Multiplayer lobby" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_a.png" alt="Asteroids" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_b.png" alt="Missile Command" width="400">
 
-Enjoy retro games? Want to play Asteroids? or Missile Command? How about realtime multiplayer Asteroids?
-
-Okay, now how about you play Missile Command in realtime against your friends playing Asteroids? When they shoot down asteroids, you have to defend against more missiles. When you shoot down missiles they have to negotiate more asteroids. 
+Enjoy retro games? Enjoy multiplayer games? Ever wanted to play one retro game against a different game in real time?
 
 **Welcome to Super Retro Mega Wars!**
 
-Still in early stage development, but currently supports clones of the following in both single player and multi-player mode:
+Play against your friends, with each of you can competing by playing a different game. Score points in your game and every other game will be handicaped in their own unique way. But watch out, as others score, your game will become more difficult too.
 
-* Asteroids
-* Missile Command
+Still in early stage development (networking is quite buggy), but currently supports four different single and multi-player versions of games based on classic retro titles.
 
 No ads. No in game purchases. Just retro games and good times.
 
 Any feedback is very welcome at <a href="https://github.com/retrowars/retrowars/issues">GitHub</a>.
 
-Known limitations:
+**Known limitations:**
 
+* Networking is quite buggy.
 * Only local network play supported.
 * Thorough play testing required to balance the games.
-* Networking can be a little flakey.
 * Untested on multiple screen sizes.
 
 ## Contributing

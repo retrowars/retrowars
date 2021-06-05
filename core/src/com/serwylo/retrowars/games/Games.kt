@@ -14,7 +14,6 @@ object Games {
 
     val asteroids = GameDetails(
         "asteroids",
-        "game.asteroids.name",
         true,
         { s -> s.icons.asteroids },
         { app, _ -> AsteroidsGameScreen(app) }
@@ -22,7 +21,6 @@ object Games {
 
     val missileCommand = GameDetails(
         "missile-command",
-        "game.missile-command.name",
         true,
         { s -> s.icons.missileCommand },
         { app, _ -> MissileCommandGameScreen(app) }
@@ -30,7 +28,6 @@ object Games {
 
     val snake = GameDetails(
         "snake",
-        "game.snake.name",
         true,
         { s -> s.icons.snake },
         { app, _ -> SnakeGameScreen(app) }
@@ -38,29 +35,27 @@ object Games {
 
     val tetris = GameDetails(
         "tetris",
-        "game.tetris.name",
         true,
         { s -> s.icons.tetris },
         { app, _ -> TetrisGameScreen(app) }
     )
 
-    val spaceInvaders = UnavailableGameDetails("space-invaders", "game.space-invaders.name")
+    val other = UnavailableGameDetails("other")
 
-    val all = sortedMapOf(
-        "asteroids" to asteroids,
-        "missile-command" to missileCommand,
-        "snake" to snake,
-        "tetris" to tetris,
-        "space-invaders" to spaceInvaders,
+    val all = listOf(
+        asteroids,
+        missileCommand,
+        snake,
+        tetris,
+        other,
     )
 
-    val allSupported = all.values.filter { it !is UnavailableGameDetails }
+    val allSupported = all.filter { it !is UnavailableGameDetails }
 
 }
 
-class UnavailableGameDetails(name: String, nameId: String): GameDetails(
+class UnavailableGameDetails(name: String): GameDetails(
     name,
-    nameId,
     false,
     { s -> s.icons.unknown },
     { game, details -> UnimplementedGameScreen(game, details) }
@@ -68,7 +63,6 @@ class UnavailableGameDetails(name: String, nameId: String): GameDetails(
 
 open class GameDetails(
     val id: String,
-    val nameId: String,
     val isAvailable: Boolean,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame, gameDetails: GameDetails) -> Screen

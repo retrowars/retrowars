@@ -50,7 +50,7 @@ class UnimplementedGameScreen(game: RetrowarsGame, gameDetails: GameDetails): Sc
 
         container.addActor(
             makeButton(
-                strings.format("unimplemented-game.vote", strings[gameDetails.nameId]),
+                strings.format("unimplemented-game.vote"),
                 styles
             ) {
                 Gdx.net.openURI("https://github.com/retrowars/retrowars/labels/game-proposal")
