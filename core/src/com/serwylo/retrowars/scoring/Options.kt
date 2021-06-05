@@ -11,7 +11,7 @@ object Options {
     }
 
     fun setUseVisualEffects(use: Boolean) {
-        prefs().putBoolean("useVisualEffects", use)
+        prefs().putBoolean("useVisualEffects", use).flush()
         useVisualEffects = use
     }
 

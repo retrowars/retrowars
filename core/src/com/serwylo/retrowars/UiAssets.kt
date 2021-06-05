@@ -67,12 +67,7 @@ class UiAssets(locale: Locale) {
         private val manager = VfxManager(Pixmap.Format.RGBA8888)
 
         init {
-            manager.addEffect(OldTvEffect().apply {
-                time = 0.20f
-            })
-            manager.addEffect(FilmGrainEffect().apply {
-                // noiseAmount = 1f
-            })
+            manager.addEffect(FilmGrainEffect())
             manager.addEffect(GaussianBlurEffect().apply {
                 amount = 0.8f
             })
