@@ -96,7 +96,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
 
         updateEntities(delta)
 
-        // TODO: Record high score, show end of game screen.
+        // TODO: Show end of game screen.
         if (state.numLives <= 0) {
             endGame()
         }

@@ -29,6 +29,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     protected val client = RetrowarsClient.get()
 
+    /**
+     * When damage is received on the network thread, add it to this and it will be processed
+     * next frame. If multiple damage events are received between a single frame, we will queue
+     * them all before applying them once next frame.
+     */
+    private var queuedDamage = 0
+
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
@@ -46,15 +53,21 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     }
 
     private fun handleBreakpointChange(player: Player, strength: Int) {
-        Gdx.app.log(TAG, "HANDLING BREAKPOINT CHANGE")
+
         if (player.id == client?.me()?.id) {
             // TODO: Show visual feedback that we are attacking other players.
-                Gdx.app.log(TAG, "BAILING")
+            Gdx.app.log(TAG, "Ignoring damage from player ${player.id} of strength $strength as this is the current player.")
             return
         }
 
+        Gdx.app.log(TAG, "Handling damage received from player ${player.id} of strength $strength")
+
         hud.showAttackFrom(player, strength)
-        onReceiveDamage(strength)
+
+        synchronized(queuedDamage) {
+            queuedDamage += strength
+        }
+
     }
 
     private fun handlePlayerStatusChange(player: Player, status: String) {
@@ -98,11 +111,37 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
      * The [strength] of the attack indicates how much we should handicap the current user in response.
      * The default is a strength of 1, when the other player increments their score by a certain threshold.
      * If they do something which makes their score increment by 2 or 3 times this increment, then [strength] will be 2 or 3 respectively.
+     *
+     * NOTE: We may receive damage from many players in a single frame. Given damage is received via network calls,
+     *       we queue them up between frames to be applied at the start of the next frame. This function will be
+     *       called at the start of a frame before calling [updateGame] if there is any damage to process.
+     *       It will always be called in the main game thread.j
      */
     protected abstract fun onReceiveDamage(strength: Int)
 
+    private fun maybeReceiveDamage() {
+        var damageToApply = 0
+        synchronized(queuedDamage) {
+            if (queuedDamage > 0) {
+                // We could actually call onReceiveDamage() directly here, but it could potentially
+                // take a non-trivial amount of time. For example, a hypothetical game may want to
+                // perform a bunch of analysis before deciding how best to apply the damage.
+                // Thus, we store the value locally to be applied after we un-synchronize on the
+                // main queuedDamage variable so that it can be mutated by the network thread at the
+                // earliest opportunity if required.
+                damageToApply = queuedDamage
+                queuedDamage = 0
+            }
+        }
+
+        if (damageToApply > 0) {
+            onReceiveDamage(queuedDamage)
+        }
+    }
+
     override fun render(delta: Float) {
 
+        maybeReceiveDamage()
         updateGame(delta)
 
         game.uiAssets.getEffects().render {
