@@ -18,6 +18,7 @@ import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.tetris.entities.Tetronimo
 import com.serwylo.retrowars.games.tetris.entities.Tetronimos
+import com.serwylo.retrowars.ui.IconButton
 
 class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
 
@@ -43,11 +44,14 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
     init {
 
-        controllerMoveLeft = TextButton("  <  ", game.uiAssets.getStyles().textButton.huge)
-        controllerMoveRight = TextButton("  >  ", game.uiAssets.getStyles().textButton.huge)
-        controllerRotateLeft = TextButton("  L  ", game.uiAssets.getStyles().textButton.huge)
-        controllerRotateRight = TextButton("  R  ", game.uiAssets.getStyles().textButton.huge)
-        controllerDrop = TextButton("  D  ", game.uiAssets.getStyles().textButton.huge)
+        val skin = game.uiAssets.getSkin()
+        val sprites = game.uiAssets.getSprites()
+
+        controllerMoveLeft = IconButton(skin, sprites.buttonIcons.left)
+        controllerMoveRight = IconButton(skin, sprites.buttonIcons.right)
+        controllerRotateLeft = IconButton(skin, sprites.buttonIcons.rotate_counter_clockwise)
+        controllerRotateRight = IconButton(skin, sprites.buttonIcons.rotate_clockwise)
+        controllerDrop = IconButton(skin, sprites.buttonIcons.drop)
 
         val listener = object: ClickListener() {
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {

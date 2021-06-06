@@ -129,6 +129,7 @@ class UiAssets(locale: Locale) {
     class Sprites(private val atlas: TextureAtlas) {
 
         val icons = Icons()
+        val buttonIcons = ButtonIcons()
         val characters = Characters()
 
         inner class Characters {
@@ -145,6 +146,18 @@ class UiAssets(locale: Locale) {
             val snake = atlas.findRegion("icon_snake")!!
             val tetris = atlas.findRegion("icon_tetris")!!
             val unknown = atlas.findRegion("icon_unknown")!!
+        }
+
+        inner class ButtonIcons {
+            val right = atlas.findRegion("arrow_right")!!
+            val left = atlas.findRegion("arrow_left")!!
+            val up = atlas.findRegion("arrow_up")!!
+            val down = atlas.findRegion("arrow_down")!!
+            val thrust = atlas.findRegion("thrust")!!
+            val drop = atlas.findRegion("drop")!!
+            val button_x = atlas.findRegion("button_x")!!
+            val rotate_clockwise = atlas.findRegion("rotate_clockwise")!!
+            val rotate_counter_clockwise = atlas.findRegion("rotate_counter_clockwise")!!
         }
 
     }

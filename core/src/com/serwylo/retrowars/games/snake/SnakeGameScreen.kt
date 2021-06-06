@@ -11,6 +11,7 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
+import com.serwylo.retrowars.ui.IconButton
 
 class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f, 400f) {
 
@@ -33,10 +34,13 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
 
     init {
 
-        controllerLeft = TextButton("  <  ", game.uiAssets.getStyles().textButton.huge)
-        controllerRight = TextButton("  >  ", game.uiAssets.getStyles().textButton.huge)
-        controllerUp = TextButton("  ^  ", game.uiAssets.getStyles().textButton.huge)
-        controllerDown = TextButton("  v  ", game.uiAssets.getStyles().textButton.huge)
+        val skin = game.uiAssets.getSkin()
+        val sprites = game.uiAssets.getSprites()
+
+        controllerLeft = IconButton(skin, sprites.buttonIcons.left)
+        controllerRight = IconButton(skin, sprites.buttonIcons.right)
+        controllerUp = IconButton(skin, sprites.buttonIcons.up)
+        controllerDown = IconButton(skin, sprites.buttonIcons.down)
 
         controllerLeft.addAction(Actions.alpha(0.4f))
         controllerRight.addAction(Actions.alpha(0.4f))

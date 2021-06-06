@@ -1,0 +1,19 @@
+<TextureAtlas imagePath="sheet.png">
+	<SubTexture name="fightJoy_00.png" x="0" y="100" width="50" height="50"/>
+	<SubTexture name="fightJoy_01.png" x="0" y="50" width="50" height="50"/>
+	<SubTexture name="fightJoy_02.png" x="0" y="0" width="50" height="50"/>
+	<SubTexture name="fightJoy_03.png" x="50" y="150" width="50" height="50"/>
+	<SubTexture name="fightJoy_04.png" x="150" y="0" width="50" height="50"/>
+	<SubTexture name="fightJoy_05.png" x="100" y="200" width="50" height="50"/>
+	<SubTexture name="fightJoy_06.png" x="100" y="150" width="50" height="50"/>
+	<SubTexture name="fightJoy_07.png" x="100" y="100" width="50" height="50"/>
+	<SubTexture name="fightJoy_08.png" x="100" y="50" width="50" height="50"/>
+	<SubTexture name="fightJoy_09.png" x="100" y="0" width="50" height="50"/>
+	<SubTexture name="fightJoy_10.png" x="50" y="200" width="50" height="50"/>
+	<SubTexture name="fightJoy_11.png" x="150" y="50" width="50" height="50"/>
+	<SubTexture name="fightJoy_12.png" x="50" y="100" width="50" height="50"/>
+	<SubTexture name="fightJoy_13.png" x="50" y="50" width="50" height="50"/>
+	<SubTexture name="fightJoy_14.png" x="50" y="0" width="50" height="50"/>
+	<SubTexture name="fightJoy_15.png" x="0" y="200" width="50" height="50"/>
+	<SubTexture name="fightJoy_16.png" x="0" y="150" width="50" height="50"/>
+</TextureAtlas>

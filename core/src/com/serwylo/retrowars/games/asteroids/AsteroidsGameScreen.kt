@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeLargeButton
 import com.serwylo.retrowars.RetrowarsGame
@@ -20,6 +21,7 @@ import com.serwylo.retrowars.games.asteroids.entities.Asteroid
 import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
+import com.serwylo.retrowars.ui.IconButton
 
 class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, 400f, 400f) {
 
@@ -49,10 +51,13 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
             state.bullets.add(it)
         }
 
-        controllerLeft = TextButton("  <  ", game.uiAssets.getStyles().textButton.huge)
-        controllerThrust = TextButton("  ^  ", game.uiAssets.getStyles().textButton.huge)
-        controllerShoot = TextButton("  *  ", game.uiAssets.getStyles().textButton.huge)
-        controllerRight = TextButton("  >  ", game.uiAssets.getStyles().textButton.huge)
+        val skin = game.uiAssets.getSkin()
+        val sprites = game.uiAssets.getSprites()
+
+        controllerLeft = IconButton(skin, sprites.buttonIcons.left)
+        controllerThrust = IconButton(skin, sprites.buttonIcons.thrust)
+        controllerShoot = IconButton(skin, sprites.buttonIcons.button_x)
+        controllerRight = IconButton(skin, sprites.buttonIcons.right)
 
         controllerLeft.addAction(Actions.alpha(0.4f))
         controllerThrust.addAction(Actions.alpha(0.4f))

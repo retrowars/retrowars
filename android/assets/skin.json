@@ -243,9 +243,9 @@ CheckBoxStyle: {
 }
 ImageButtonStyle: {
 	default: {
-		imageUp: button-c
-		imageDown: button-pressed-c
-		imageOver: button-over-c
+		up: button
+		down: button-pressed
+		over: button-over
 	}
 }
 ImageTextButtonStyle: {
