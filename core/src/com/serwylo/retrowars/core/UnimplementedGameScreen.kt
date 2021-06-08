@@ -13,7 +13,7 @@ import com.serwylo.beatgame.ui.makeHeading
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 
-class UnimplementedGameScreen(game: RetrowarsGame, gameDetails: GameDetails): Scene2dScreen(game, { game.showGameSelectMenu() }) {
+class UnimplementedGameScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSelectMenu() }) {
 
     init {
         val stage = this.stage

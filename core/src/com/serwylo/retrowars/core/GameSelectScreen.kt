@@ -1,8 +1,6 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.*
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
@@ -170,8 +168,8 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
     }
 
-    fun onGameSelected(game: GameDetails) {
-        this.game.startGame(game.createScreen(this.game, game))
+    fun onGameSelected(gameDetails: GameDetails) {
+        this.game.launchGame(gameDetails)
     }
 
 }

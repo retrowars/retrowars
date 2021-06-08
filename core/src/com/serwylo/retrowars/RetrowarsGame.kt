@@ -44,12 +44,6 @@ class RetrowarsGame : Game() {
         }
     }
 
-    fun startGame(screen: Screen) {
-        Gdx.app.postRunnable {
-            setScreen(screen)
-        }
-    }
-
     override fun dispose() {
 
     }
@@ -69,6 +63,12 @@ class RetrowarsGame : Game() {
     fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
         Gdx.app.postRunnable {
             setScreen(NetworkErrorScreen(this, wasGraceful))
+        }
+    }
+
+    fun launchGame(gameDetails: GameDetails) {
+        Gdx.app.postRunnable {
+            setScreen(gameDetails.createScreen(this))
         }
     }
 

@@ -16,28 +16,28 @@ object Games {
         "asteroids",
         true,
         { s -> s.icons.asteroids },
-        { app, _ -> AsteroidsGameScreen(app) }
+        { app -> AsteroidsGameScreen(app) }
     )
 
     val missileCommand = GameDetails(
         "missile-command",
         true,
         { s -> s.icons.missileCommand },
-        { app, _ -> MissileCommandGameScreen(app) }
+        { app -> MissileCommandGameScreen(app) }
     )
 
     val snake = GameDetails(
         "snake",
         true,
         { s -> s.icons.snake },
-        { app, _ -> SnakeGameScreen(app) }
+        { app -> SnakeGameScreen(app) }
     )
 
     val tetris = GameDetails(
         "tetris",
         true,
         { s -> s.icons.tetris },
-        { app, _ -> TetrisGameScreen(app) }
+        { app -> TetrisGameScreen(app) }
     )
 
     val other = UnavailableGameDetails("other")
@@ -58,12 +58,12 @@ class UnavailableGameDetails(name: String): GameDetails(
     name,
     false,
     { s -> s.icons.unknown },
-    { game, details -> UnimplementedGameScreen(game, details) }
+    { game -> UnimplementedGameScreen(game) }
 )
 
 open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
-    val createScreen: (app: RetrowarsGame, gameDetails: GameDetails) -> Screen
+    val createScreen: (app: RetrowarsGame) -> Screen
 )
