@@ -5,11 +5,11 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeButton
-import com.serwylo.beatgame.ui.makeHeading
+import com.badlogic.gdx.utils.Align
+import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +38,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
-    private val wrapper: Table
+    private val wrapper = Table()
 
     private val styles = game.uiAssets.getStyles()
     private val strings = game.uiAssets.getStrings()
@@ -52,11 +52,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     private var renderedState: UiState? = null
 
     init {
-        wrapper = makeStageDecoration()
-        stage.addActor(wrapper)
-        stage.isDebugAll = true
-
-        showSplash()
+        stage.addActor(makeStageDecoration())
     }
 
     private fun makeStageDecoration(): Table {
@@ -84,7 +80,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             val oldState = currentState
             val newState = currentState.consumeAction(action)
 
-            Gdx.app.debug(STATE_TAG, "Consuming action $action (which takes us from $oldState to $newState)")
+            Gdx.app.log(STATE_TAG, "Consuming action $action (which takes us from $oldState to $newState)")
             currentState = newState
         }
     }
@@ -94,7 +90,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         synchronized(stateLock) {
             if (renderedState !== currentState) {
-                Gdx.app.debug(STATE_TAG, "Rendering state $currentState (previous was $renderedState)")
+                Gdx.app.log(STATE_TAG, "Rendering state $currentState (previous was $renderedState)")
                 toRender = currentState
                 renderedState = currentState
             }
@@ -106,9 +102,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 is Splash -> showSplash()
                 is ConnectingToServer -> showConnectingToServer()
                 is StartingServer -> showStartingServer()
-                is ClientReady -> showClientReady()
-                is ServerReadyToStart -> showServerReadyToStart()
-                is ServerWaitingForClients -> showServerWaitingForClients()
+                is ClientReady -> showClientReady(new.players)
+                is ServerReadyToStart -> showServerReadyToStart(new.players)
+                is ServerWaitingForClients -> showServerWaitingForClients(new.me)
                 is CountdownToGame -> showCountdownToGame()
                 is LaunchingGame -> game.launchGame(new.gameDetails)
             }
@@ -121,6 +117,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.clear()
 
+        val description = Label("Play with others\non the same local network", game.uiAssets.getStyles().label.medium)
+        description.setAlignment(Align.center)
+
+        wrapper.add(description).colspan(2).spaceBottom(UI_SPACE)
+
+        wrapper.row()
+
         wrapper.add(
             makeButton("Start server", styles) {
                 changeState(Action.AttemptToStartServer())
@@ -128,9 +131,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 GlobalScope.launch(Dispatchers.IO) {
                     RetrowarsServer.start()
                     createClient(true)
-                    changeState(Action.StartedServer())
-                }
 
+                    // Don't change the state here. Instead, we will wait for a 'players updated'
+                    // event from our client which will in turn trigger the appropriate state change.
+                }
             }
         )
 
@@ -141,7 +145,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
             GlobalScope.launch(Dispatchers.IO) {
                 createClient(false)
-                changeState(Action.JoinedServer())
+
+                // Don't change the state here. Instead, we will wait for a 'players updated'
+                // event from our client which will in turn trigger the appropriate state change.
             }
         })
 
@@ -159,13 +165,17 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(Label("Starting server", styles.label.medium))
     }
 
-    private fun showClientReady() {
+    private fun showClientReady(players: List<Player>) {
         wrapper.clear()
 
         wrapper.add(Label("Waiting for server to start", styles.label.medium))
+
+        wrapper.row()
+
+        wrapper.add(makeAvatarTiles(players))
     }
 
-    private fun showServerReadyToStart() {
+    private fun showServerReadyToStart(players: List<Player>) {
         wrapper.clear()
 
         wrapper.add(Label("Ready to start", styles.label.medium))
@@ -173,21 +183,78 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row()
 
         wrapper.add(makeButton("Start game", styles) {
-            changeState(Action.BeginGame())
+            RetrowarsServer.get()?.startGame()
         })
+
+        wrapper.row()
+
+        wrapper.add(makeAvatarTiles(players))
     }
 
-    private fun showServerWaitingForClients() {
+    private fun showServerWaitingForClients(me: Player) {
         wrapper.clear()
 
         wrapper.add(Label("Waiting for clients to connect", styles.label.medium))
+
+        wrapper.row()
+
+        wrapper.add(makeAvatarTiles(listOf(me)))
+    }
+
+    private fun makeAvatarTiles(players: List<Player>) = Table().apply {
+
+        val uiAssets = game.uiAssets
+
+        pad(UI_SPACE)
+
+        row().space(UI_SPACE).pad(UI_SPACE)
+
+        val myAvatar = Avatar(players[0], uiAssets)
+
+        // TODO: If they were not previously rendered, add this action.
+        // myAvatar.addAction(CustomActions.bounce())
+
+        add(myAvatar)
+        add(makeGameIcon(players[0].getGameDetails(), uiAssets))
+        add(Label("You", uiAssets.getStyles().label.large))
+
+        if (players.size > 1) {
+
+            players.subList(1, players.size).forEach { player ->
+
+                row().space(UI_SPACE).pad(UI_SPACE)
+
+                val avatar = Avatar(player, uiAssets)
+
+
+                // TODO: If they were not previously rendered, add this action.
+                // avatar.addAction(CustomActions.bounce())
+
+                add(avatar)
+                add(makeGameIcon(player.getGameDetails(), uiAssets))
+
+                add(
+                    Label(
+                        when(player.status) {
+                            Player.Status.playing -> "Playing"
+                            Player.Status.dead -> "Dead"
+                            Player.Status.lobby -> "Ready"
+                            else -> "?"
+                        },
+                        uiAssets.getStyles().label.medium
+                    )
+                )
+
+            }
+        }
+
     }
 
     private fun showCountdownToGame() {
         val gameDetails = RetrowarsClient.get()?.me()?.getGameDetails()
         if (gameDetails == null) {
             // TODO: Handle this better
-            Gdx.app.log(TAG, "Unable to figure out which game to start.")
+            Gdx.app.error(TAG, "Unable to figure out which game to start.")
             game.showMainMenu()
             return
         }
@@ -196,7 +263,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         var count = 5
 
-            // After some experimentation, it seems the only way to get this label to animate from
+        // After some experimentation, it seems the only way to get this label to animate from
         // within a table is to wrap it in a Container with isTransform = true (and don't forget
         // to enable GL_BLEND somewhere for the alpha transitions).
         val countdown = Label(count.toString(), game.uiAssets.getStyles().label.huge)
@@ -244,15 +311,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         return client
     }
 
-    // TODO: Race condition between this and the other client.listen(...) call (after appending avatars)
-    //       seems to cause a condition where you just see "Connected to server" but no information
-    //       about any of the players.
+    // TODO: These listeners should really be added before we start to connect.
     private fun listenToClient(client: RetrowarsClient) {
         Gdx.app.log(TAG, "Listening to just start game or network close listener from client.")
         client.listen(
             startGameListener = { changeState(Action.BeginGame())},
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
-            playersChangedListener = { changeState(Action.ClientsUpdated())}
+            playersChangedListener = { players -> changeState(Action.PlayersChanged(players))},
         )
     }
 
@@ -267,11 +332,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 sealed class Action {
     class AttemptToStartServer: Action()
-    class StartedServer: Action()
-    class ClientsUpdated: Action()
+    class PlayersChanged(val players: List<Player>): Action()
 
     class AttemptToJoinServer: Action()
-    class JoinedServer: Action()
 
     class BeginGame: Action()
     class CountdownComplete(val gameDetails: GameDetails) : Action()
@@ -294,25 +357,25 @@ class Splash: UiState {
 class StartingServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.StartedServer -> ServerWaitingForClients()
+            is Action.PlayersChanged -> ServerWaitingForClients(action.players[0])
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
 }
 
-class ServerWaitingForClients: UiState {
+class ServerWaitingForClients(val me: Player): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ClientsUpdated -> ServerReadyToStart()
+            is Action.PlayersChanged -> if (action.players.size == 1) this else ServerReadyToStart(action.players)
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
 }
 
-class ServerReadyToStart: UiState {
+class ServerReadyToStart(val players: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ClientsUpdated -> ServerReadyToStart()
+            is Action.PlayersChanged -> ServerReadyToStart(action.players)
             is Action.BeginGame -> CountdownToGame()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
@@ -322,17 +385,16 @@ class ServerReadyToStart: UiState {
 class ConnectingToServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.JoinedServer -> ClientReady()
-            is Action.ClientsUpdated -> this // We connect ourselves to the server, so we will receive an event saying we connected at some point.
+            is Action.PlayersChanged -> ClientReady(action.players)
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
 }
 
-class ClientReady: UiState {
+class ClientReady(val players: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ClientsUpdated -> ClientReady()
+            is Action.PlayersChanged -> ClientReady(action.players)
             is Action.BeginGame -> CountdownToGame()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
