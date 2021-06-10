@@ -143,7 +143,7 @@ fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {
 
 object CustomActions {
 
-    fun bounce(numJumps: Int = 3): Action =
+    fun bounce(numJumps: Int = 5): Action =
         Actions.repeat(
             numJumps, Actions.sequence(
                 Actions.moveBy(0f, 10f, 0.15f, Interpolation.bounceOut),
