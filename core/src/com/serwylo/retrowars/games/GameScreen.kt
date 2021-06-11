@@ -136,7 +136,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         }
 
         if (damageToApply > 0) {
-            onReceiveDamage(queuedDamage)
+            onReceiveDamage(damageToApply)
         }
     }
 
