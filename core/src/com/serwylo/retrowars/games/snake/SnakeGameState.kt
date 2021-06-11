@@ -20,7 +20,6 @@ class SnakeGameState() {
     var queuedGrowth = 0
 
     var cells: List<List<Cell>>
-    var score: Long = 0
 
     val snake = LinkedList<Cell>()
     var food: Cell? = null

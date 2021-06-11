@@ -111,8 +111,6 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         Gdx.input.inputProcessor = getInputProcessor()
     }
 
-    override fun getScore() = state.score
-
     override fun updateGame(delta: Float) {
 
         state.timer += delta
@@ -307,7 +305,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
 
         if (numLines > 0) {
-            state.score += TetrisGameState.score(numLines)
+            increaseScore(TetrisGameState.score(numLines))
             state.lines += numLines
             linesLabel.setText("${state.lines} lines")
         }

@@ -26,8 +26,6 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
         const val MAX_MISSILES_PER_LEVEL = 3 *  Turret.INITIAL_AMMUNITION * 2
     }
 
-    var score: Long = 0
-
     /**
      * Seconds elapsed since the game began. Wont count during pause.
      */

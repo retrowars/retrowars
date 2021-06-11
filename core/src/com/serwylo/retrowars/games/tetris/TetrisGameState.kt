@@ -64,7 +64,6 @@ class TetrisGameState() {
     var timer = 0f
 
     var cells: List<MutableList<Boolean>>
-    var score: Long = 0
     var lines: Int = 0
 
     var currentPieceRotations: TetronimoOrientations = Tetronimos.random()

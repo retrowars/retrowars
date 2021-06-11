@@ -29,6 +29,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     protected val client = RetrowarsClient.get()
 
+    private var score = 0L
+
     /**
      * When damage is received on the network thread, add it to this and it will be processed
      * next frame. If multiple damage events are received between a single frame, we will queue
@@ -87,8 +89,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         // TODO: Show end of game screen.
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
-            saveHighScore(gameDetails, getScore())
-            recordStats(Stats(System.currentTimeMillis() - startTime, getScore(), gameDetails.id))
+            saveHighScore(gameDetails, score)
+            recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id))
             game.showGameSelectMenu()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
@@ -97,7 +99,6 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         }
     }
 
-    protected abstract fun getScore(): Long
     protected abstract fun updateGame(delta: Float)
     protected abstract fun renderGame(camera: OrthographicCamera)
 
@@ -149,7 +150,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
                 renderGame(camera)
             }
 
-            hud.render(getScore(), delta)
+            hud.render(score, delta)
         }
 
     }
@@ -166,6 +167,16 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     protected fun addGameScoreToHUD(score: Actor) {
         hud.addGameScore(score)
+    }
+
+    /**
+     * Increments the score, and in a multiplayer game it will also notify the network client
+     * to update the server.
+     */
+    protected fun increaseScore(scoreToIncrement: Int) {
+        score += scoreToIncrement
+
+        client?.updateScore(score)
     }
 
     override fun resize(width: Int, height: Int) {

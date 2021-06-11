@@ -53,8 +53,6 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         state.friendlyMissiles.add(FriendlyMissile(turret, target))
     }
 
-    override fun getScore() = state.score
-
     override fun updateGame(delta: Float) {
         state.timer += delta
 
@@ -92,7 +90,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
                     val missile = enemyMissiles.next()
                     if (missile.isColliding(explosion)) {
                         enemyMissiles.remove()
-                        incrementScore(Missile.POINTS)
+                        increaseScore(Missile.POINTS)
                     }
                 }
             }
@@ -144,7 +142,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     private fun completeLevel() {
         with(state) {
-            incrementScore(MissileCommandGameState.BONUS_SCORE_PER_LEVEL)
+            increaseScore(MissileCommandGameState.BONUS_SCORE_PER_LEVEL)
 
             nextEnemyMissileTime = timer + (MissileCommandGameState.MAX_TIME_BETWEEN_ENEMY_MISSILES * 1.5f)
 
@@ -159,11 +157,6 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
             // Don't improve the health of cities automatically at the end of the level.
             // Rather, wait for a certain amount of points to be reached and then give back a city in response.
         }
-    }
-
-    private fun incrementScore(amount: Int) {
-        state.score += amount
-        client?.updateScore(state.score)
     }
 
     private fun fireEnemyMissile() {

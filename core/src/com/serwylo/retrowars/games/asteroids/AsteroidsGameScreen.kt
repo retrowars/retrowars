@@ -84,8 +84,6 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         Gdx.input.inputProcessor = getInputProcessor()
     }
 
-    override fun getScore() = state.score
-
     override fun updateGame(delta: Float) {
         state.timer += delta
 
@@ -183,8 +181,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
-                    state.score += asteroid.size.points
-                    client?.updateScore(state.score)
+                    increaseScore(asteroid.size.points)
                 }
 
             }

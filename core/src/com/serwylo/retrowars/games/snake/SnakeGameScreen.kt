@@ -66,8 +66,6 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         Gdx.input.inputProcessor = getInputProcessor()
     }
 
-    override fun getScore() = state.score
-
     override fun updateGame(delta: Float) {
 
         state.timer += delta
@@ -127,7 +125,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
             increaseSpeed()
             spawnFood()
 
-            state.score += 10000
+            increaseScore(10000)
 
         } else if (state.queuedGrowth > 0) {
 
