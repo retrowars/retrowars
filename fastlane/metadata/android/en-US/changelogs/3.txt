@@ -1,0 +1,8 @@
+Bugfixes:
+
+ * Tetris + Snake correctly send their scores to the server to be shared with others.
+ * More robust networking: Incoming handicaps from other network players always handled on the correct thread.
+
+Please feel free to provide feedback so we can make this as fun as can be.
+
+Support further development via Liberapay or GitHub Sponsors.
