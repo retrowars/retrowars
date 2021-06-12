@@ -8,8 +8,6 @@ import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.InetAddress
 
@@ -18,7 +16,6 @@ class RetrowarsClient(host: InetAddress?) {
     companion object {
 
         private const val TAG = "RetorwarsClient"
-        private const val SCORE_BREAKPOINT_SIZE = 40000L
 
         private var client: RetrowarsClient? = null
 
@@ -52,13 +49,7 @@ class RetrowarsClient(host: InetAddress?) {
     }
 
     val players = mutableListOf<Player>()
-    val scores = mutableMapOf<Player, Long>()
-
-    /**
-     * For each player, record the next score for which we will send an event to other players.
-     * Once we notice their score go over this threshold, we'll bump it to the next breakpoint.
-     */
-    val scoreBreakpoints = mutableMapOf<Player, Long>()
+    val scores = PlayerScores()
 
     /**
      * By convention, the server always tells a client about themselves first before then passing
@@ -195,13 +186,11 @@ class RetrowarsClient(host: InetAddress?) {
         val player = players.find { it.id == playerId } ?: return
 
         Gdx.app.log(TAG, "Updating player $playerId score to $score")
-        scores[player] = score
+        scores.incrementScore(player, score)
         scoreChangedListener?.invoke(player, score)
 
-        val breakpoint = getNextScoreBreakpointFor(player)
-        if (breakpoint <= score) {
-            val strength = incrementScoreBreakpoint(player, score)
-
+        val strength = scores.advanceBreakpoints(player)
+        if (strength > 0) {
             Gdx.app.log(TAG, "Player ${player.id} hit the score breakpoint of $breakpoint, so will send event to client.")
             scoreBreakpointListener?.invoke(player, strength)
         }
@@ -239,7 +228,7 @@ class RetrowarsClient(host: InetAddress?) {
     fun updateScore(score: Long) {
         val me = me()
         if (me != null) {
-            scores[me] = score
+            scores.updateScoreIgnoreBreakpoints(me, score)
         }
         client.sendTCP(Network.Server.UpdateScore(score))
     }
@@ -249,28 +238,7 @@ class RetrowarsClient(host: InetAddress?) {
     }
 
     fun getScoreFor(player: Player): Long {
-        return scores[player] ?: 0
-    }
-
-    private fun getNextScoreBreakpointFor(player: Player): Long {
-        val breakpoint = scoreBreakpoints[player] ?: 0L
-        if (breakpoint == 0L) {
-            scoreBreakpoints[player] = SCORE_BREAKPOINT_SIZE
-            return SCORE_BREAKPOINT_SIZE
-        }
-
-        return breakpoint
-    }
-
-    private fun incrementScoreBreakpoint(player: Player, currentScore: Long): Int {
-        var counter = 0
-        do {
-            val breakpoint = getNextScoreBreakpointFor(player)
-            scoreBreakpoints[player] = breakpoint + SCORE_BREAKPOINT_SIZE
-            counter ++
-        } while (breakpoint + SCORE_BREAKPOINT_SIZE < currentScore)
-
-        return counter
+        return scores.getScoreFor(player)
     }
 
 }

@@ -266,8 +266,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         Gdx.app.log(TAG, "Appending avatars for client $client and server $server")
 
         val infoLabel = Label("", game.uiAssets.getStyles().label.medium)
+
         val startButton = if (server == null) null else makeLargeButton("Start Game", game.uiAssets.getStyles()) {
             server.startGame()
+        }
+
+        val cpuButton = if (server == null) null else makeButton("Add CPU Player", game.uiAssets.getStyles()) {
+            server.addCpuPlayer()
         }
 
         table.row()
@@ -276,6 +281,11 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         if (startButton != null) {
             table.row()
             table.add(startButton).spaceTop(UI_SPACE)
+        }
+
+        if (cpuButton != null) {
+            table.row()
+            table.add(cpuButton).spaceTop(UI_SPACE)
         }
 
         table.row()

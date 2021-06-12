@@ -6,6 +6,7 @@ import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Server
 import com.esotericsoftware.minlog.Log
+import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
@@ -40,6 +41,7 @@ class RetrowarsServer {
     }
 
     private var players = mutableSetOf<Player>()
+    private var cpuClients = mutableListOf<CpuClient>()
     private val scores = mutableMapOf<Player, Long>()
 
     private var server = object : Server() {
@@ -89,9 +91,9 @@ class RetrowarsServer {
         // If returning to the lobby, then decide on a new random game to give this player.
         if (status == Player.Status.lobby) {
             player.game = Games.allSupported.random().id
-            server.sendToAllTCP(Network.Client.OnPlayerReturnedToLobby(player.id, player.game))
+            sendToAllClients(Network.Client.OnPlayerReturnedToLobby(player.id, player.game))
         } else {
-            server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))
+            sendToAllClients(Network.Client.OnPlayerStatusChange(player.id, status))
         }
 
         checkForWinner()
@@ -141,7 +143,7 @@ class RetrowarsServer {
         scores[player] = score
 
         // TODO: Don't send back to the client that originally reported their own score.
-        server.sendToAllTCP(Network.Client.OnPlayerScored(player.id, score))
+        sendToAllClients(Network.Client.OnPlayerScored(player.id, score))
 
         checkForWinner()
     }
@@ -152,7 +154,7 @@ class RetrowarsServer {
         }
 
         players.remove(player)
-        server.sendToAllTCP(Network.Client.OnPlayerRemoved(player.id))
+        sendToAllClients(Network.Client.OnPlayerRemoved(player.id))
 
         checkForWinner()
     }
@@ -172,7 +174,7 @@ class RetrowarsServer {
         // First tell people about the new player (before sending a list of all existing players to
         // this newly registered client). That means that the first PlayerAdded message received by
         // a new client will always be for themselves.
-        server.sendToAllTCP(Network.Client.OnPlayerAdded(player.id, player.game, AppProperties.appVersionCode))
+        sendToAllClients(Network.Client.OnPlayerAdded(player.id, player.game, AppProperties.appVersionCode))
 
         // Then notify the current player about all others.
         players.forEach { existingPlayer ->
@@ -183,15 +185,107 @@ class RetrowarsServer {
     }
 
     fun close() {
-        server.sendToAllTCP(Network.Client.OnServerStopped())
+        sendToAllClients(Network.Client.OnServerStopped())
         server.close()
     }
 
     fun startGame() {
         scores.clear()
         players.onEach { it.status = Player.Status.playing }
-        server.sendToAllTCP(Network.Client.OnStartGame())
+        sendToAllClients(Network.Client.OnStartGame())
+    }
+
+    fun addCpuPlayer() {
+        val player = Player(Random.nextLong(), Games.allSupported.random().id)
+
+        players.add(player)
+        sendToAllClients(Network.Client.OnStartGame())
+    }
+
+    private fun sendToAllClients(obj: Any) {
+        server.sendToAllTCP(obj)
+
+        cpuClients.forEach { it.receiveMessage(obj) }
+    }
+
+    inner class CpuClient: Runnable {
+
+        private val TAG = "CpuClient"
+
+        private var scores = PlayerScores()
+        private var players = mutableListOf<Player>()
+
+        fun receiveMessage(obj: Any) {
+            if (obj !is FrameworkMessage.KeepAlive) {
+                Gdx.app.log(TAG, "Received message from server: $obj")
+            }
+
+            when (obj) {
+                is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
+                is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
+                is Network.Client.OnStartGame -> onStartGame()
+                is Network.Client.OnServerStopped -> onServerStopped()
+                is Network.Client.OnPlayerAdded -> onPlayerAdded()
+
+                // Not an interesting message for CPU clients. This is just another player retruning
+                // from the end game screen to the lobby.
+                // Network.Client.OnPlayerReturnedToLobby
+            }
+        }
+
+        private var running = false
+
+        override fun run() {
+            while (running) {
+
+            }
+        }
+
+        private fun onServerStopped() {
+            running = false
+        }
+
+        private fun onStartGame() {
+            running = true
+            Thread(this).start()
+        }
+
+        private fun onPlayerAdded(id: Long, game: String) {
+            players.add(Player(id, game))
+        }
+
+        private fun me(): Player? {
+            return if (players.size > 0) players[0] else null
+        }
+
+        private fun onStatusChanged(id: Long, status: String) {
+            if (id != me()?.id) {
+                return
+            }
+
+            if (status == Player.Status.dead) {
+                Gdx.app.log(GameScreen.TAG, "Server has instructed us that we are in fact dead. We will honour this request and stop.")
+                running = false
+            }
+        }
+
+        private fun onScoreChanged(playerId: Long, score: Long) {
+            val player = players.find { it.id == playerId } ?: return
+
+            Gdx.app.log(TAG, "Updating player $playerId score to $score")
+            scores.incrementScore(player, score)
+
+            val strength = scores.advanceBreakpoints(player)
+            if (strength > 0) {
+                Gdx.app.log(TAG, "Player ${player.id} passed $strength score breakpoints, so we will inflict a handicap on ourselves.")
+                handleScoreBreakpoint(strength)
+            }
+        }
+
+        private fun handleScoreBreakpoint(strength: Int) {
+            // TODO: Find a meaningful way for the "AI" to reasonably damage itself.
+        }
+
     }
 
 }
-
