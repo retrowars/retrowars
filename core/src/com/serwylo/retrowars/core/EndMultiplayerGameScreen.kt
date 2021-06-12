@@ -1,26 +1,23 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.ScreenAdapter
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
-import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
+import java.util.concurrent.atomic.AtomicBoolean
 
-class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter() {
+class EndMultiplayerGameScreen(game: RetrowarsGame): Scene2dScreen(game, {}) {
 
     companion object {
         const val TAG = "EndMultiplayerGameScreen"
     }
 
-    private val stage = makeStage()
     private val subheading: Label
     private val playerSummaries: Cell<Actor>
     private val actionButtons: Cell<Actor>
@@ -41,6 +38,21 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
      * played on this screen.
      */
     private val playerGames = client.players.associateWith { it.game }
+
+    /**
+     * Receiving network events means updating the UI to communicate these to the player.
+     * Doing so in a background thread is problematic, as if Scene2D is mid-way through a render
+     * of the screen, and then we start changing the content of labels, things go wrong. For example,
+     * it is very common for scene2d to have measured a text layout, only for it to then be changed
+     * prior to actually looping over the glyphs for rendering, at which time we end up with all
+     * sorts of weird and wonderful NPE.
+     *
+     * The solution to this is to only ever mark the screen as dirty from a network thread.
+     *
+     * The main thread will check if it is dirty each render, and if so, rebuild the UI on the main
+     * thread.
+     */
+    private var isDirty = AtomicBoolean(false)
 
     init {
         val table = Table().apply {
@@ -66,8 +78,8 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
             // TODO: During the game, listen for these events and then show the data in the HUD in realtime.
             client.listen(
-                scoreChangedListener = { _, _ -> showPlayerSummaries() },
-                playerStatusChangedListener = { _, _ -> refreshScreen() },
+                scoreChangedListener = { _, _ -> markScreenDirty() },
+                playerStatusChangedListener = { _, _ -> markScreenDirty() },
                 networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
             )
 
@@ -76,6 +88,13 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
 
         stage.addActor(table)
 
+    }
+
+    /**
+     * @see isDirty
+     */
+    private fun markScreenDirty() {
+        isDirty.set(true)
     }
 
     private fun refreshScreen() {
@@ -154,7 +173,8 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
                     group.addActor(label)
                 }
 
-                group.addActor(Label(client.getScoreFor(player).toString(), styles.label.medium))
+                val scoreLabel = Label(client.getScoreFor(player).toString(), styles.label.medium)
+                group.addActor(scoreLabel)
 
             }
 
@@ -177,10 +197,12 @@ class EndMultiplayerGameScreen(private val game: RetrowarsGame): ScreenAdapter()
     }
 
     override fun render(delta: Float) {
-        stage.act(delta)
-        effects.render {
-            stage.draw()
+        val shouldRefresh = isDirty.compareAndSet(true, false)
+        if (shouldRefresh) {
+            refreshScreen()
         }
+
+        super.render(delta)
     }
 
 }
