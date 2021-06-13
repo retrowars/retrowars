@@ -5,6 +5,7 @@ import java.util.*
 class SnakeGameState() {
 
     companion object {
+        // Based on my count from a screenshot of the old Nokia 6110 version.
         const val CELLS_WIDE = 29
         const val CELLS_HIGH = 19
     }
@@ -19,10 +20,17 @@ class SnakeGameState() {
      */
     var queuedGrowth = 0
 
-    var cells: List<List<Cell>>
+    var cells: List<List<Cell>> = (0 until CELLS_HIGH).map { y ->
+        (0 until CELLS_WIDE).map { x ->
+            Cell(x, y)
+        }
+    }
 
-    val snake = LinkedList<Cell>()
-    var food: Cell? = null
+    val snake = LinkedList<Cell>().apply {
+        add(cells[0][CELLS_WIDE/2])
+    }
+
+    var food = cells[CELLS_HIGH * 2 / 3][CELLS_WIDE / 2]
 
     var left = false
     var right = false
@@ -31,17 +39,6 @@ class SnakeGameState() {
 
     var currentDirection = Direction.UP
     var nextDirection = Direction.UP
-
-    init {
-        cells = (0 until CELLS_HIGH).map { y ->
-            (0 until CELLS_WIDE).map { x ->
-                Cell(x, y)
-            }
-        }
-
-        snake.add(cells[CELLS_HIGH / 2][CELLS_WIDE / 2])
-        food = cells[CELLS_HIGH * 2 / 3][CELLS_WIDE / 2]
-    }
 
     class Cell(val x: Int, val y: Int) {
         override fun toString() = "($x, $y)"
