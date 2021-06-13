@@ -20,8 +20,12 @@ object DesktopLauncher {
             val config = LwjglApplicationConfiguration()
             LwjglApplication(AnalyseStats(), config)
         } else {
+
+            val verbose = arg.contains("--verbose")
+
             val config = LwjglApplicationConfiguration()
-            LwjglApplication(RetrowarsGame(), config)
+            LwjglApplication(RetrowarsGame(verbose), config)
+
         }
     }
 }

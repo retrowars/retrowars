@@ -188,6 +188,7 @@ class RetrowarsServer {
     }
 
     fun startGame() {
+        Gdx.app.debug(TAG, "Server sending request to all players telling them to start the game.")
         scores.clear()
         players.onEach { it.status = Player.Status.playing }
         server.sendToAllTCP(Network.Client.OnStartGame())

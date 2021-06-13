@@ -1,5 +1,6 @@
 package com.serwylo.retrowars
 
+import com.badlogic.gdx.Application
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
@@ -11,7 +12,7 @@ import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.scoring.saveHighScore
 import java.util.*
 
-class RetrowarsGame : Game() {
+class RetrowarsGame(private val verbose: Boolean) : Game() {
 
     companion object {
         const val TAG = "RetrowarsGame"
@@ -20,6 +21,10 @@ class RetrowarsGame : Game() {
     lateinit var uiAssets: UiAssets
 
     override fun create() {
+        if (verbose) {
+            Gdx.app.logLevel = Application.LOG_DEBUG
+        }
+
         uiAssets = UiAssets(Locale.getDefault())
         uiAssets.initSync()
 
@@ -44,12 +49,6 @@ class RetrowarsGame : Game() {
         }
     }
 
-    fun startGame(screen: Screen) {
-        Gdx.app.postRunnable {
-            setScreen(screen)
-        }
-    }
-
     override fun dispose() {
 
     }
@@ -69,6 +68,12 @@ class RetrowarsGame : Game() {
     fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
         Gdx.app.postRunnable {
             setScreen(NetworkErrorScreen(this, wasGraceful))
+        }
+    }
+
+    fun launchGame(gameDetails: GameDetails) {
+        Gdx.app.postRunnable {
+            setScreen(gameDetails.createScreen(this))
         }
     }
 
