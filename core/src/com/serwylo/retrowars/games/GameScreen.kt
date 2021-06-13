@@ -2,7 +2,6 @@ package com.serwylo.retrowars.games
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.serwylo.retrowars.RetrowarsGame
@@ -32,11 +31,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     private var score = 0L
 
     /**
-     * When damage is received on the network thread, add it to this and it will be processed
-     * next frame. If multiple damage events are received between a single frame, we will queue
-     * them all before applying them once next frame.
+     * When damage is received on the network thread, queue up the players who are responsible and
+     * tally up the damage until we hit the next frame.
+     *
+     * On the next frame, we will animate an attack from that player, apply the attack, and then
+     * clear this queue so that we can receive new attacks on the network thread again.
      */
-    private var queuedDamage = 0
+    private var queuedAttacks = mutableMapOf<Player, Int>()
 
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
@@ -66,8 +67,9 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         hud.showAttackFrom(player, strength)
 
-        synchronized(queuedDamage) {
-            queuedDamage += strength
+        synchronized(queuedAttacks) {
+            val previous = queuedAttacks[player] ?: 0
+            queuedAttacks.put(player, previous + strength)
         }
 
     }
@@ -121,22 +123,28 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     protected abstract fun onReceiveDamage(strength: Int)
 
     private fun maybeReceiveDamage() {
-        var damageToApply = 0
-        synchronized(queuedDamage) {
-            if (queuedDamage > 0) {
+        val attacksToApply: Map<Player, Int>?
+        synchronized(queuedAttacks) {
+            attacksToApply = if (queuedAttacks.isNotEmpty()) {
                 // We could actually call onReceiveDamage() directly here, but it could potentially
                 // take a non-trivial amount of time. For example, a hypothetical game may want to
                 // perform a bunch of analysis before deciding how best to apply the damage.
                 // Thus, we store the value locally to be applied after we un-synchronize on the
                 // main queuedDamage variable so that it can be mutated by the network thread at the
                 // earliest opportunity if required.
-                damageToApply = queuedDamage
-                queuedDamage = 0
+                queuedAttacks.clear()
+                queuedAttacks.toMap()
+            } else {
+                null
             }
         }
 
-        if (damageToApply > 0) {
-            onReceiveDamage(damageToApply)
+        if (attacksToApply != null) {
+            onReceiveDamage(attacksToApply.values.sum())
+
+            attacksToApply.onEach {
+                hud.showAttackFrom(it.key, it.value)
+            }
         }
     }
 
