@@ -213,8 +213,10 @@ class RetrowarsClient(host: InetAddress?) {
             val strength = incrementScoreBreakpoint(player, score)
 
             Gdx.app.log(TAG, "Player ${player.id} hit the score breakpoint of $breakpoint, so will send event to client.")
-            Gdx.app.debug(TAG, "Breakpoint hit. Invoking RetrowarsClient.scoreBreakpointListener (player ${player.id}, strength: $strength)")
+            Gdx.app.debug(TAG, "Breakpoint $breakpoint hit. Invoking RetrowarsClient.scoreBreakpointListener (player ${player.id}, strength: $strength)")
             scoreBreakpointListener?.invoke(player, strength)
+        } else {
+            Gdx.app.debug(TAG, "Next breakpoint: $breakpoint. Not yet hit with current score of $score")
         }
     }
 
@@ -281,7 +283,9 @@ class RetrowarsClient(host: InetAddress?) {
         var counter = 0
         do {
             val breakpoint = getNextScoreBreakpointFor(player)
-            scoreBreakpoints[player] = breakpoint + SCORE_BREAKPOINT_SIZE
+            val nextBreakpoint = breakpoint + SCORE_BREAKPOINT_SIZE
+            scoreBreakpoints[player] = nextBreakpoint
+            Gdx.app.debug(TAG, "Incrementing breakpoint from $breakpoint to $nextBreakpoint for player ${player.id}")
             counter ++
         } while (breakpoint + SCORE_BREAKPOINT_SIZE < currentScore)
 

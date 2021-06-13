@@ -88,7 +88,7 @@ class RetrowarsServer {
 
         // If returning to the lobby, then decide on a new random game to give this player.
         if (status == Player.Status.lobby) {
-            player.game = Games.allSupported.random().id
+            player.game = Games.tetris.id // Games.allSupported.random().id
             server.sendToAllTCP(Network.Client.OnPlayerReturnedToLobby(player.id, player.game))
         } else {
             server.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status))

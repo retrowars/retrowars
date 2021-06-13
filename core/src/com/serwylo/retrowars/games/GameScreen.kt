@@ -65,8 +65,6 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         Gdx.app.log(TAG, "Handling damage received from player ${player.id} of strength $strength")
 
-        hud.showAttackFrom(player, strength)
-
         synchronized(queuedAttacks) {
             val previous = queuedAttacks[player] ?: 0
             queuedAttacks.put(player, previous + strength)
@@ -132,8 +130,9 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
                 // Thus, we store the value locally to be applied after we un-synchronize on the
                 // main queuedDamage variable so that it can be mutated by the network thread at the
                 // earliest opportunity if required.
+                val copy = queuedAttacks.toMap()
                 queuedAttacks.clear()
-                queuedAttacks.toMap()
+                copy
             } else {
                 null
             }
