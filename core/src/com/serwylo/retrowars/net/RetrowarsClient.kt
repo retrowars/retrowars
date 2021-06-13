@@ -133,6 +133,8 @@ class RetrowarsClient(host: InetAddress?) {
                 } else {
                     Gdx.app.log(TAG, "Client received disconnected event. No graceful shutdown from server, so will broadcast that.")
                 }
+
+                Gdx.app.debug(TAG, "Disconnected. Invoking RetrowarsClient.networkCloseListener (${if (hasShutdownGracefully) "shut down gracefully" else "ungraceful shutdown"})")
                 networkCloseListener?.invoke(hasShutdownGracefully)
             }
 
@@ -178,16 +180,22 @@ class RetrowarsClient(host: InetAddress?) {
         // continuing with a new game.
         scores.clear()
         players.forEach { it.status = Player.Status.playing }
+
+        Gdx.app.debug(TAG, "Game started. Invoking RetrowarsClient.startGameListener")
         startGameListener?.invoke()
     }
 
     private fun onPlayerAdded(id: Long, game: String) {
         players.add(Player(id, game))
+
+        Gdx.app.debug(TAG, "Player added. Invoking RetrowarsClient.playersChangedListener (Number of players is now ${players.size}, new player: ${id})")
         playersChangedListener?.invoke(players.toList())
     }
 
     private fun onPlayerRemoved(id: Long) {
         players.removeAll { it.id == id }
+
+        Gdx.app.debug(TAG, "Player removed. Invoking RetrowarsClient.playersChangedListener (Number of players is now ${players.size}, removed player: ${id})")
         playersChangedListener?.invoke(players.toList())
     }
 
@@ -196,6 +204,8 @@ class RetrowarsClient(host: InetAddress?) {
 
         Gdx.app.log(TAG, "Updating player $playerId score to $score")
         scores[player] = score
+
+        Gdx.app.debug(TAG, "Score changed. Invoking RetrowarsClient.scoreChangedListener (player ${player.id}, score: $score)")
         scoreChangedListener?.invoke(player, score)
 
         val breakpoint = getNextScoreBreakpointFor(player)
@@ -203,6 +213,7 @@ class RetrowarsClient(host: InetAddress?) {
             val strength = incrementScoreBreakpoint(player, score)
 
             Gdx.app.log(TAG, "Player ${player.id} hit the score breakpoint of $breakpoint, so will send event to client.")
+            Gdx.app.debug(TAG, "Breakpoint hit. Invoking RetrowarsClient.scoreBreakpointListener (player ${player.id}, strength: $strength)")
             scoreBreakpointListener?.invoke(player, strength)
         }
     }
@@ -217,6 +228,8 @@ class RetrowarsClient(host: InetAddress?) {
 
         Gdx.app.log(TAG, "Received status change for player $playerId: $status")
         player.status = status
+
+        Gdx.app.debug(TAG, "Status changed. Invoking RetrowarsClient.playerStatusChangedListener (player $playerId, status: $status)")
         playerStatusChangedListener?.invoke(player, status)
     }
 
@@ -228,6 +241,8 @@ class RetrowarsClient(host: InetAddress?) {
         Gdx.app.log(TAG, "Received return to lobby request for player $playerId. New game: $playersNewGame")
         player.status = Player.Status.lobby
         player.game = playersNewGame
+
+        Gdx.app.debug(TAG, "Player returning to lobby. Invoking RetrowarsClient.playerStatusChangedListener (player $playerId, status: ${Player.Status.lobby})")
         playerStatusChangedListener?.invoke(player, Player.Status.lobby)
     }
 
