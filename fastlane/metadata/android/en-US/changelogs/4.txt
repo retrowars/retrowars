@@ -1,0 +1,8 @@
+Improvements:
+ * Additional controller layouts to choose from (thanks for the idea MrLatebros)
+ * Much more robust multiplayer networking all round (ensure clearer separation of the network + UI thread)
+ * Snake starts from bottom of screen to allow more time to think at the start of the game
+
+Please feel free to provide feedback so we can make this as fun as can be.
+
+Support further development via Liberapay or GitHub Sponsors.
