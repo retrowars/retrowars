@@ -5,20 +5,14 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.scenes.scene2d.InputEvent
-import com.badlogic.gdx.scenes.scene2d.actions.Actions
-import com.badlogic.gdx.scenes.scene2d.ui.Button
 import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
-import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.tetris.entities.Tetronimo
 import com.serwylo.retrowars.games.tetris.entities.Tetronimos
-import com.serwylo.retrowars.ui.IconButton
+import com.serwylo.retrowars.input.TetrisSoftController
+import com.serwylo.retrowars.utils.Options
 
 class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
 
@@ -27,81 +21,35 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         const val TAG = "TetrisGameScreen"
     }
 
-    private val controllerMoveLeft: Button
-    private val controllerMoveRight: Button
-    private val controllerRotateLeft: Button
-    private val controllerRotateRight: Button
-    private val controllerDrop: Button
-
     private val state = TetrisGameState()
 
-    /**
-     * Used to provide an on-screen controller for driving the ship. Left, Right, Thrust, and Fire.
-     */
-    private val softController = Table()
+    private val controller = TetrisSoftController(Options.getSoftController(Games.tetris), game.uiAssets)
 
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
     init {
 
-        val skin = game.uiAssets.getSkin()
-        val sprites = game.uiAssets.getSprites()
+        controller.listen(TetrisSoftController.Buttons.LEFT,
+            { state.moveLeft = if (state.moveLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.moveLeft = ButtonState.Unpressed })
 
-        controllerMoveLeft = IconButton(skin, sprites.buttonIcons.left)
-        controllerMoveRight = IconButton(skin, sprites.buttonIcons.right)
-        controllerRotateLeft = IconButton(skin, sprites.buttonIcons.rotate_counter_clockwise)
-        controllerRotateRight = IconButton(skin, sprites.buttonIcons.rotate_clockwise)
-        controllerDrop = IconButton(skin, sprites.buttonIcons.drop)
+        controller.listen(TetrisSoftController.Buttons.RIGHT,
+            { state.moveRight = if (state.moveRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.moveRight = ButtonState.Unpressed })
 
-        val listener = object: ClickListener() {
-            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                when (event.listenerActor) {
-                    controllerMoveLeft -> state.moveLeft = if (state.moveLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held
-                    controllerMoveRight -> state.moveRight = if (state.moveRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held
-                    controllerRotateLeft -> state.rotateLeft = if (state.rotateLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held
-                    controllerRotateRight -> state.rotateRight = if (state.rotateRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held
-                    controllerDrop -> state.drop = if (state.drop == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held
-                }
+        controller.listen(TetrisSoftController.Buttons.ROTATE_CCW,
+            { state.rotateLeft = if (state.rotateLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.rotateLeft = ButtonState.Unpressed })
 
-                return true
-            }
+        controller.listen(TetrisSoftController.Buttons.ROTATE_CW,
+            { state.rotateRight = if (state.rotateRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.rotateRight = ButtonState.Unpressed })
 
-            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                when (event.listenerActor) {
-                    controllerMoveLeft -> state.moveLeft = ButtonState.Unpressed
-                    controllerMoveRight -> state.moveRight = ButtonState.Unpressed
-                    controllerRotateLeft -> state.rotateLeft = ButtonState.Unpressed
-                    controllerRotateRight -> state.rotateRight = ButtonState.Unpressed
-                    controllerDrop -> state.drop = ButtonState.Unpressed
-                }
-            }
-        }
+        controller.listen(TetrisSoftController.Buttons.DROP,
+            { state.drop = if (state.drop == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.drop = ButtonState.Unpressed })
 
-        controllerMoveLeft.addListener(listener)
-        controllerMoveRight.addListener(listener)
-        controllerRotateLeft.addListener(listener)
-        controllerRotateRight.addListener(listener)
-        controllerDrop.addListener(listener)
-
-        controllerMoveLeft.addAction(Actions.alpha(0.4f))
-        controllerMoveRight.addAction(Actions.alpha(0.4f))
-        controllerRotateLeft.addAction(Actions.alpha(0.4f))
-        controllerRotateRight.addAction(Actions.alpha(0.4f))
-        controllerDrop.addAction(Actions.alpha(0.4f))
-
-        val buttonSize = UI_SPACE * 15
-        softController.apply {
-            bottom().pad(UI_SPACE * 4)
-            add(controllerDrop).colspan(5).space(UI_SPACE * 2).size(buttonSize).right()
-            row()
-            add(controllerMoveLeft).space(UI_SPACE * 2).size(buttonSize)
-            add(controllerMoveRight).space(UI_SPACE * 2).size(buttonSize)
-            add().expandX()
-            add(controllerRotateLeft).space(UI_SPACE * 2).size(buttonSize)
-            add(controllerRotateRight).space(UI_SPACE * 2).size(buttonSize)
-        }
-
-        addGameOverlayToHUD(softController)
+        addGameOverlayToHUD(controller.getActor())
         addGameScoreToHUD(linesLabel)
         showMessage("Fill complete rows", "Stay below the top")
 

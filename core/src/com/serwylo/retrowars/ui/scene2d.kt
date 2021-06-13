@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
+import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
@@ -63,10 +64,18 @@ fun makeIconDrawable(sprite: TextureRegion, size: Float = UI_SPACE * 4): Texture
     }
 }
 
-fun makeHeading(title: String, styles: UiAssets.Styles, strings: I18NBundle, onBack: (() -> Unit)? = null): HorizontalGroup {
+fun makeHeading(title: String, styles: UiAssets.Styles, strings: I18NBundle, onBack: (() -> Unit)? = null) =
+    makeHeading(icon = null, title, styles, strings, onBack)
+
+fun makeHeading(icon: TextureRegion?, title: String, styles: UiAssets.Styles, strings: I18NBundle, onBack: (() -> Unit)? = null): HorizontalGroup {
     return HorizontalGroup().apply {
         space(UI_SPACE * 2)
         padBottom(UI_SPACE)
+
+        if (icon != null) {
+            addActor(makeIcon(icon, UI_SPACE * 8))
+        }
+
         addActor(Label(title, styles.label.huge))
         if (onBack != null) {
             addActor(makeSmallButton(strings["btn.back"], styles, onBack))

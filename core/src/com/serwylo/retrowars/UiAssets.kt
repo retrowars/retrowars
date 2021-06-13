@@ -13,9 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.utils.I18NBundle
 import com.crashinvaders.vfx.VfxManager
 import com.crashinvaders.vfx.effects.*
-import com.crashinvaders.vfx.effects.util.MixEffect
 import com.gmail.blueboxware.libgdxplugin.annotations.GDXAssets
-import com.serwylo.retrowars.scoring.Options
+import com.serwylo.retrowars.utils.Options
 import java.util.*
 
 @Suppress("PropertyName") // Allow underscores in variable names here, because it better reflects the source files things come from.
@@ -141,6 +140,7 @@ class UiAssets(locale: Locale) {
         }
 
         inner class Icons {
+            val retrowars = atlas.findRegion("icon_app")!!
             val asteroids = atlas.findRegion("icon_asteroids")!!
             val missileCommand = atlas.findRegion("icon_missile_command")!!
             val snake = atlas.findRegion("icon_snake")!!

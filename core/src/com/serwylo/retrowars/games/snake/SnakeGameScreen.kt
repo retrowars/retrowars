@@ -5,13 +5,11 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.scenes.scene2d.actions.Actions
-import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
-import com.serwylo.retrowars.ui.IconButton
+import com.serwylo.retrowars.input.SnakeSoftController
+import com.serwylo.retrowars.utils.Options
 
 class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f, 400f) {
 
@@ -20,46 +18,13 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         const val TAG = "SnakeGameScreen"
     }
 
-    private val controllerLeft: Button
-    private val controllerRight: Button
-    private val controllerUp: Button
-    private val controllerDown: Button
-
     private val state = SnakeGameState()
 
-    /**
-     * Used to provide an on-screen controller for driving the ship. Left, Right, Thrust, and Fire.
-     */
-    private val softController = Table()
+    private val controller = SnakeSoftController(Options.getSoftController(Games.snake), game.uiAssets)
 
     init {
-
-        val skin = game.uiAssets.getSkin()
-        val sprites = game.uiAssets.getSprites()
-
-        controllerLeft = IconButton(skin, sprites.buttonIcons.left)
-        controllerRight = IconButton(skin, sprites.buttonIcons.right)
-        controllerUp = IconButton(skin, sprites.buttonIcons.up)
-        controllerDown = IconButton(skin, sprites.buttonIcons.down)
-
-        controllerLeft.addAction(Actions.alpha(0.4f))
-        controllerRight.addAction(Actions.alpha(0.4f))
-        controllerUp.addAction(Actions.alpha(0.4f))
-        controllerDown.addAction(Actions.alpha(0.4f))
-
-        val buttonSize = UI_SPACE * 15
-        softController.apply {
-            bottom().pad(UI_SPACE * 4)
-            add(controllerLeft).space(UI_SPACE * 2).size(buttonSize)
-            add(controllerRight).space(UI_SPACE * 2).size(buttonSize)
-            add().expandX()
-            add(controllerUp).space(UI_SPACE * 2).size(buttonSize)
-            add(controllerDown).space(UI_SPACE * 2).size(buttonSize)
-        }
-
-        addGameOverlayToHUD(softController)
+        addGameOverlayToHUD(controller.getActor())
         showMessage("Eat the fruit", "Avoid your tail")
-
     }
 
     override fun show() {
@@ -77,10 +42,10 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private fun recordInput() {
-        state.left = controllerLeft.isPressed || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        state.right = controllerRight.isPressed || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        state.up = controllerUp.isPressed || Gdx.input.isKeyPressed(Input.Keys.UP)
-        state.down = controllerDown.isPressed || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+        state.left = controller.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+        state.right = controller.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        state.up = controller.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
+        state.down = controller.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
     }
 
     /**

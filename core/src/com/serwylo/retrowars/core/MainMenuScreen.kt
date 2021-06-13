@@ -23,7 +23,12 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
         }
 
         container.addActor(
-            makeHeading(strings["app.name"], styles, strings)
+            makeHeading(
+                game.uiAssets.getSprites().icons.retrowars,
+                strings["app.name"],
+                styles,
+                strings
+            )
         )
 
         container.addActor(Table().apply {
