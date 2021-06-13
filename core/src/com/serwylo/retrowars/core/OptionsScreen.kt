@@ -18,7 +18,7 @@ import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.IconButton
 import com.serwylo.retrowars.utils.Options
 
-class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSelectMenu() }) {
+class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMenu() }) {
 
     init {
         val stage = this.stage
@@ -27,19 +27,21 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSel
         val strings = game.uiAssets.getStrings()
         val sprites = game.uiAssets.getSprites()
 
-        val container = VerticalGroup().apply {
+        val container = Table().apply {
             setFillParent(true)
-            align(Align.center)
-            space(UI_SPACE)
+            pad(UI_SPACE)
         }
 
-        container.addActor(
+        container.row().top()
+        container.add(
             makeHeading(strings["options.title"], styles, strings) {
                 game.showMainMenu()
             }
-        )
+        ).expandY()
 
-        container.addActor(
+        container.row().pad(UI_SPACE)
+
+        container.add(
             CheckBox(strings["options.visual-effects"], skin).apply {
 
                 isChecked = Options.useVisualEffects()
@@ -53,11 +55,13 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSel
             }
         )
 
-        container.addActor(
+        container.row().pad(UI_SPACE)
+        container.add(
             Label("Controller layouts", styles.label.medium)
         )
 
-        container.addActor(
+        container.row()
+        container.add(
             HorizontalGroup().apply {
 
                 addActor(
@@ -97,7 +101,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSel
                 )
 
             }
-        )
+        ).expandY().top()
 
         stage.addActor(container)
 
@@ -110,7 +114,7 @@ class ControllerSelectScreen(
     private val gameDetails: GameDetails,
     private val keyboards: List<String>,
     private val makeController: (index: Int) -> SoftController,
-): Scene2dScreen(game) {
+): Scene2dScreen(game, { game.showOptions() }) {
 
     private val wrapper = Table()
     private val heading = Label("", game.uiAssets.getStyles().label.large)

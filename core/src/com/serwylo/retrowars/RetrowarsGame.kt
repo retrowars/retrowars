@@ -32,18 +32,21 @@ class RetrowarsGame(private val verbose: Boolean) : Game() {
     }
 
     fun showGameSelectMenu() {
+        Gdx.app.log(TAG, "Showing game select screen")
         Gdx.app.postRunnable {
             setScreen(GameSelectScreen(this))
         }
     }
 
     fun showMultiplayerLobby() {
+        Gdx.app.log(TAG, "Showing multiplayer lobby screen")
         Gdx.app.postRunnable {
             setScreen(MultiplayerLobbyScreen(this))
         }
     }
 
     fun showOptions() {
+        Gdx.app.log(TAG, "Showing options screen")
         Gdx.app.postRunnable {
             setScreen(OptionsScreen(this))
         }
@@ -54,24 +57,28 @@ class RetrowarsGame(private val verbose: Boolean) : Game() {
     }
 
     fun showMainMenu() {
+        Gdx.app.log(TAG, "Showing main menu screen")
         Gdx.app.postRunnable {
             setScreen(MainMenuScreen(this))
         }
     }
 
     fun showEndMultiplayerGame() {
+        Gdx.app.log(TAG, "Showing end multiplayer game screen")
         Gdx.app.postRunnable {
             setScreen(EndMultiplayerGameScreen(this))
         }
     }
 
     fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
+        Gdx.app.log(TAG, "Showing network error screen")
         Gdx.app.postRunnable {
             setScreen(NetworkErrorScreen(this, wasGraceful))
         }
     }
 
     fun launchGame(gameDetails: GameDetails) {
+        Gdx.app.log(TAG, "Showing game screen for ${gameDetails.id}")
         Gdx.app.postRunnable {
             setScreen(gameDetails.createScreen(this))
         }
