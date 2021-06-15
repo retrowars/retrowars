@@ -23,6 +23,10 @@ Any feedback is very welcome at <a href="https://github.com/retrowars/retrowars/
 * Thorough play testing required to balance the games.
 * Untested on multiple screen sizes.
 
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.serwylo.retrowars/)
+
 ## Contributing
 
 ### Donations
