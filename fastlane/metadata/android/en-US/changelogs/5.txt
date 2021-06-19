@@ -1,0 +1,4 @@
+Minor Improvements:
+ * Use Android "immersive mode" to hide the back, home, etc buttons.
+
+Support further development via Liberapay or GitHub Sponsors.
