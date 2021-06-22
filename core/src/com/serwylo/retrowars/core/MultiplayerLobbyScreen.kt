@@ -1,25 +1,22 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.Align
+import com.esotericsoftware.kryonet.Client
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
-import com.serwylo.retrowars.net.OnlineServerDetails
-import com.serwylo.retrowars.net.Player
-import com.serwylo.retrowars.net.RetrowarsClient
-import com.serwylo.retrowars.net.RetrowarsServer
+import com.serwylo.retrowars.net.*
 import io.ktor.client.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.net.InetAddress
 
 class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     close()
@@ -123,6 +120,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         if (new != null) {
             when(new) {
                 is Splash -> showSplash()
+                is SearchingForPublicServers -> showSearchingForPublicServers()
+                is ShowingServerList -> showServerList(new.servers)
                 is ConnectingToServer -> showConnectingToServer()
                 is StartingServer -> showStartingServer()
                 is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
@@ -136,24 +135,60 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         super.render(delta)
     }
 
-    private fun showSplash() {
-
+    private fun showSearchingForPublicServers() {
         wrapper.clear()
 
-        val description = Label("Play with others\non the same local network", game.uiAssets.getStyles().label.medium)
-        description.setAlignment(Align.center)
+        wrapper.add(Label("Looking for public servers...", styles.label.medium))
+        wrapper.row()
+        wrapper.add(Label("Checking http://localhost:8080/.well-known/com.serwylo.retrowars-servers.json", styles.label.small))
+    }
 
-        wrapper.add(description).colspan(2).spaceBottom(UI_SPACE)
+    private fun showServerList(servers: List<ServerMetadataDTO>) {
+        wrapper.clear()
+
+        wrapper.add(
+            Label("Public servers", styles.label.large)
+        ).spaceBottom(UI_SPACE * 2)
 
         wrapper.row()
 
         wrapper.add(
-            makeButton("Start server", styles) {
+            Label("Select one to join a game", styles.label.medium)
+        ).spaceBottom(UI_SPACE * 2)
+
+        servers.onEach { server ->
+            wrapper.row()
+            wrapper.add(
+                makeButton("${server.type} - ${server.hostname}:${server.tcpPort}", styles) {
+                    changeState(Action.AttemptToJoinServer)
+
+                    GlobalScope.launch(Dispatchers.IO) {
+                        createClient(server.hostname, server.tcpPort, server.udpPort)
+                    }
+                }
+            )
+        }
+    }
+
+    private fun showSplash() {
+
+        wrapper.clear()
+
+        wrapper.add(
+            Label("Play on your WiFi network", game.uiAssets.getStyles().label.medium).apply {
+                setAlignment(Align.center)
+            }
+        ).colspan(2).spaceBottom(UI_SPACE)
+
+        wrapper.row()
+
+        wrapper.add(
+            makeButton("Start local server", styles) {
                 changeState(Action.AttemptToStartServer)
 
                 GlobalScope.launch(Dispatchers.IO) {
                     RetrowarsServer.start()
-                    createClient(true)
+                    createClient(InetAddress.getLocalHost(), Network.defaultPort, Network.defaultUdpPort)
 
                     // Don't change the state here. Instead, we will wait for a 'players updated'
                     // event from our client which will in turn trigger the appropriate state change.
@@ -161,33 +196,56 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             }
         )
 
-        wrapper.row()
-
         wrapper.add(
-            makeButton("Find public game", styles) {
+            makeButton("Join local server", styles) {
+                changeState(Action.AttemptToJoinServer)
 
                 GlobalScope.launch(Dispatchers.IO) {
 
-                    val c = HttpClient()
-                    val response: HttpResponse = c.request("http://localhost:8080/games")
+                    val c = Client()
+                    Network.register(c)
+                    val host = c.discoverHost(Network.defaultUdpPort, 5000)
 
+                    if (host == null) {
+                        // TODO: Change to a view showing: "Could not server on the local network to connect to."
+                    } else {
+                        createClient(host, Network.defaultPort, Network.defaultUdpPort)
 
+                        // Don't change the state here. Instead, we will wait for a 'players updated'
+                        // event from our client which will in turn trigger the appropriate state change.
+                    }
                 }
             }
         )
 
+        wrapper.row().spaceTop(UI_SPACE * 4)
+
+        wrapper.add(
+            Label("Play other retro fans\nover the internet", game.uiAssets.getStyles().label.medium).apply {
+                setAlignment(Align.center)
+            }
+        ).colspan(2).spaceBottom(UI_SPACE)
+
         wrapper.row()
 
-        wrapper.add(makeButton("Join server", styles) {
-            changeState(Action.AttemptToJoinServer)
+        wrapper.add(
+            makeButton("Find a public server", styles) {
 
-            GlobalScope.launch(Dispatchers.IO) {
-                createClient(false)
+                GlobalScope.launch(Dispatchers.IO) {
 
-                // Don't change the state here. Instead, we will wait for a 'players updated'
-                // event from our client which will in turn trigger the appropriate state change.
+                    changeState(Action.FindPublicServers())
+
+                    // Right now we don't yet support private rooms (they will require an invite mechanism to work).
+                    val servers = fetchPublicServerList()
+                        .filter { it.type == ServerMetadataDTO.PUBLIC_RANDOM_ROOMS }
+
+                    changeState(Action.ShowPublicServers(servers))
+
+                }
             }
-        })
+        ).colspan(2)
+
+        wrapper.row()
 
     }
 
@@ -346,8 +404,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     }
 
-    private fun createClient(isAlsoServer: Boolean): RetrowarsClient {
-        val client = RetrowarsClient.connect(isAlsoServer)
+    private fun createClient(host: InetAddress, port: Int, udpPort: Int): RetrowarsClient {
+        val client = RetrowarsClient.connect(host, port, udpPort)
         listenToClient(client)
         return client
     }
@@ -374,7 +432,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 sealed class Action {
     object AttemptToStartServer : Action()
-    class ShowPublicServers(val servers: List<OnlineServerDetails>) : Action()
+    class FindPublicServers() : Action()
+    class ShowPublicServers(val servers: List<ServerMetadataDTO>) : Action()
     class PlayersChanged(val players: List<Player>): Action()
 
     object AttemptToJoinServer : Action()
@@ -391,7 +450,7 @@ class Splash: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.AttemptToStartServer -> StartingServer()
-            is Action.ShowPublicServers -> StartingServer()
+            is Action.FindPublicServers -> SearchingForPublicServers()
             is Action.AttemptToJoinServer -> ConnectingToServer()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
@@ -411,6 +470,24 @@ class WaitingForOtherPlayers(val me: Player): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.PlayersChanged -> if (action.players.size == 1) this else ReadyToStart(action.players, listOf(me))
+            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+        }
+    }
+}
+
+class SearchingForPublicServers: UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            is Action.ShowPublicServers -> ShowingServerList(action.servers)
+            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+        }
+    }
+}
+
+class ShowingServerList(val servers: List<ServerMetadataDTO>): UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            is Action.AttemptToJoinServer -> ConnectingToServer()
             else -> throw IllegalStateException("Invalid action $action passed to state $this")
         }
     }
