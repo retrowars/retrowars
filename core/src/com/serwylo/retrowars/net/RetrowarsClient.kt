@@ -8,12 +8,10 @@ import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.InetAddress
 
-class RetrowarsClient(host: InetAddress?) {
+class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
 
     companion object {
 
@@ -26,18 +24,13 @@ class RetrowarsClient(host: InetAddress?) {
          * @param connectToSelf Use this flag when you are also the server. Will result in connecting
          * directly to localhost, rather than trying to discover a server on the network.
          */
-        fun connect(connectToSelf: Boolean): RetrowarsClient {
+        fun connect(host: InetAddress, port: Int, udpPort: Int): RetrowarsClient {
             Gdx.app.log(TAG, "Establishing connecting from client to server.")
             if (client != null) {
                 throw IllegalStateException("Cannot connect to server, client connection has already been opened.")
             }
 
-            val host = if (connectToSelf) {
-                InetAddress.getLocalHost()
-            } else {
-                null
-            }
-            val newClient = RetrowarsClient(host)
+            val newClient = RetrowarsClient(host, port, udpPort)
             client = newClient
             return newClient
         }
@@ -156,11 +149,7 @@ class RetrowarsClient(host: InetAddress?) {
         }))
 
         try {
-            val address = host
-                ?: client.discoverHost(Network.defaultUdpPort, 10000)
-                ?: throw IOException("Could not server on the local network to connect to.")
-
-            client.connect(5000, address, Network.defaultPort, Network.defaultUdpPort)
+            client.connect(5000, host, port, udpPort)
             client.sendTCP(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
         } catch (e: IOException) {
             client.stop()

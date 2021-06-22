@@ -48,6 +48,11 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     private var score = 0L
 
+    /**
+     * Bit of a hack, but we end up in a loop whereby we send
+     */
+    private var isEnding = false
+
     private var state = State.Playing
 
     /**
@@ -115,6 +120,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         state = State.Finished
 
+        if (isEnding) {
+            return
+        }
+
+        isEnding = true
+
+        // TODO: Show end of game screen.
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
             GlobalScope.launch {

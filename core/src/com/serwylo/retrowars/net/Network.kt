@@ -36,14 +36,28 @@ object Network {
          * a LAN server then it will use the default room.
          */
         class RegisterPlayer(var appVersionCode: Int = 0, var roomId: Long = 0) {
-            override fun toString(): String = "RegisterPlayer [app version: $appVersionCode, room id; $roomId]"
+            override fun toString() = "RegisterPlayer [app version: $appVersionCode, room id; $roomId]"
         }
 
-        class StartGame
+        class StartGame {
+            override fun toString() = "StartGame"
+        }
 
-        class UnregisterPlayer
-        class UpdateScore(val score: Long) { constructor() : this(0) }
-        class UpdateStatus(val status: String) { constructor() : this("") }
+        class UnregisterPlayer {
+            override fun toString() = "UnregisterPlayer"
+        }
+
+        class UpdateScore(val score: Long) {
+            constructor() : this(0)
+
+            override fun toString() = "UpdateScore [score: $score]"
+        }
+
+        class UpdateStatus(val status: String) {
+            constructor() : this("")
+
+            override fun toString() = "UpdateStatus [status: $status]"
+        }
 
     }
 
@@ -61,30 +75,30 @@ object Network {
          */
         class OnPlayerAdded(var roomId: Long, var id: Long, var game: String, var serverVersionCode: Int) {
             constructor() : this(0, 0, "", 0)
-            override fun toString(): String = "OnPlayerAdded[room id: $roomId, player id: $id, game type: $game, server version: $serverVersionCode]"
+            override fun toString() = "OnPlayerAdded[room id: $roomId, player id: $id, game type: $game, server version: $serverVersionCode]"
         }
 
         class OnPlayerRemoved(var id: Long) {
             constructor() : this(0)
-            override fun toString(): String = "OnPlayerRemoved[player id: $id]"
+            override fun toString() = "OnPlayerRemoved[player id: $id]"
         }
 
         class OnPlayerScored(var id: Long, var score: Long) {
             constructor() : this(0, 0)
 
-            override fun toString(): String = "OnPlayerScored[player id: $id, score: $score]"
+            override fun toString() = "OnPlayerScored[player id: $id, score: $score]"
         }
 
         class OnPlayerStatusChange(var id: Long, var status: String) {
             constructor() : this(0, "")
 
-            override fun toString(): String = "OnPlayerStatusChange[player id: $id, status: $status]"
+            override fun toString() = "OnPlayerStatusChange[player id: $id, status: $status]"
         }
 
         class OnPlayerReturnedToLobby(var id: Long, var game: String) {
             constructor() : this(0, "")
 
-            override fun toString(): String = "OnPlayerReturnedToLobby[player id: $id, game: $game]"
+            override fun toString() = "OnPlayerReturnedToLobby[player id: $id, game: $game]"
         }
 
         class OnStartGame

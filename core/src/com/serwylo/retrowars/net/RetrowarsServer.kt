@@ -10,7 +10,7 @@ import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
 import kotlin.random.Random
 
-class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.defaultPort, private val udpPort: Int = Network.defaultUdpPort) {
+class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort, udpPort: Int = Network.defaultUdpPort) {
 
     interface Rooms {
 
@@ -107,14 +107,28 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
     }
 
     class Room(val id: Long) {
+
         var players = mutableSetOf<Player>()
         val scores = mutableMapOf<Player, Long>()
 
         fun sendToAllTCP(obj: Any, allConnections: Collection<Connection>) {
-            allConnections
-                .filter { it is PlayerConnection && it.room?.id == id}
-                .onEach { it.sendTCP(obj) }
+            sendToAllExceptTCP(obj, allConnections, null)
         }
+
+        fun sendToAllExceptTCP(obj: Any, allConnections: Collection<Connection>, except: Connection?) {
+            allConnections
+                .filter { it is PlayerConnection && it.room?.id == id }
+                .filter { except == null || except.id != it.id }
+                .onEach {
+                    // We know it is a player connection due to the filter above, however we need to check again for the benefit of the compiler.
+                    if (it is PlayerConnection) {
+                        Gdx.app.log(TAG, "Sending message [to client ${it.player?.id}, room: ${it.room?.id}]: $obj")
+                    }
+
+                    it.sendTCP(obj)
+                }
+        }
+
     }
 
     private var server = object : Server() {
@@ -141,15 +155,15 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
             override fun received(c: Connection, obj: Any) {
                 val connection = c as PlayerConnection
                 if (obj !is FrameworkMessage.KeepAlive) {
-                    Gdx.app.log(TAG, "Received message from client: $obj")
+                    Gdx.app.log(TAG, "Received message [from client ${connection.player?.id}, room: ${connection.room?.id}]: $obj")
                 }
 
                 when (obj) {
                     is Network.Server.RegisterPlayer -> newPlayer(connection, obj.roomId)
                     is Network.Server.StartGame -> startGame(connection.room)
-                    is Network.Server.UnregisterPlayer -> removePlayer(connection.player, connection.room)
-                    is Network.Server.UpdateScore -> updateScore(connection.player, connection.room, obj.score)
-                    is Network.Server.UpdateStatus -> updateStatus(connection.player, connection.room, obj.status)
+                    is Network.Server.UnregisterPlayer -> removePlayer(connection)
+                    is Network.Server.UpdateScore -> updateScore(connection, obj.score)
+                    is Network.Server.UpdateStatus -> updateStatus(connection, obj.status)
                 }
             }
 
@@ -158,15 +172,23 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
                     return
                 }
 
-                removePlayer(c.player, c.room)
+                removePlayer(c)
             }
         })
 
+        Gdx.app.log(TAG, "Starting server on port $port (TCP) and $udpPort (UDP)")
         server.bind(port, udpPort)
         server.start()
     }
 
-    private fun updateStatus(player: Player?, room: Room?, status: String) {
+    private fun updateStatus(initiatingConnection: PlayerConnection, status: String) {
+        val player = initiatingConnection.player
+        val room = initiatingConnection.room
+
+        updateStatus(player, room, status, initiatingConnection)
+    }
+
+    private fun updateStatus(player: Player?, room: Room?, status: String, allExcept: Connection? = null) {
         if (player == null || room == null) {
             Gdx.app.error(TAG, "Ignoring updateStatus request because Player ($player) or Room ($room) is null.")
             return
@@ -176,10 +198,11 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
 
         // If returning to the lobby, then decide on a new random game to give this player.
         if (status == Player.Status.lobby) {
-            player.game = Games.tetris.id // Games.allSupported.random().id
+            player.game = Games.allSupported.random().id
             room.sendToAllTCP(Network.Client.OnPlayerReturnedToLobby(player.id, player.game), server.connections)
         } else {
-            room.sendToAllTCP(Network.Client.OnPlayerStatusChange(player.id, status), server.connections)
+            // Don't send the message back to the player, because they already know about this status change (they requested it).
+            room.sendToAllExceptTCP(Network.Client.OnPlayerStatusChange(player.id, status), server.connections, allExcept)
         }
 
         checkForWinner(room)
@@ -221,7 +244,10 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
         updateStatus(survivingPlayer, room, Player.Status.dead)
     }
 
-    private fun updateScore(player: Player?, room: Room?, score: Long) {
+    private fun updateScore(initiatingConnection: PlayerConnection, score: Long) {
+        val player = initiatingConnection.player
+        val room = initiatingConnection.room
+
         if (player == null || room == null) {
             Gdx.app.error(TAG, "Ignoring updateScore request because Player ($player) or Room ($room) is null.")
             return
@@ -229,13 +255,15 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
 
         room.scores[player] = score
 
-        // TODO: Don't send back to the client that originally reported their own score.
-        server.sendToAllTCP(Network.Client.OnPlayerScored(player.id, score))
+        room.sendToAllExceptTCP(Network.Client.OnPlayerScored(player.id, score), server.connections, initiatingConnection)
 
         checkForWinner(room)
     }
 
-    private fun removePlayer(player: Player?, room: Room?) {
+    private fun removePlayer(initiatingConnection: PlayerConnection) {
+        val player = initiatingConnection.player
+        val room = initiatingConnection.room
+
         if (player == null || room == null) {
             Gdx.app.error(TAG, "Ignoring removePlayer request because Player ($player) or Room ($room) is null.")
             return
@@ -292,4 +320,3 @@ class RetrowarsServer(private val rooms: Rooms, private val port: Int = Network.
     }
 
 }
-
