@@ -122,6 +122,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 is Splash -> showSplash()
                 is SearchingForPublicServers -> showSearchingForPublicServers()
                 is ShowingServerList -> showServerList(new.servers)
+                is ShowEmptyServerList -> showEmptyServerList()
                 is ConnectingToServer -> showConnectingToServer()
                 is StartingServer -> showStartingServer()
                 is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
@@ -141,6 +142,22 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(Label("Looking for public servers...", styles.label.medium))
         wrapper.row()
         wrapper.add(Label("Checking http://localhost:8080/.well-known/com.serwylo.retrowars-servers.json", styles.label.small))
+    }
+
+    private fun showEmptyServerList() {
+        wrapper.clear()
+
+        wrapper.add(Label("No servers found", styles.label.large))
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(Label("Want to help Super Retro Mega Wars project\nby running a public server?", styles.label.medium).apply {
+            setAlignment(Align.center)
+        })
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(
+            makeButton("Learn how to help", styles) {
+                Gdx.net.openURI("http://github.com/retrowars/retrowars")
+            }
+        )
     }
 
     private fun showServerList(servers: List<ServerMetadataDTO>) {
@@ -432,7 +449,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 sealed class Action {
     object AttemptToStartServer : Action()
-    class FindPublicServers() : Action()
+    class FindPublicServers : Action()
     class ShowPublicServers(val servers: List<ServerMetadataDTO>) : Action()
     class PlayersChanged(val players: List<Player>): Action()
 
@@ -444,6 +461,10 @@ sealed class Action {
 
 interface UiState {
     fun consumeAction(action: Action): UiState
+
+    fun unsupported(action: Action): Nothing {
+        throw IllegalStateException("Invalid action $action passed to state $this")
+    }
 }
 
 class Splash: UiState {
@@ -452,7 +473,7 @@ class Splash: UiState {
             is Action.AttemptToStartServer -> StartingServer()
             is Action.FindPublicServers -> SearchingForPublicServers()
             is Action.AttemptToJoinServer -> ConnectingToServer()
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -461,7 +482,7 @@ class StartingServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.PlayersChanged -> WaitingForOtherPlayers(action.players[0])
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -470,7 +491,7 @@ class WaitingForOtherPlayers(val me: Player): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.PlayersChanged -> if (action.players.size == 1) this else ReadyToStart(action.players, listOf(me))
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -478,8 +499,8 @@ class WaitingForOtherPlayers(val me: Player): UiState {
 class SearchingForPublicServers: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ShowPublicServers -> ShowingServerList(action.servers)
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            is Action.ShowPublicServers -> if (action.servers.isEmpty()) ShowEmptyServerList() else ShowingServerList(action.servers)
+            else -> unsupported(action)
         }
     }
 }
@@ -488,8 +509,15 @@ class ShowingServerList(val servers: List<ServerMetadataDTO>): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.AttemptToJoinServer -> ConnectingToServer()
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
+    }
+}
+
+class ShowEmptyServerList: UiState {
+    override fun consumeAction(action: Action): UiState {
+        // User needs to press "Back" from the top menu to go to the main menu and start again.
+        unsupported(action)
     }
 }
 
@@ -503,7 +531,7 @@ class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>)
         return when(action) {
             is Action.PlayersChanged -> ReadyToStart(action.players, this.players)
             is Action.BeginGame -> CountdownToGame()
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -511,7 +539,7 @@ class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>)
 class WaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         if (action !is Action.PlayersChanged) {
-            throw IllegalStateException("Invalid action $action passed to state $this")
+            unsupported(action)
         }
 
         return when {
@@ -526,7 +554,7 @@ class ConnectingToServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.PlayersChanged -> if (action.players.size == 1) WaitingForOtherPlayers(action.players[0]) else ReadyToStart(action.players, listOf())
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -536,7 +564,7 @@ class CountdownToGame: UiState {
         return when(action) {
             is Action.CountdownComplete -> LaunchingGame(action.gameDetails)
             is Action.BeginGame -> CountdownToGame()
-            else -> throw IllegalStateException("Invalid action $action passed to state $this")
+            else -> unsupported(action)
         }
     }
 }
@@ -544,6 +572,6 @@ class CountdownToGame: UiState {
 class LaunchingGame(val gameDetails: GameDetails): UiState {
     override fun consumeAction(action: Action): UiState {
         // This is a terminal state, which will cause us to leave this screen.
-        throw IllegalStateException("Invalid action $action passed to state $this")
+        unsupported(action)
     }
 }
