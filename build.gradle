@@ -52,6 +52,8 @@ allprojects {
 
 }
 
+task stage(dependsOn: [':server:dist'])
+
 project(":texture-packer") {
     apply plugin: "kotlin"
 
