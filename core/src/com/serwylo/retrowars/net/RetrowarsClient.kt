@@ -6,12 +6,10 @@ import com.esotericsoftware.kryonet.Connection
 import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
-import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
 import java.io.IOException
-import java.net.InetAddress
 
-class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
+class RetrowarsClient(host: String, port: Int, udpPort: Int) {
 
     companion object {
 
@@ -24,7 +22,7 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
          * @param connectToSelf Use this flag when you are also the server. Will result in connecting
          * directly to localhost, rather than trying to discover a server on the network.
          */
-        fun connect(host: InetAddress, port: Int, udpPort: Int): RetrowarsClient {
+        fun connect(host: String, port: Int, udpPort: Int): RetrowarsClient {
             Gdx.app.log(TAG, "Establishing connecting from client to server.")
             if (client != null) {
                 throw IllegalStateException("Cannot connect to server, client connection has already been opened.")
@@ -66,7 +64,7 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
     fun otherPlayers(): List<Player> =
         if (players.size == 0) emptyList() else players.subList(1, players.size)
 
-    private var client = Client()
+    private var client: NetworkClient
 
     /**
      * Record if we receive a nice graceful message from the server.
@@ -113,14 +111,8 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
 
     init {
 
-        client.start()
-
-        register(client)
-
-        client.addListener(ThreadedListener(object : Listener {
-            override fun connected(connection: Connection) {}
-
-            override fun disconnected(connection: Connection) {
+        client = KryonetNetworkClient(
+            onDisconnected = {
                 if (hasShutdownGracefully) {
                     Gdx.app.log(TAG, "Client received disconnected event. Previously received a graceful shutdown so will broadcast that.")
                 } else {
@@ -129,12 +121,10 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
 
                 Gdx.app.debug(TAG, "Disconnected. Invoking RetrowarsClient.networkCloseListener (${if (hasShutdownGracefully) "shut down gracefully" else "ungraceful shutdown"})")
                 networkCloseListener?.invoke(hasShutdownGracefully)
-            }
+            },
 
-            override fun received(connection: Connection, obj: Any) {
-                if (obj !is FrameworkMessage.KeepAlive) {
-                    Gdx.app.log(TAG, "Received message from server: $obj")
-                }
+            onMessage = { obj ->
+                Gdx.app.log(TAG, "Received message from server: $obj")
 
                 when(obj) {
                     is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game)
@@ -146,13 +136,13 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
                     is Network.Client.OnServerStopped -> onServerStopped()
                 }
             }
-        }))
+        )
 
         try {
-            client.connect(5000, host, port, udpPort)
-            client.sendTCP(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
+            client.connect(host, port, udpPort)
+            client.sendMessage(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
         } catch (e: IOException) {
-            client.stop()
+            client.disconnect()
             throw IOException(e)
         }
 
@@ -239,7 +229,7 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
 
     fun changeStatus(status: String) {
         me()?.status = status
-        client.sendTCP(Network.Server.UpdateStatus(status))
+        client.sendMessage(Network.Server.UpdateStatus(status))
     }
 
     fun updateScore(score: Long) {
@@ -247,11 +237,11 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
         if (me != null) {
             scores[me] = score
         }
-        client.sendTCP(Network.Server.UpdateScore(score))
+        client.sendMessage(Network.Server.UpdateScore(score))
     }
 
     fun close() {
-        client.close()
+        client.disconnect()
     }
 
     fun getScoreFor(player: Player): Long {
@@ -282,7 +272,59 @@ class RetrowarsClient(host: InetAddress, port: Int, udpPort: Int) {
     }
 
     fun startGame() {
-        client.sendTCP(Network.Server.StartGame())
+        client.sendMessage(Network.Server.StartGame())
+    }
+
+}
+
+interface NetworkClient {
+    fun sendMessage(obj: Any)
+    fun connect(host: String, port: Int, udpPort: Int? = null)
+    fun disconnect()
+}
+
+class KryonetNetworkClient(
+    onMessage: (obj: Any) -> Unit,
+    onDisconnected: () -> Unit,
+): NetworkClient {
+
+    private val client = Client()
+
+    init {
+        client.start()
+        Network.register(client)
+
+        client.addListener(ThreadedListener(object : Listener {
+            override fun disconnected(connection: Connection) {
+                onDisconnected()
+            }
+
+            override fun received(connection: Connection, obj: Any) {
+                if (obj is FrameworkMessage.KeepAlive) {
+                    return
+                }
+
+                onMessage(obj)
+            }
+        }))
+
+    }
+
+    override fun sendMessage(obj: Any) {
+        client.sendTCP(obj)
+    }
+
+    override fun connect(host: String, port: Int, udpPort: Int?) {
+        if (udpPort == null) {
+            client.connect(5000, host, port)
+        } else {
+            client.connect(5000, host, port, udpPort)
+        }
+    }
+
+    override fun disconnect() {
+        client.stop()
+        client.close()
     }
 
 }

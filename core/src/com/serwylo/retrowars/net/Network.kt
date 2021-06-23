@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.net
 
 import com.esotericsoftware.kryonet.EndPoint
+import com.google.gson.Gson
 
 // TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
 //       upgrade to the same (latest) version.
