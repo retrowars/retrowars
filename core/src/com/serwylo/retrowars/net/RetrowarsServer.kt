@@ -8,6 +8,7 @@ import com.esotericsoftware.kryonet.Server
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Network.register
 import com.serwylo.retrowars.utils.AppProperties
+import java.util.*
 import kotlin.random.Random
 
 class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort, udpPort: Int = Network.defaultUdpPort) {
@@ -15,6 +16,9 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
     interface Rooms {
 
         fun getOrCreateRoom(requestedRoomId: Long): Room
+        fun getRoomCount(): Int
+        fun getPlayerCount(): Int
+        fun getLastGameTime(): Date?
 
         class SingleRoom: Rooms {
 
@@ -24,6 +28,19 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
                 return room
             }
 
+            override fun getRoomCount() = 1
+            override fun getPlayerCount() = room.players.size
+            override fun getLastGameTime() = room.lastGame
+        }
+
+        abstract class MultipleRooms: Rooms {
+
+            protected val rooms = mutableListOf<Room>()
+
+            override fun getRoomCount() = rooms.size
+            override fun getPlayerCount() = rooms.sumBy { it.players.size }
+            override fun getLastGameTime() = rooms.map { it.lastGame }.maxByOrNull { it?.time ?: 0 }
+
         }
 
         /**
@@ -31,9 +48,7 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
          * You can request a new room is created by passing in a zero for the room ID, and one will be created.
          * However, other players must obtain this room ID using some external means (e.g. QR code, SMS, etc) in order to join.
          */
-        class MultiplePrivateRooms: Rooms {
-
-            private val rooms = listOf<Room>()
+        class MultiplePrivateRooms: MultipleRooms() {
 
             override fun getOrCreateRoom(requestedRoomId: Long): Room {
                 if (requestedRoomId > 0) {
@@ -48,7 +63,9 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
                     Gdx.app.log(TAG, "Creating a new room at players request.")
                 }
 
-                return Room(Random.nextLong())
+                val newRoom = Room(Random.nextLong())
+                rooms.add(newRoom)
+                return newRoom
             }
 
         }
@@ -59,9 +76,7 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
          *  - If there is space in an existing room, add the player to that room, otherwise.
          *  - Create a new room and put the player in there waiting for others to join.
          */
-        class PublicRandomRooms(private val maxPlayersPerRoom: Int = 4): Rooms {
-
-            private val rooms = mutableListOf<Room>()
+        class PublicRandomRooms(private val maxPlayersPerRoom: Int = 4): MultipleRooms() {
 
             override fun getOrCreateRoom(requestedRoomId: Long): Room {
                 val existing = rooms.find { it.players.size < maxPlayersPerRoom }
@@ -108,8 +123,14 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
 
     class Room(val id: Long) {
 
-        var players = mutableSetOf<Player>()
+        val players = mutableSetOf<Player>()
         val scores = mutableMapOf<Player, Long>()
+
+        /**
+         * Remembering this date will help with both cleaning up unused rooms periodically, but also
+         * reporting to users how often this server is used.
+         */
+        var lastGame: Date? = null
 
         fun sendToAllTCP(obj: Any, allConnections: Collection<Connection>) {
             sendToAllExceptTCP(obj, allConnections, null)
@@ -180,6 +201,11 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
         server.bind(port, udpPort)
         server.start()
     }
+
+    fun getRoomCount() = rooms.getRoomCount()
+    fun getPlayerCount() = rooms.getPlayerCount()
+    fun getLastGameTime() = rooms.getLastGameTime()
+
 
     private fun updateStatus(initiatingConnection: PlayerConnection, status: String) {
         val player = initiatingConnection.player
@@ -315,6 +341,7 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
 
         Gdx.app.debug(TAG, "Server sending request to all players telling them to start the game.")
         room.scores.clear()
+        room.lastGame = Date()
         room.players.onEach { it.status = Player.Status.playing }
         room.sendToAllTCP(Network.Client.OnStartGame(), server.connections)
     }

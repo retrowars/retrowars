@@ -46,6 +46,11 @@ Please report any issues or suggest features on the [issue tracker](https://gith
 
 Pull requests will be warmly received at [https://github.com/retrowars/retrowars](https://github.com/retrowars/retrowars).
 
+### Running a public server
+
+If you are able to run a public server, please submit an issue and we can add your server to the list of well known servers.
+Doing so will make it appear in the default retro wars client when searching for public servers.
+
 ## Compiling
 
 This app uses a the libgdx library and Kotlin. It is recommended to read the [libgdx documentation to get a dev environment setup](https://libgdx.com/dev/setup/).
