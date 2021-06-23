@@ -6,13 +6,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.Align
-import com.esotericsoftware.kryonet.Client
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
-import kotlinx.coroutines.*
-import java.net.InetAddress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     close()
@@ -178,8 +179,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     changeState(Action.AttemptToJoinServer)
 
                     GlobalScope.launch(Dispatchers.IO) {
-                        val host = InetAddress.getByName(server.hostname)
-                        createClient(host, server.tcpPort, server.udpPort)
+                        createClient(server.hostname, server.tcpPort, server.udpPort)
                     }
                 }
             )
@@ -220,7 +220,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     RetrowarsServer.start()
-                    createClient(InetAddress.getLocalHost(), Network.defaultPort, Network.defaultUdpPort)
+                    createClient("localhost", Network.defaultPort, Network.defaultUdpPort)
 
                     // Don't change the state here. Instead, we will wait for a 'players updated'
                     // event from our client which will in turn trigger the appropriate state change.
@@ -234,9 +234,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 GlobalScope.launch(Dispatchers.IO) {
 
-                    val c = Client()
-                    Network.register(c)
-                    val host = c.discoverHost(Network.defaultUdpPort, 5000)
+                    val host = "localhost" // TODO: Use https://github.com/jmdns/jmdns for service discovery.
 
                     if (host == null) {
                         // TODO: Change to a view showing: "Could not server on the local network to connect to."
@@ -480,7 +478,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     }
 
-    private fun createClient(host: InetAddress, port: Int, udpPort: Int): RetrowarsClient {
+    private fun createClient(host: String, port: Int, udpPort: Int): RetrowarsClient {
         val client = RetrowarsClient.connect(host, port, udpPort)
         listenToClient(client)
         return client
