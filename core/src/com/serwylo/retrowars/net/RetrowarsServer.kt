@@ -7,6 +7,17 @@ import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Server
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
+import io.ktor.application.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.random.Random
 
@@ -160,16 +171,17 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
             is Rooms.PublicRandomRooms -> Gdx.app.log(TAG, "Starting a server that puts players into random rooms.")
         }
 
-        server = KryonetNetworkServer(
-            port,
-            udpPort,
+        server = WebSocketNetworkServer(
             onPlayerDisconnected = {
                 connections.remove(it)
                 removePlayer(it)
-           },
+            },
             onPlayerConnected = { connections.add(it) },
             onMessage = { obj, connection ->
-                Gdx.app.log(TAG, "Received message [from client ${connection.player?.id}, room: ${connection.room?.id}]: $obj")
+                Gdx.app.log(
+                    TAG,
+                    "Received message [from client ${connection.player?.id}, room: ${connection.room?.id}]: $obj"
+                )
 
                 when (obj) {
                     is Network.Server.RegisterPlayer -> newPlayer(connection, obj.roomId)
@@ -342,6 +354,69 @@ interface NetworkServer {
 
         fun sendMessage(obj: Any)
     }
+}
+
+class WebSocketNetworkServer(
+    private val onMessage: (obj: Any, connection: NetworkServer.Connection) -> Unit,
+    private val onPlayerDisconnected: (connection: NetworkServer.Connection) -> Unit,
+    private val onPlayerConnected: (connection: NetworkServer.Connection) -> Unit,
+): NetworkServer {
+
+    companion object {
+        private const val TAG = "WebSocketNetworkServer"
+    }
+
+    internal class PlayerConnection(val session: DefaultWebSocketSession): NetworkServer.Connection {
+        override var player: Player? = null
+        override var room: RetrowarsServer.Room? = null
+
+        override fun sendMessage(obj: Any) {
+            runBlocking {
+                val message = WebSocketMessage.toJson(obj)
+                session.send(message)
+            }
+        }
+    }
+
+    var server: NettyApplicationEngine? = null
+
+    override fun connect(port: Int, udpPort: Int?) {
+        Gdx.app.log(TAG, "Starting websocket server on port $port.")
+        server = embeddedServer(Netty, port) {
+
+            install(WebSockets)
+
+            routing {
+                get("/info") {
+                    call.respondText("Hello, world!")
+                }
+
+                webSocket("/ws") {
+
+                    Gdx.app.log(TAG, "Established new websocket connection")
+                    val connection = PlayerConnection(this)
+                    onPlayerConnected(connection)
+
+                    for (frame in incoming) {
+                        frame as? Frame.Text ?: continue
+                        val json = frame.readText()
+                        val obj = WebSocketMessage.fromJson(json)
+                        onMessage(obj, connection)
+                    }
+
+                    Gdx.app.log(TAG, "Finished processing websocket messages. Did the client close the connection?")
+                    onPlayerDisconnected(connection)
+                }
+            }
+        }
+
+        server?.start()
+    }
+
+    override fun disconnect() {
+        server?.stop(1000, 1000)
+    }
+
 }
 
 class KryonetNetworkServer(
