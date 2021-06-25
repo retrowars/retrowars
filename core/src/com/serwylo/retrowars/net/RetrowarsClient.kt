@@ -7,6 +7,12 @@ import com.esotericsoftware.kryonet.FrameworkMessage
 import com.esotericsoftware.kryonet.Listener
 import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.utils.AppProperties
+import io.ktor.client.*
+import io.ktor.client.features.websocket.*
+import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
 import java.io.IOException
 
 class RetrowarsClient(host: String, port: Int, udpPort: Int) {
@@ -23,7 +29,7 @@ class RetrowarsClient(host: String, port: Int, udpPort: Int) {
          * directly to localhost, rather than trying to discover a server on the network.
          */
         fun connect(host: String, port: Int, udpPort: Int): RetrowarsClient {
-            Gdx.app.log(TAG, "Establishing connecting from client to server.")
+            Gdx.app.log(TAG, "Establishing connection from client to server.")
             if (client != null) {
                 throw IllegalStateException("Cannot connect to server, client connection has already been opened.")
             }
@@ -111,7 +117,7 @@ class RetrowarsClient(host: String, port: Int, udpPort: Int) {
 
     init {
 
-        client = KryonetNetworkClient(
+        client = WebSocketNetworkClient(
             onDisconnected = {
                 if (hasShutdownGracefully) {
                     Gdx.app.log(TAG, "Client received disconnected event. Previously received a graceful shutdown so will broadcast that.")
@@ -283,6 +289,73 @@ interface NetworkClient {
     fun disconnect()
 }
 
+class WebSocketNetworkClient(
+    private val onMessage: (obj: Any) -> Unit,
+    private val onDisconnected: () -> Unit,
+): NetworkClient {
+
+    companion object {
+        private const val TAG = "WebSocketNetworkClient"
+    }
+
+    private val client = HttpClient {
+        install(WebSockets)
+    }
+
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
+    private val messageQueue = Channel<Any>(10)
+
+    private suspend fun DefaultClientWebSocketSession.receiveMessages() {
+        try {
+            for (frame in incoming) {
+                frame as? Frame.Text ?: continue
+                val json = frame.readText()
+                val obj = WebSocketMessage.fromJson(json)
+                onMessage(obj)
+            }
+        } catch (e: Exception) {
+            Gdx.app.error(TAG, "Error receiving websocket message in client", e)
+        }
+    }
+
+    override fun sendMessage(obj: Any) {
+        messageQueue.trySendBlocking(obj)
+            .onFailure {
+                // TODO: Handle this gracefully.
+            }
+    }
+
+    private suspend fun sendMessages() {
+        for (message in messageQueue) {
+            val jsonMessage = WebSocketMessage.toJson(message)
+            session?.send(jsonMessage)
+        }
+    }
+
+    private var session: DefaultClientWebSocketSession? = null
+
+    override fun connect(host: String, port: Int, udpPort: Int?) {
+        scope.launch {
+            client.webSocket(HttpMethod.Get, host, port, "/ws") {
+                session = this
+                val receiveJob = launch { receiveMessages() }
+                val sendJob = launch { sendMessages() }
+
+                // TODO: Whatabout the server killing receiveMessage() first?
+                sendJob.join()
+
+                // TODO: If we failed nicely here, then we should politely send a cancel message to the server before cancellin this job (and hence moving forward to then terminate the job.
+                receiveJob.cancelAndJoin()
+            }
+        }
+    }
+
+    override fun disconnect() {
+        client.close()
+    }
+
+}
 class KryonetNetworkClient(
     onMessage: (obj: Any) -> Unit,
     onDisconnected: () -> Unit,
