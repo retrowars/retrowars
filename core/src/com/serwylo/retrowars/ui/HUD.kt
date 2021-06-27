@@ -8,10 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.Avatar
-import com.serwylo.beatgame.ui.CustomActions
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeStage
+import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -39,8 +36,18 @@ class HUD(private val assets: UiAssets) {
     private var descriptionHeading = Label(null, styles.label.large).apply { setAlignment(Align.center) }
     private var descriptionBody  = Label(null, styles.label.medium).apply { setAlignment(Align.center) }
     private var description = VerticalGroup().apply {
-        addActor(descriptionHeading)
-        addActor(descriptionBody)
+        addActor(
+            withBackground(
+                Table().apply {
+                    row().top().spaceTop(UI_SPACE * 10)
+                    add(descriptionHeading)
+                    row()
+                    add(descriptionBody)
+                },
+                assets.getSkin(),
+            )
+        )
+        
         align(Align.top)
         padTop(UI_SPACE * 10)
     }

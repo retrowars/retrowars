@@ -444,5 +444,9 @@ WindowStyle: {
 		background: window
 		titleFont: font_medium
 	}
+	transparent-text-background: {
+		background: window-transparent-text-background
+		titleFont: font_medium
+	}
 }
 }

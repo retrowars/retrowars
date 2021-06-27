@@ -83,6 +83,15 @@ fun makeHeading(icon: TextureRegion?, title: String, styles: UiAssets.Styles, st
     }
 }
 
+fun withBackground(actor: Actor, skin: Skin) =
+    Window("", skin, "transparent-text-background").apply {
+        add(actor)
+            .padTop(UI_SPACE)
+            .padBottom(UI_SPACE)
+            .padLeft(UI_SPACE * 4)
+            .padRight(UI_SPACE * 4)
+    }
+
 val UI_WIDTH = 800f
 val UI_HEIGHT = 600f
 const val UI_SPACE = 10f
