@@ -32,6 +32,10 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     override fun updateGame(delta: Float) {
+        if (getState() != State.Playing) {
+            // There are no items to continue animating at the end of the game, so don't bother updating.
+            return
+        }
 
         state.timer += delta
 

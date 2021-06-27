@@ -1,9 +1,18 @@
 package com.serwylo.retrowars.games
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.Window
+import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.makeButton
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -12,11 +21,19 @@ import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
 
     companion object {
         const val TAG = "GameScreen"
+    }
+
+    enum class State {
+        Playing,
+        Finished,
     }
 
     private val camera = OrthographicCamera()
@@ -29,6 +46,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     protected val client = RetrowarsClient.get()
 
     private var score = 0L
+
+    private var state = State.Playing
 
     /**
      * When damage is received on the network thread, queue up the players who are responsible and
@@ -50,6 +69,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
             scoreBreakpointListener = { player, strength -> handleBreakpointChange(player, strength) }
         )
     }
+
+    protected fun getState() = state
 
     protected fun showMessage(heading: String, body: String? = null) {
         hud.showMessage(heading, body)
@@ -86,17 +107,68 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     }
 
     protected fun endGame() {
-        // TODO: Show end of game screen.
+        if (state != State.Playing) {
+            Gdx.app.error(TAG, "Game requested that we end, despite the fact the state is $state instead of ${State.Playing}. Sounds like the game has called endGame() more than once.")
+            return
+        }
+
+        state = State.Finished
+
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
-            saveHighScore(gameDetails, score)
-            recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id))
-            game.showGameSelectMenu()
+            GlobalScope.launch {
+                saveHighScore(gameDetails, score)
+                recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id))
+            }
+            showEndGameScreen()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
             client.changeStatus(Player.Status.dead)
             game.showEndMultiplayerGame()
         }
+    }
+
+    private fun showEndGameScreen() {
+        val styles = game.uiAssets.getStyles()
+        hud.addGameOverlay(
+            Table().apply {
+
+                val withBackground = { label: Label ->
+                    Window("", game.uiAssets.getSkin(), "transparent-text-background").apply {
+                        add(label).pad(UI_SPACE)
+                    }
+                }
+
+                add(withBackground(Label("Game Over", styles.label.huge))).spaceBottom(UI_SPACE * 2)
+                row()
+
+                val label = withBackground(Label("Insert coin\nto continue", styles.label.large))
+
+                add(label)
+
+                label.addAction(
+                    sequence(
+                        alpha(0f),
+                        delay(2f),
+                        parallel(
+                            alpha(1f, 2f),
+                            Actions.run {
+                                Gdx.input.inputProcessor = object: InputAdapter() {
+                                    override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                                        game.showGameSelectMenu()
+                                        return true
+                                    }
+
+                                    override fun keyTyped(character: Char): Boolean {
+                                        game.showGameSelectMenu()
+                                        return true
+                                    }
+                                }
+                            },
+                        ),
+                    )
+                )
+        })
     }
 
     protected abstract fun updateGame(delta: Float)
@@ -181,6 +253,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
      * to update the server.
      */
     protected fun increaseScore(scoreToIncrement: Int) {
+        // We let the game continue to update after showing the Game Over screen. Therefore, there
+        // is a chance that things will happen which cause scores (e.g. missiles exploding in missile command).
+        // We want to make sure that these don't impact your score at all.
+        if (state != State.Playing) {
+            return
+        }
+
         score += scoreToIncrement
 
         client?.updateScore(score)

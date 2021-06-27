@@ -50,30 +50,35 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     override fun updateGame(delta: Float) {
         state.timer += delta
 
-        state.ship.left = controller.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        state.ship.right = controller.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        state.ship.shooting = controller.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
-        state.ship.thrust = controller.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
+        if (getState() == State.Playing) {
+            state.ship.left = controller.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+            state.ship.right = controller.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+            state.ship.shooting = controller.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
+            state.ship.thrust = controller.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
+        }
 
         updateEntities(delta)
 
-        // TODO: Show end of game screen.
-        if (state.numLives <= 0) {
+        if (getState() == State.Playing && state.numLives <= 0) {
             endGame()
         }
     }
 
     private fun updateEntities(delta: Float) {
 
-        if (state.isShipAlive()) {
+        if (getState() == State.Playing) {
 
-            // If we have not died (i.e. we are not in the mandatory waiting period for respawning the ship).
-            state.ship.update(delta)
+            if (state.isShipAlive()) {
 
-        } else if (state.isShipReadyToRespawn()) {
+                // If we have not died (i.e. we are not in the mandatory waiting period for respawning the ship).
+                state.ship.update(delta)
 
-            // If we have died, waited the minimum amount of time, and are now ready to respawn...
-            respawnShipIfSafe()
+            } else if (state.isShipReadyToRespawn()) {
+
+                // If we have died, waited the minimum amount of time, and are now ready to respawn...
+                respawnShipIfSafe()
+
+            }
 
         }
 

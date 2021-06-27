@@ -28,6 +28,9 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         Gdx.input.inputProcessor = object: InputAdapter() {
 
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                if (getState() != State.Playing) {
+                    return false
+                }
 
                 val worldPos = viewport.unproject(Vector2(screenX.toFloat(), screenY.toFloat()))
 
@@ -58,7 +61,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
         updateEntities(delta)
 
-        if (!state.anyCitiesAlive()) {
+        if (getState() == State.Playing && !state.anyCitiesAlive()) {
             endGame()
         }
     }
@@ -119,7 +122,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
             }
         }
 
-        if (state.numMissilesRemaining <= 0) {
+        if (getState() == State.Playing && state.numMissilesRemaining <= 0) {
             if (state.enemyMissiles.size == 0) {
                 completeLevel()
             }

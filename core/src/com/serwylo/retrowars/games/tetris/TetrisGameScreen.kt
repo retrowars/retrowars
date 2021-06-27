@@ -60,6 +60,9 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
     }
 
     override fun updateGame(delta: Float) {
+        if (getState() != State.Playing) {
+            return
+        }
 
         state.timer += delta
 
