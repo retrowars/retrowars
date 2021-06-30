@@ -1,0 +1,4 @@
+Improvement:
+ * At the end of a game, show a "Game Over" message. This prevents players accidentally starting another game when having a good time and smashing buttons during a game. Thanks to WarmChocolateCake for the suggestion and feedback.
+
+Please support further development via Liberapay or GitHub Sponsors.
