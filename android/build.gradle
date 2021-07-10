@@ -68,7 +68,11 @@ task copyAndroidNatives {
 }
 
 tasks.whenTaskAdded { packageTask ->
-    if (packageTask.name.contains("package")) {
+    // Different from the default libgdx config due to changes in Gradle 6.7.1.
+    // See:
+    //  * https://github.com/yairm210/Unciv/issues/3946 for the problem, and
+    //  * https://github.com/yairm210/Unciv/pull/4090/files for the solution
+    if (packageTask.name.contains("package") || packageTask.name.contains("assemble")) {
         packageTask.dependsOn 'copyAndroidNatives'
     }
 }
