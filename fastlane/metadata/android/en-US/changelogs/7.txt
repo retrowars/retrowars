@@ -1,0 +1,8 @@
+Critical bug fix:
+
+v0.6.0 crashes instantly every time. This was due to a change in Gradle tooling.
+Thanks to everyone who reported this issue, and especially to those on the Unciv
+GitHub (including those from the F-Droid team) who identified the problem and
+the solution.
+
+Please support further development via Liberapay or GitHub Sponsors.
