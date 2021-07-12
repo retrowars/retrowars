@@ -1,11 +1,6 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
-import com.esotericsoftware.kryonet.Client
-import com.esotericsoftware.kryonet.Connection
-import com.esotericsoftware.kryonet.FrameworkMessage
-import com.esotericsoftware.kryonet.Listener
-import com.esotericsoftware.kryonet.Listener.ThreadedListener
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
@@ -342,61 +337,16 @@ class WebSocketNetworkClient(
                 val receiveJob = launch { receiveMessages() }
                 val sendJob = launch { sendMessages() }
 
-                // TODO: Whatabout the server killing receiveMessage() first?
+                // TODO: What about the server killing receiveMessage() first?
                 sendJob.join()
 
-                // TODO: If we failed nicely here, then we should politely send a cancel message to the server before cancellin this job (and hence moving forward to then terminate the job.
+                // TODO: If we failed nicely here, then we should politely send a cancel message to the server before cancelling this job (and hence moving forward to then terminate the job.
                 receiveJob.cancelAndJoin()
             }
         }
     }
 
     override fun disconnect() {
-        client.close()
-    }
-
-}
-class KryonetNetworkClient(
-    onMessage: (obj: Any) -> Unit,
-    onDisconnected: () -> Unit,
-): NetworkClient {
-
-    private val client = Client()
-
-    init {
-        client.start()
-        Network.register(client)
-
-        client.addListener(ThreadedListener(object : Listener {
-            override fun disconnected(connection: Connection) {
-                onDisconnected()
-            }
-
-            override fun received(connection: Connection, obj: Any) {
-                if (obj is FrameworkMessage.KeepAlive) {
-                    return
-                }
-
-                onMessage(obj)
-            }
-        }))
-
-    }
-
-    override fun sendMessage(obj: Any) {
-        client.sendTCP(obj)
-    }
-
-    override fun connect(host: String, port: Int, udpPort: Int?) {
-        if (udpPort == null) {
-            client.connect(5000, host, port)
-        } else {
-            client.connect(5000, host, port, udpPort)
-        }
-    }
-
-    override fun disconnect() {
-        client.stop()
         client.close()
     }
 
