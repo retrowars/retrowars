@@ -1,10 +1,6 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
-import com.esotericsoftware.kryonet.Connection
-import com.esotericsoftware.kryonet.FrameworkMessage
-import com.esotericsoftware.kryonet.Listener
-import com.esotericsoftware.kryonet.Server
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.application.*
@@ -14,9 +10,6 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.random.Random
@@ -415,84 +408,6 @@ class WebSocketNetworkServer(
 
     override fun disconnect() {
         server?.stop(1000, 1000)
-    }
-
-}
-
-class KryonetNetworkServer(
-    port: Int,
-    udpPort: Int,
-    onMessage: (obj: Any, connection: NetworkServer.Connection) -> Unit,
-    onPlayerDisconnected: (connection: NetworkServer.Connection) -> Unit,
-    onPlayerConnected: (connection: NetworkServer.Connection) -> Unit,
-): NetworkServer {
-
-    companion object {
-        private const val TAG = "KryonetNetworkServer"
-    }
-
-    internal class PlayerConnection: Connection(), NetworkServer.Connection {
-        override var player: Player? = null
-        override var room: RetrowarsServer.Room? = null
-
-        override fun sendMessage(obj: Any) {
-            sendTCP(obj)
-        }
-    }
-
-    private var server = object : Server() {
-        override fun newConnection() = PlayerConnection()
-    }
-
-    init {
-
-        Network.register(server)
-
-        server.addListener(object : Listener {
-
-            override fun connected(connection: Connection?) {
-                if (connection !is PlayerConnection) {
-                    return
-                }
-
-                onPlayerConnected(connection)
-            }
-
-            override fun received(connection: Connection, obj: Any) {
-                if (obj is FrameworkMessage.KeepAlive || connection !is PlayerConnection) {
-                    return
-                }
-
-                onMessage(obj, connection)
-            }
-
-            override fun disconnected(connection: Connection) {
-                if (connection !is PlayerConnection) {
-                    return
-                }
-
-                onPlayerDisconnected(connection)
-            }
-        })
-
-        Gdx.app.log(TAG, "Starting server on port $port (TCP) and $udpPort (UDP)")
-        server.bind(port, udpPort)
-        server.start()
-    }
-
-    override fun disconnect() {
-        Gdx.app.log(TAG, "Disconnecting server")
-        server.stop()
-        server.close()
-    }
-
-    override fun connect(port: Int, udpPort: Int?) {
-        if (udpPort == null) {
-            server.bind(port)
-        } else {
-            server.bind(port, udpPort)
-        }
-        server.start()
     }
 
 }

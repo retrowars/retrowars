@@ -43,14 +43,6 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url 'https://jitpack.io' }
     }
-
-    // Newer versions of objenesis (used by kryonet to deserialize classes) requires minSdk 26.
-    // Not particularly interested in bumping from 14 just to solve this issue.
-    // https://github.com/mockk/mockk/issues/281#issuecomment-483329039
-    configurations.all {
-        resolutionStrategy.force 'org.objenesis:objenesis:2.6'
-    }
-
 }
 
 task stage(dependsOn: [':server:dist'])
@@ -116,7 +108,6 @@ project(":core") {
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
-        implementation 'com.github.crykn:kryonet:2.22.7'
         implementation 'com.google.code.gson:gson:2.8.6'
         implementation 'com.crashinvaders.vfx:gdx-vfx-core:0.5.0'
         implementation 'com.crashinvaders.vfx:gdx-vfx-effects:0.5.0'

@@ -1,6 +1,5 @@
 package com.serwylo.retrowars.net
 
-import com.esotericsoftware.kryonet.EndPoint
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -13,23 +12,6 @@ object Network {
 
     const val defaultPort = 6263
     const val defaultUdpPort = defaultPort + 1
-
-    fun register(endPoint: EndPoint) {
-        val kryo = endPoint.kryo
-        kryo.register(Server.RegisterPlayer::class.java)
-        kryo.register(Server.UnregisterPlayer::class.java)
-        kryo.register(Server.UpdateScore::class.java)
-        kryo.register(Server.UpdateStatus::class.java)
-        kryo.register(Server.StartGame::class.java)
-
-        kryo.register(Client.OnPlayerAdded::class.java)
-        kryo.register(Client.OnPlayerRemoved::class.java)
-        kryo.register(Client.OnPlayerScored::class.java)
-        kryo.register(Client.OnStartGame::class.java)
-        kryo.register(Client.OnPlayerStatusChange::class.java)
-        kryo.register(Client.OnPlayerReturnedToLobby::class.java)
-        kryo.register(Client.OnServerStopped::class.java)
-    }
 
     /**
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
@@ -169,7 +151,6 @@ object WebSocketMessage {
         val payload = parsed.get(MESSAGE_PAYLOAD_KEY).asJsonObject
         return when(type) {
 
-            // TODO: Unify this with Network.register so we only need to add messages in one place.
             Network.Server.RegisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.RegisterPlayer::class.java)
             Network.Server.UnregisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.UnregisterPlayer::class.java)
             Network.Server.UpdateScore::class.simpleName -> Gson().fromJson(payload, Network.Server.UpdateScore::class.java)
