@@ -1,0 +1,5 @@
+Bugfix:
+
+* Tetris: Don't allow tetronimos to be hard-dropped into other pieces or below the ground (thanks pssandhu for both reporting and also promptly fixing the issue!)
+
+Any issues you'd like to address? Come and join us on GitHub.
