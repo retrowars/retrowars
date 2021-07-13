@@ -11,6 +11,12 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
 import kotlinx.coroutines.*
+import java.net.InetAddress
+import javax.jmdns.JmDNS
+import javax.jmdns.ServiceEvent
+import javax.jmdns.ServiceListener
+import kotlin.system.measureTimeMillis
+
 
 class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     close()
@@ -176,7 +182,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     changeState(Action.AttemptToJoinServer)
 
                     GlobalScope.launch(Dispatchers.IO) {
-                        createClient(server.hostname, server.tcpPort, server.udpPort)
+                        createClient(server.hostname, server.tcpPort)
                     }
                 }
             )
@@ -217,7 +223,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 GlobalScope.launch(Dispatchers.IO) {
                     RetrowarsServer.start()
-                    createClient("localhost", Network.defaultPort, Network.defaultUdpPort)
+                    createClient("localhost", Network.defaultPort)
 
                     // Don't change the state here. Instead, we will wait for a 'players updated'
                     // event from our client which will in turn trigger the appropriate state change.
@@ -228,20 +234,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(
             makeButton("Join local server", styles) {
                 changeState(Action.AttemptToJoinServer)
-
-                GlobalScope.launch(Dispatchers.IO) {
-
-                    val host = "localhost" // TODO: Use https://github.com/jmdns/jmdns for service discovery.
-
-                    if (host == null) {
-                        // TODO: Change to a view showing: "Could not server on the local network to connect to."
-                    } else {
-                        createClient(host, Network.defaultPort, Network.defaultUdpPort)
-
-                        // Don't change the state here. Instead, we will wait for a 'players updated'
-                        // event from our client which will in turn trigger the appropriate state change.
-                    }
-                }
+                findAndJoinLocalServer()
             }
         )
 
@@ -257,61 +250,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.add(
             makeButton("Find a public server", styles) {
-
-                GlobalScope.launch(Dispatchers.IO) {
-
-                    changeState(Action.FindPublicServers())
-
-                    var pendingServers = fetchPublicServerList()
-
-                    var activeServers = listOf<ServerDetails>()
-                    var inactiveServers = listOf<ServerMetadataDTO>()
-
-                    val update = {
-                        changeState(Action.ShowPublicServers(activeServers, pendingServers, inactiveServers))
-                    }
-
-                    update()
-
-                    // Take a copy before iterating over, because we are going to mutate the original pendingServers list within this loop.
-                    pendingServers.toList().onEach { server ->
-                        Gdx.app.debug(TAG, "Fetching server metadata for ${server.hostname}")
-                        val info = withContext(Dispatchers.IO) {
-                            // TODO: Time this as a kind of rudimentary ping, then tell the user the result.
-                            fetchServerInfo(server)
-                        }
-
-                        if (info == null) {
-
-                            Gdx.app.log(TAG, "Showing server ${server.hostname} as inactive.")
-                            inactiveServers = inactiveServers.plus(server)
-
-
-                        // Right now we don't yet support private rooms (they will require an invite mechanism to work).
-                        } else if (info.type == ServerMetadataDTO.PUBLIC_RANDOM_ROOMS) {
-
-                            Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
-                            activeServers = activeServers.plus(ServerDetails(
-                                server.hostname,
-                                server.httpPort,
-                                info.tcpPort,
-                                info.udpPort,
-                                info.type,
-                                info.maxPlayersPerRoom,
-                                info.maxRooms,
-                                info.currentRoomCount,
-                                info.currentPlayerCount,
-                                info.lastGameTimestamp,
-                            ))
-
-                        }
-
-                        Gdx.app.debug(TAG, "Updating list of servers with new information about ${server.hostname}")
-                        pendingServers = pendingServers.filter { it !== server }
-                        update()
-                    }
-
-
+                GlobalScope.launch {
+                    findAndShowPublicServers()
                 }
             }
         ).colspan(2)
@@ -320,10 +260,146 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     }
 
+    private fun findAndJoinLocalServer() {
+
+        // Once we've found a server, we will ask jmdns to close. However it is likely it may still
+        // find other servers in the meantime. Therefore, lets guard against this by ignoring any
+        // other servers after serverFound is set to true.
+        var serverFound = false
+
+        // TODO: If time out occurs, change to a view showing: "Could not server on the local network to connect to."
+        val jmdns = JmDNS.create(InetAddress.getLocalHost())
+
+        jmdns.addServiceListener(Network.jmdnsServiceName, object: ServiceListener {
+
+            override fun serviceAdded(event: ServiceEvent?) {
+                synchronized(serverFound) {
+                    if (serverFound) {
+                        Gdx.app.debug(TAG, "Retrowars server has already been found, so disregarding \"service added\" event: $event")
+                        return
+                    }
+
+                    // TODO: serviceAdded() is an intermediate step before being resolved.
+                    //       It may be possible to provide more fine grained feedback here while
+                    //       we wait for the full resolution.
+                    Gdx.app.log(TAG, "Found service: $event")
+                    jmdns.requestServiceInfo(Network.jmdnsServiceName, event?.name)
+                }
+            }
+
+            override fun serviceRemoved(event: ServiceEvent?) {}
+
+            override fun serviceResolved(event: ServiceEvent?) {
+                synchronized(serverFound) {
+                    if (serverFound) {
+                        Gdx.app.debug(TAG, "Retrowars server has already been found, so disregarding \"service resolved\" event: $event")
+                        return
+                    }
+
+                    serverFound = true
+                }
+
+                Gdx.app.log(TAG, "Resolved service: $event")
+                val info = event?.info
+
+                if (info == null) {
+                    Gdx.app.error(TAG, "Resolved retrowars server via jmdns, but couldn't get any info about it. Will ignore.")
+                    return
+                }
+
+                if (info.inet4Addresses.isEmpty()) {
+                    Gdx.app.error(TAG, "Resolved retrowars server via jmdns, but no IP addresses were present, this is weird and unexpected, will ignore.")
+                    return
+                }
+
+                val port = info.port
+                val host = info.inet4Addresses[0]
+
+                Gdx.app.debug(TAG, "Found local retrowars server at $host:$port")
+
+                // Fire and forget this, we don't want that to stop us from actually connecting to
+                // the client.
+                GlobalScope.launch {
+                    runCatching {
+                        Gdx.app.debug(TAG, "Closing jmdns as we found the details we were looking for.")
+                        jmdns.close()
+                        Gdx.app.debug(TAG, "Finished closing jmdns.")
+                    }
+                }
+
+                Gdx.app.debug(TAG, "Creating client connection to ${host.hostAddress}:$port")
+                createClient(host.hostAddress, port)
+
+                // Don't change the state here. Instead, we will wait for a 'players updated'
+                // event from our client which will in turn trigger the appropriate state change.
+            }
+        })
+
+    }
+
+    private suspend fun findAndShowPublicServers() = withContext(Dispatchers.IO) {
+        changeState(Action.FindPublicServers())
+
+        var pendingServers = fetchPublicServerList()
+        yield()
+
+        var activeServers = listOf<ServerDetails>()
+        var inactiveServers = listOf<ServerMetadataDTO>()
+
+        val update = {
+            changeState(Action.ShowPublicServers(activeServers, pendingServers, inactiveServers))
+        }
+
+        update()
+
+        // Take a copy before iterating over, because we are going to mutate the original pendingServers list within this loop.
+        pendingServers.toList().onEach { server ->
+            launch {
+                Gdx.app.debug(TAG, "Fetching server metadata for ${server.hostname}")
+                val info: ServerInfoDTO?
+                val pingTime = measureTimeMillis {
+                    info = fetchServerInfo(server)
+                }
+
+                if (info == null) {
+
+                    Gdx.app.log(TAG, "Showing server ${server.hostname} as inactive.")
+                    inactiveServers = inactiveServers.plus(server)
+
+
+                    // Right now we don't yet support private rooms (they will require an invite mechanism to work).
+                } else if (info.type == ServerMetadataDTO.PUBLIC_RANDOM_ROOMS) {
+
+                    Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
+                    activeServers = activeServers.plus(ServerDetails(
+                        server.hostname,
+                        server.httpPort,
+                        info.tcpPort,
+                        info.udpPort,
+                        info.type,
+                        info.maxPlayersPerRoom,
+                        info.maxRooms,
+                        info.currentRoomCount,
+                        info.currentPlayerCount,
+                        info.lastGameTimestamp,
+                        pingTime.toInt(),
+                    ))
+
+                }
+
+                Gdx.app.debug(TAG, "Updating list of servers with new information about ${server.hostname}")
+                pendingServers = pendingServers.filter { it !== server }
+                update()
+            }
+        }
+    }
+
     private fun showConnectingToServer() {
         wrapper.clear()
 
-        wrapper.add(Label("Connecting to server", styles.label.medium))
+        wrapper.add(Label("Searching for server", styles.label.medium))
+        wrapper.row()
+        wrapper.add(Label("Make sure you're both connected to the same WiFi network", styles.label.small))
     }
 
     private fun showStartingServer() {
@@ -475,8 +551,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     }
 
-    private fun createClient(host: String, port: Int, udpPort: Int): RetrowarsClient {
-        val client = RetrowarsClient.connect(host, port, udpPort)
+    private fun createClient(host: String, port: Int): RetrowarsClient {
+        val client = RetrowarsClient.connect(host, port)
         listenToClient(client)
         return client
     }

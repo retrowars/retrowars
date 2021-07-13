@@ -10,8 +10,9 @@ import com.google.gson.annotations.SerializedName
 //       upgrade to the same (latest) version.
 object Network {
 
-    const val defaultPort = 6263
+    const val defaultPort = 8080
     const val defaultUdpPort = defaultPort + 1
+    const val jmdnsServiceName = "_retrowars._tcp.local."
 
     /**
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].

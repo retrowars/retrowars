@@ -118,6 +118,7 @@ project(":core") {
         implementation "io.ktor:ktor-client-websockets:$ktor_version"
         implementation "io.ktor:ktor-websockets:$ktor_version"
         implementation "ch.qos.logback:logback-classic:1.2.3" // For ktor
+        implementation 'org.jmdns:jmdns:3.5.7'
     }
 
     // https://stackoverflow.com/a/54006518
