@@ -46,7 +46,12 @@ data class ServerDetails(
     val maxRooms: Int,
     val currentRoomCount: Int,
     val currentPlayerCount: Int,
-    val lastGameTimestamp: Long
+    val lastGameTimestamp: Long,
+
+    /**
+     * Approx ping time - the time it took to ask the server for its details.
+     */
+    val pingTime: Int,
 )
 
 private val httpClient = HttpClient(CIO) {

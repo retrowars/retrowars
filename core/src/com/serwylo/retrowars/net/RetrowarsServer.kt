@@ -10,9 +10,14 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import java.net.InetAddress
 import java.util.*
+import javax.jmdns.JmDNS
+import javax.jmdns.ServiceInfo
 import kotlin.random.Random
+
 
 class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort, udpPort: Int = Network.defaultUdpPort) {
 
@@ -337,6 +342,11 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
 
 }
 
+/**
+ * Currently, the assumption is that game events use TCP, and UDP is only used for discovery
+ * of servers on the local network. If that assumption changes, then there are checks in [RetrowarsClient]
+ * which will need to change how they check if [udpPort] is null.
+ */
 interface NetworkServer {
     fun connect(port: Int, udpPort: Int? = null)
     fun disconnect()
@@ -349,6 +359,14 @@ interface NetworkServer {
     }
 }
 
+/**
+ * Note that the "discover servers on the local network" function which uses JmDNS in this class
+ * could be hoisted out, given it is nothing to do with websockets. The reason it is here is because
+ * the first implementation of networking using the KryoNet library had built in support for
+ * discovery, so it was very much part of the "KryoNetNetworkServer". That is now gone though in
+ * favour of websockets, which means we are free to make some different design decisions around
+ * the discovery of servers (e.g. separating it from the protocol used to manage games).
+ */
 class WebSocketNetworkServer(
     private val onMessage: (obj: Any, connection: NetworkServer.Connection) -> Unit,
     private val onPlayerDisconnected: (connection: NetworkServer.Connection) -> Unit,
@@ -372,9 +390,13 @@ class WebSocketNetworkServer(
     }
 
     var server: NettyApplicationEngine? = null
+    var jmdns: JmDNS? = null
+
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     override fun connect(port: Int, udpPort: Int?) {
-        Gdx.app.log(TAG, "Starting websocket server on port $port.")
+        Gdx.app.log(TAG, "Creating websocket server on port $port.")
         server = embeddedServer(Netty, port) {
 
             install(WebSockets)
@@ -403,11 +425,37 @@ class WebSocketNetworkServer(
             }
         }
 
-        server?.start()
+        if (udpPort != null) {
+            scope.launch {
+                runCatching {
+                    Gdx.app.log(TAG, "Starting JmDNS discovery service on port $udpPort to broadcast our availability on port $port...")
+                    jmdns = JmDNS.create(InetAddress.getLocalHost()).apply {
+                        registerService(ServiceInfo.create(
+                             Network.jmdnsServiceName,
+                             "localserver",
+                            port,
+                            "retrowars service",
+                        ))
+                    }
+                }
+            }
+        }
+
+        runBlocking {
+            // Fire off in the background while we start up the JmDNS service.
+            Gdx.app.debug(TAG, "Starting websocket server on port $port in a non-blocking fashion.")
+            server?.start()
+            Gdx.app.debug(TAG, "Finished starting websocket server.")
+        }
+
     }
 
     override fun disconnect() {
         server?.stop(1000, 1000)
+        jmdns?.unregisterAllServices()
+        runBlocking {
+            job.cancelAndJoin()
+        }
     }
 
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.io.IOException
 
-class RetrowarsClient(host: String, port: Int, udpPort: Int) {
+class RetrowarsClient(host: String, port: Int) {
 
     companion object {
 
@@ -23,13 +23,13 @@ class RetrowarsClient(host: String, port: Int, udpPort: Int) {
          * @param connectToSelf Use this flag when you are also the server. Will result in connecting
          * directly to localhost, rather than trying to discover a server on the network.
          */
-        fun connect(host: String, port: Int, udpPort: Int): RetrowarsClient {
+        fun connect(host: String, port: Int): RetrowarsClient {
             Gdx.app.log(TAG, "Establishing connection from client to server.")
             if (client != null) {
                 throw IllegalStateException("Cannot connect to server, client connection has already been opened.")
             }
 
-            val newClient = RetrowarsClient(host, port, udpPort)
+            val newClient = RetrowarsClient(host, port)
             client = newClient
             return newClient
         }
@@ -140,7 +140,7 @@ class RetrowarsClient(host: String, port: Int, udpPort: Int) {
         )
 
         try {
-            client.connect(host, port, udpPort)
+            client.connect(host, port)
             client.sendMessage(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
         } catch (e: IOException) {
             client.disconnect()
@@ -280,7 +280,7 @@ class RetrowarsClient(host: String, port: Int, udpPort: Int) {
 
 interface NetworkClient {
     fun sendMessage(obj: Any)
-    fun connect(host: String, port: Int, udpPort: Int? = null)
+    fun connect(host: String, port: Int)
     fun disconnect()
 }
 
@@ -330,7 +330,7 @@ class WebSocketNetworkClient(
 
     private var session: DefaultClientWebSocketSession? = null
 
-    override fun connect(host: String, port: Int, udpPort: Int?) {
+    override fun connect(host: String, port: Int) {
         scope.launch {
             client.webSocket(HttpMethod.Get, host, port, "/ws") {
                 session = this
