@@ -156,11 +156,11 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
 
         var newY = state.currentY + 1
-        while (isLegalMove(state.currentPiece, state.currentX, newY + 1)) {
+        while (isLegalMove(state.currentPiece, state.currentX, newY)) {
             newY ++
         }
 
-        storeTetronimoInGrid(state.currentPiece, state.currentX, newY)
+        storeTetronimoInGrid(state.currentPiece, state.currentX, newY - 1)
         chooseNewTetronimo()
 
         if (!isLegalMove(state.currentPiece, state.currentX, state.currentY)) {
