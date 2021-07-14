@@ -182,7 +182,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     changeState(Action.AttemptToJoinServer)
 
                     GlobalScope.launch(Dispatchers.IO) {
-                        createClient(server.hostname, server.tcpPort)
+                        createClient(server.hostname, server.port)
                     }
                 }
             )
@@ -222,7 +222,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 changeState(Action.AttemptToStartServer)
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    RetrowarsServer.start()
+                    RetrowarsServer.start(true)
                     createClient("localhost", Network.defaultPort)
 
                     // Don't change the state here. Instead, we will wait for a 'players updated'
@@ -368,14 +368,12 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 
                     // Right now we don't yet support private rooms (they will require an invite mechanism to work).
-                } else if (info.type == ServerMetadataDTO.PUBLIC_RANDOM_ROOMS) {
+                } else if (info.type == "publicRandomRooms") {
 
                     Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
                     activeServers = activeServers.plus(ServerDetails(
                         server.hostname,
-                        server.httpPort,
-                        info.tcpPort,
-                        info.udpPort,
+                        server.port,
                         info.type,
                         info.maxPlayersPerRoom,
                         info.maxRooms,

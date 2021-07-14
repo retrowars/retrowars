@@ -15,32 +15,12 @@ class ServerApp: ApplicationListener {
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        Gdx.app.log(TAG, "Creating server app")
-        val app = Javalin.create().start(8080)
-        app.get("/info") { ctx -> showStats(ctx) }
-        app.get("/.well-known/com.serwylo.retrowars-servers.json") { ctx -> listServers(ctx) }
+        Gdx.app.log(TAG, "Launching server app")
 
-        server = RetrowarsServer(RetrowarsServer.Rooms.PublicRandomRooms(5), Network.defaultPort + 10, Network.defaultUdpPort + 10)
-    }
-
-    private fun showStats(ctx: Context): Context {
-        return ctx.json(ServerInfoDTO(
-            Network.defaultPort + 10,
-            Network.defaultUdpPort + 10,
-            ServerMetadataDTO.PUBLIC_RANDOM_ROOMS,
-            5,
-            10, // TODO: This isn't actually implemented yet.
-            server.getRoomCount(),
-            server.getPlayerCount(),
-            server.getLastGameTime()?.time ?: 0
-        ))
-    }
-
-    private fun listServers(ctx: Context): Context {
-    return ctx.json(emptyList<ServerMetadataDTO>())
-    /*return ctx.json(listOf(
-            ServerMetadataDTO("localhost", 8080),
-        ))*/
+        server = RetrowarsServer(
+            rooms = RetrowarsServer.Rooms.PublicRandomRooms(5),
+            port = Network.defaultPort,
+        )
     }
 
     override fun resize(width: Int, height: Int) {}

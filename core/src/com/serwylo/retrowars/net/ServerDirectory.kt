@@ -13,23 +13,15 @@ private const val TAG = "ServerDirectory"
 /**
  * @param httpPort Used to fetch statistics about the server.
  */
-data class ServerMetadataDTO(val hostname: String, val httpPort: Int) {
-    companion object {
-        const val SINGLE_ROOM = "singleRoom"
-        const val PUBLIC_RANDOM_ROOMS = "publicRandomRooms"
-        const val MULTIPLE_PRIVATE_ROOMS = "multiplePrivateRooms"
-    }
-}
+data class ServerMetadataDTO(val hostname: String, val port: Int)
 
 data class ServerInfoDTO(
-    val tcpPort: Int,
-    val udpPort: Int,
     val type: String,
     val maxPlayersPerRoom: Int,
     val maxRooms: Int,
     val currentRoomCount: Int,
     val currentPlayerCount: Int,
-    val lastGameTimestamp: Long
+    val lastGameTimestamp: Long,
 )
 
 /**
@@ -37,10 +29,7 @@ data class ServerInfoDTO(
  */
 data class ServerDetails(
     val hostname: String,
-    val httpPort: Int,
-
-    val tcpPort: Int,
-    val udpPort: Int,
+    val port: Int,
     val type: String,
     val maxPlayersPerRoom: Int,
     val maxRooms: Int,
@@ -59,15 +48,15 @@ private val httpClient = HttpClient(CIO) {
 }
 
 suspend fun fetchPublicServerList(): List<ServerMetadataDTO> {
-    val url = "http://localhost:8080/.well-known/com.serwylo.retrowars-servers.json"
+    val url = "http://localhost:8888/.well-known/com.serwylo.retrowars-servers.json"
 
     return httpClient.get(url)
 }
 
 suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
     val url = URLBuilder(
-        protocol = if (server.httpPort == 443) URLProtocol.HTTPS else URLProtocol.HTTP,
-        port = server.httpPort,
+        protocol = if (server.port == 443) URLProtocol.HTTPS else URLProtocol.HTTP,
+        port = server.port,
         host = server.hostname,
         encodedPath = "info"
     ).build()

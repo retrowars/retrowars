@@ -4,6 +4,9 @@ import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.gson.*
+import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -11,7 +14,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import java.net.InetAddress
 import java.util.*
 import javax.jmdns.JmDNS
@@ -19,16 +21,17 @@ import javax.jmdns.ServiceInfo
 import kotlin.random.Random
 
 
-class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort, udpPort: Int = Network.defaultUdpPort) {
+class RetrowarsServer(private val rooms: Rooms, val port: Int) {
 
-    interface Rooms {
+    sealed interface Rooms {
 
         fun getOrCreateRoom(requestedRoomId: Long): Room
         fun getRoomCount(): Int
         fun getPlayerCount(): Int
         fun getLastGameTime(): Date?
+        fun getName(): String
 
-        class SingleRoom: Rooms {
+        class SingleLocalRoom: Rooms {
 
             private val room = Room(Random.nextLong())
 
@@ -39,6 +42,8 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
             override fun getRoomCount() = 1
             override fun getPlayerCount() = room.players.size
             override fun getLastGameTime() = room.lastGame
+            override fun getName() = "singleLocalRoom"
+
         }
 
         abstract class MultipleRooms: Rooms {
@@ -57,6 +62,8 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
          * However, other players must obtain this room ID using some external means (e.g. QR code, SMS, etc) in order to join.
          */
         class MultiplePrivateRooms: MultipleRooms() {
+
+            override fun getName() = "multiplePrivateRooms"
 
             override fun getOrCreateRoom(requestedRoomId: Long): Room {
                 if (requestedRoomId > 0) {
@@ -86,6 +93,8 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
          */
         class PublicRandomRooms(private val maxPlayersPerRoom: Int = 4): MultipleRooms() {
 
+            override fun getName() = "publicRandomRooms"
+
             override fun getOrCreateRoom(requestedRoomId: Long): Room {
                 val existing = rooms.find { it.players.size < maxPlayersPerRoom }
 
@@ -110,12 +119,12 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
 
         private var server: RetrowarsServer? = null
 
-        fun start(): RetrowarsServer {
+        fun start(isDiscoverable: Boolean): RetrowarsServer {
             if (server != null) {
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(Rooms.SingleRoom())
+            val newServer = RetrowarsServer(Rooms.SingleLocalRoom(), 8080)
             server = newServer
             return newServer
         }
@@ -164,12 +173,13 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
     init {
 
         when (rooms) {
-            is Rooms.SingleRoom -> Gdx.app.log(TAG, "Starting singleton server, with only one room.")
+            is Rooms.SingleLocalRoom -> Gdx.app.log(TAG, "Starting singleton server, with only one room.")
             is Rooms.MultiplePrivateRooms -> Gdx.app.log(TAG, "Starting a server that only allows to be joined if you know the room ID.")
             is Rooms.PublicRandomRooms -> Gdx.app.log(TAG, "Starting a server that puts players into random rooms.")
         }
 
         server = WebSocketNetworkServer(
+            this,
             onPlayerDisconnected = {
                 connections.remove(it)
                 removePlayer(it)
@@ -191,14 +201,14 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
             },
         )
 
-        Gdx.app.log(TAG, "Starting server on port $port (TCP) and $udpPort (UDP)")
-        server.connect(port, udpPort)
+        Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port $port")
+        server.connect(port, rooms.getName())
     }
 
     fun getRoomCount() = rooms.getRoomCount()
     fun getPlayerCount() = rooms.getPlayerCount()
     fun getLastGameTime() = rooms.getLastGameTime()
-
+    fun getRoomType() = rooms.getName()
 
     private fun updateStatus(initiatingConnection: NetworkServer.Connection, status: String) {
         val player = initiatingConnection.player
@@ -342,13 +352,8 @@ class RetrowarsServer(private val rooms: Rooms, port: Int = Network.defaultPort,
 
 }
 
-/**
- * Currently, the assumption is that game events use TCP, and UDP is only used for discovery
- * of servers on the local network. If that assumption changes, then there are checks in [RetrowarsClient]
- * which will need to change how they check if [udpPort] is null.
- */
 interface NetworkServer {
-    fun connect(port: Int, udpPort: Int? = null)
+    fun connect(port: Int, type: String)
     fun disconnect()
 
     interface Connection {
@@ -368,6 +373,7 @@ interface NetworkServer {
  * the discovery of servers (e.g. separating it from the protocol used to manage games).
  */
 class WebSocketNetworkServer(
+    private val retrowarsServer: RetrowarsServer,
     private val onMessage: (obj: Any, connection: NetworkServer.Connection) -> Unit,
     private val onPlayerDisconnected: (connection: NetworkServer.Connection) -> Unit,
     private val onPlayerConnected: (connection: NetworkServer.Connection) -> Unit,
@@ -389,21 +395,34 @@ class WebSocketNetworkServer(
         }
     }
 
-    var server: NettyApplicationEngine? = null
+    var httpServer: NettyApplicationEngine? = null
     var jmdns: JmDNS? = null
 
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
-    override fun connect(port: Int, udpPort: Int?) {
+    override fun connect(port: Int, type: String) {
         Gdx.app.log(TAG, "Creating websocket server on port $port.")
-        server = embeddedServer(Netty, port) {
+        httpServer = embeddedServer(Netty, port) {
 
             install(WebSockets)
+            install(ContentNegotiation) {
+                gson()
+            }
 
             routing {
-                get("/info") {
-                    call.respondText("Hello, world!")
+
+                if (type != "singleLocalRoom") {
+                    get("/info") {
+                        call.respond(ServerInfoDTO(
+                            type = type,
+                            maxPlayersPerRoom = 5,
+                            maxRooms = 10, // TODO: This isn't actually implemented yet.
+                            currentRoomCount = retrowarsServer.getRoomCount(),
+                            currentPlayerCount = retrowarsServer.getPlayerCount(),
+                            lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: 0,
+                        ))
+                    }
                 }
 
                 webSocket("/ws") {
@@ -425,10 +444,10 @@ class WebSocketNetworkServer(
             }
         }
 
-        if (udpPort != null) {
+        if (type == "singleLocalRoom") {
             scope.launch {
                 runCatching {
-                    Gdx.app.log(TAG, "Starting JmDNS discovery service on port $udpPort to broadcast our availability on port $port...")
+                    Gdx.app.log(TAG, "Starting JmDNS discovery service to broadcast that we are available on port $port.")
                     jmdns = JmDNS.create(InetAddress.getLocalHost()).apply {
                         registerService(ServiceInfo.create(
                              Network.jmdnsServiceName,
@@ -444,14 +463,14 @@ class WebSocketNetworkServer(
         runBlocking {
             // Fire off in the background while we start up the JmDNS service.
             Gdx.app.debug(TAG, "Starting websocket server on port $port in a non-blocking fashion.")
-            server?.start()
+            httpServer?.start()
             Gdx.app.debug(TAG, "Finished starting websocket server.")
         }
 
     }
 
     override fun disconnect() {
-        server?.stop(1000, 1000)
+        httpServer?.stop(1000, 1000)
         jmdns?.unregisterAllServices()
         runBlocking {
             job.cancelAndJoin()
