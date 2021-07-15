@@ -332,8 +332,11 @@ class WebSocketNetworkClient(
 
     override fun connect(host: String, port: Int) {
         scope.launch {
-            client.webSocket(HttpMethod.Get, host, port, "/ws") {
+
+            val block:suspend DefaultClientWebSocketSession.() -> Unit = {
+
                 session = this
+
                 val receiveJob = launch { receiveMessages() }
                 val sendJob = launch { sendMessages() }
 
@@ -342,6 +345,16 @@ class WebSocketNetworkClient(
 
                 // TODO: If we failed nicely here, then we should politely send a cancel message to the server before cancelling this job (and hence moving forward to then terminate the job.
                 receiveJob.cancelAndJoin()
+
+            }
+
+            // It would be convenient if there was a flag we could pass in, because then we wouldn't
+            // need to extract the block out above. However it is also good of the ktor team to
+            // avoid functions which do two very different things based on a flag passed into them.
+            if (port == 443) {
+                client.wss(HttpMethod.Get, host, port, "/ws", block = block)
+            } else {
+                client.webSocket(HttpMethod.Get, host, port, "/ws", block = block)
             }
         }
     }
