@@ -6,7 +6,7 @@ import com.serwylo.retrowars.net.*
 import io.javalin.Javalin
 import io.javalin.http.Context
 
-class ServerApp: ApplicationListener {
+class ServerApp(private val port: Int = 8080): ApplicationListener {
 
     companion object {
         const val TAG = "ServerApp"
@@ -15,11 +15,11 @@ class ServerApp: ApplicationListener {
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        Gdx.app.log(TAG, "Launching server app")
+        Gdx.app.log(TAG, "Launching server app on port $port")
 
         server = RetrowarsServer(
             rooms = RetrowarsServer.Rooms.PublicRandomRooms(5),
-            port = Network.defaultPort,
+            port = port,
         )
     }
 
