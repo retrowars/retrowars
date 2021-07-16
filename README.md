@@ -51,6 +51,17 @@ Pull requests will be warmly received at [https://github.com/retrowars/retrowars
 If you are able to run a public server, please submit an issue and we can add your server to the list of well known servers.
 Doing so will make it appear in the default retro wars client when searching for public servers.
 
+#### Running a server on Heroku
+
+Before pushing to your Heroku app, make sure to set the following config:
+
+```
+heroku config:set GRADLE_TASK="-PonlyServer stage"
+```
+
+Explanation: Newer versions of the Android Gradle plugin require an Android SDK to even configure the `:android` subproject of a libgdx project, not just to compile it.
+To [avoid this issue, run the command above](https://devcenter.heroku.com/articles/deploying-gradle-apps-on-heroku#multiple-application-types-in-the-same-project) to tell Heroku that it doesn't need to worry about configuring anything except the `:core` and `:server` projects, and therefore it doesn't matter that the Android SDK is missing.
+
 ## Compiling
 
 This app uses a the libgdx library and Kotlin. It is recommended to read the [libgdx documentation to get a dev environment setup](https://libgdx.com/dev/setup/).
