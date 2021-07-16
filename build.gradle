@@ -47,6 +47,7 @@ allprojects {
 
 task stage(dependsOn: [':server:dist'])
 
+if (!hasProperty('onlyServer')) {
 project(":texture-packer") {
     apply plugin: "kotlin"
 
@@ -54,20 +55,6 @@ project(":texture-packer") {
         implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    }
-}
-
-project(":server") {
-    apply plugin: "kotlin"
-
-    dependencies {
-        implementation project(":core")
-        api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
-        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-        api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-        implementation "io.javalin:javalin:3.13.7"
-        implementation "org.slf4j:slf4j-simple:1.7.30" // Required for Javalin
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3" // Required for Javalin
     }
 }
 
@@ -99,6 +86,7 @@ project(":android") {
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutinesVersion"
     }
 }
+}
 
 project(":core") {
     apply plugin: "kotlin"
@@ -125,5 +113,19 @@ project(":core") {
     // https://stackoverflow.com/a/54006518
     processResources {
         expand(['appVersionCode': appVersionCode])
+    }
+}
+
+project(":server") {
+    apply plugin: "kotlin"
+
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        implementation "io.javalin:javalin:3.13.7"
+        implementation "org.slf4j:slf4j-simple:1.7.30" // Required for Javalin
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3" // Required for Javalin
     }
 }
