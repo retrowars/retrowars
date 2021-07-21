@@ -3,6 +3,7 @@ package com.serwylo.retrowars.net
 import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
+import com.serwylo.retrowars.utils.Platform
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
@@ -21,7 +22,7 @@ import javax.jmdns.ServiceInfo
 import kotlin.random.Random
 
 
-class RetrowarsServer(private val rooms: Rooms, val port: Int) {
+class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, val port: Int) {
 
     sealed interface Rooms {
 
@@ -119,12 +120,12 @@ class RetrowarsServer(private val rooms: Rooms, val port: Int) {
 
         private var server: RetrowarsServer? = null
 
-        fun start(isDiscoverable: Boolean): RetrowarsServer {
+        fun start(platform: Platform): RetrowarsServer {
             if (server != null) {
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(Rooms.SingleLocalRoom(), 8080)
+            val newServer = RetrowarsServer(platform, Rooms.SingleLocalRoom(), 8080)
             server = newServer
             return newServer
         }
@@ -202,7 +203,7 @@ class RetrowarsServer(private val rooms: Rooms, val port: Int) {
         )
 
         Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port $port")
-        server.connect(port, rooms.getName())
+        server.connect(platform, port, rooms.getName())
     }
 
     fun getRoomCount() = rooms.getRoomCount()
@@ -335,7 +336,7 @@ class RetrowarsServer(private val rooms: Rooms, val port: Int) {
     fun close() {
         val message = Network.Client.OnServerStopped()
         connections.onEach { it.sendMessage(message) }
-        server.disconnect()
+        server.disconnect(platform)
     }
 
     fun startGame(room: Room?) {
@@ -353,8 +354,8 @@ class RetrowarsServer(private val rooms: Rooms, val port: Int) {
 }
 
 interface NetworkServer {
-    fun connect(port: Int, type: String)
-    fun disconnect()
+    fun connect(platform: Platform, port: Int, type: String)
+    fun disconnect(platform: Platform)
 
     interface Connection {
         var player: Player?
@@ -401,7 +402,7 @@ class WebSocketNetworkServer(
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
-    override fun connect(port: Int, type: String) {
+    override fun connect(platform: Platform, port: Int, type: String) {
         Gdx.app.log(TAG, "Creating websocket server on port $port.")
         httpServer = embeddedServer(Netty, port) {
 
@@ -448,7 +449,8 @@ class WebSocketNetworkServer(
             scope.launch {
                 runCatching {
                     Gdx.app.log(TAG, "Starting JmDNS discovery service to broadcast that we are available on port $port.")
-                    jmdns = JmDNS.create(InetAddress.getLocalHost()).apply {
+                    platform.getMulticastControl().acquireLock()
+                    jmdns = JmDNS.create(platform.getInetAddress()).apply {
                         registerService(ServiceInfo.create(
                              Network.jmdnsServiceName,
                              "localserver",
@@ -469,9 +471,15 @@ class WebSocketNetworkServer(
 
     }
 
-    override fun disconnect() {
+    override fun disconnect(platform: Platform) {
         httpServer?.stop(1000, 1000)
-        jmdns?.unregisterAllServices()
+
+        if (jmdns != null) {
+            jmdns?.unregisterAllServices()
+            platform.getMulticastControl().releaseLock()
+            jmdns = null
+        }
+
         runBlocking {
             job.cancelAndJoin()
         }
