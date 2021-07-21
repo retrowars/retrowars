@@ -18,7 +18,7 @@ object DesktopLauncher {
             val verbose = arg.contains("--verbose")
 
             val config = LwjglApplicationConfiguration()
-            LwjglApplication(RetrowarsGame(verbose), config)
+            LwjglApplication(RetrowarsGame(DesktopPlatform(), verbose), config)
 
         }
     }

@@ -2,6 +2,7 @@ package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
@@ -121,8 +122,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             when(new) {
                 is Splash -> showSplash()
                 is SearchingForPublicServers -> showSearchingForPublicServers()
+                is SearchingForLocalServer -> showSearchingForLocalServer()
                 is ShowingServerList -> showServerList(new.activeServers, new.pendingServers, new.inactiveServers)
                 is ShowEmptyServerList -> showEmptyServerList()
+                is NoLocalServerFound -> showNoLocalServerFound()
                 is ConnectingToServer -> showConnectingToServer()
                 is StartingServer -> showStartingServer()
                 is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
@@ -140,8 +143,6 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.clear()
 
         wrapper.add(Label("Looking for public servers...", styles.label.medium))
-        wrapper.row()
-        wrapper.add(Label("Checking http://localhost:8080/.well-known/com.serwylo.retrowars-servers.json", styles.label.small))
     }
 
     private fun showEmptyServerList() {
@@ -155,7 +156,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row().spaceTop(UI_SPACE * 2)
         wrapper.add(
             makeButton("Learn how to help", styles) {
-                Gdx.net.openURI("http://github.com/retrowars/retrowars")
+                Gdx.net.openURI("http://github.com/retrowars/retrowars#running-a-public-server")
             }
         )
     }
@@ -222,7 +223,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 changeState(Action.AttemptToStartServer)
 
                 GlobalScope.launch(Dispatchers.IO) {
-                    RetrowarsServer.start(true)
+                    RetrowarsServer.start(game.platform)
                     createClient("localhost", Network.defaultPort)
 
                     // Don't change the state here. Instead, we will wait for a 'players updated'
@@ -233,7 +234,6 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.add(
             makeButton("Join local server", styles) {
-                changeState(Action.AttemptToJoinServer)
                 findAndJoinLocalServer()
             }
         )
@@ -262,13 +262,18 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     private fun findAndJoinLocalServer() {
 
+        changeState(Action.FindLocalServer)
+
+        game.platform.getMulticastControl().acquireLock()
+
         // Once we've found a server, we will ask jmdns to close. However it is likely it may still
         // find other servers in the meantime. Therefore, lets guard against this by ignoring any
         // other servers after serverFound is set to true.
         var serverFound = false
 
         // TODO: If time out occurs, change to a view showing: "Could not server on the local network to connect to."
-        val jmdns = JmDNS.create(InetAddress.getLocalHost())
+        //       Also use the timeout to trigger the release of the multicast lock.
+        val jmdns = JmDNS.create(game.platform.getInetAddress())
 
         jmdns.addServiceListener(Network.jmdnsServiceName, object: ServiceListener {
 
@@ -319,15 +324,17 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 // Fire and forget this, we don't want that to stop us from actually connecting to
                 // the client.
-                GlobalScope.launch {
+                GlobalScope.launch(Dispatchers.IO) {
                     runCatching {
                         Gdx.app.debug(TAG, "Closing jmdns as we found the details we were looking for.")
+                        game.platform.getMulticastControl().releaseLock()
                         jmdns.close()
                         Gdx.app.debug(TAG, "Finished closing jmdns.")
                     }
                 }
 
                 Gdx.app.debug(TAG, "Creating client connection to ${host.hostAddress}:$port")
+                changeState(Action.AttemptToJoinServer)
                 createClient(host.hostAddress, port)
 
                 // Don't change the state here. Instead, we will wait for a 'players updated'
@@ -335,10 +342,37 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             }
         })
 
+        GlobalScope.launch(Dispatchers.IO) {
+            Gdx.app.debug(TAG, "Waiting 10 seconds before timing out after searching for a server.")
+            delay(10000)
+
+            Gdx.app.debug(TAG, "10 seconds is up, checking if we found a server.")
+            synchronized(serverFound) {
+                if (serverFound) {
+                    // Great, we found a server, so we can assume we've already closed of jmdns
+                    // (or we are in the process of closing it).
+                    Gdx.app.debug(TAG, "Timeout unneccesary, because we found a server. Will cancel coroutine and not bother closing off JmDNS.")
+                    cancel()
+                    return@launch
+                }
+
+                // Set this to true, so that if in the same time that we are trying to close off
+                // JmDNS another response comes in, it is ignored. Too late, you had your chance.
+                serverFound = true
+            }
+
+            Gdx.app.log(TAG, "Unable to find local server after 10s, so cancelling jmdns and notifying user.")
+            changeState(Action.UnableToFindLocalServer)
+            runCatching {
+                game.platform.getMulticastControl().releaseLock()
+                jmdns.close()
+            }
+        }
+
     }
 
     private suspend fun findAndShowPublicServers() = withContext(Dispatchers.IO) {
-        changeState(Action.FindPublicServers())
+        changeState(Action.FindPublicServers)
 
         var pendingServers = fetchPublicServerList()
         yield()
@@ -392,12 +426,38 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
-    private fun showConnectingToServer() {
+    private fun showSearchingForLocalServer() {
         wrapper.clear()
 
         wrapper.add(Label("Searching for server", styles.label.medium))
         wrapper.row()
-        wrapper.add(Label("Make sure you're both connected to the same WiFi network", styles.label.small))
+        wrapper.add(
+            Label("Make sure you're both connected to the same WiFi network", styles.label.small).apply {
+                addAction(
+                    sequence(
+                        alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
+                        delay(2f), // ...after the player has had to wait for a few seconds...
+                        alpha(1f, 1f), // ...show them this message as a prompt.
+                    )
+                )
+            }
+        )
+    }
+
+    private fun showNoLocalServerFound() {
+        wrapper.clear()
+
+        wrapper.add(Label("Could not find server", styles.label.medium))
+        wrapper.row()
+        wrapper.add(Label("Has another player started a server?", styles.label.small))
+        wrapper.row()
+        wrapper.add(Label("Are you on the same WiFi network?", styles.label.small))
+    }
+
+    private fun showConnectingToServer() {
+        wrapper.clear()
+
+        wrapper.add(Label("Connecting to server", styles.label.medium))
     }
 
     private fun showStartingServer() {
@@ -516,28 +576,28 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(countdownContainer).center().expand()
 
         countdownContainer.addAction(
-            Actions.sequence(
+            sequence(
 
-                Actions.repeat(
+                repeat(
                     count,
-                    Actions.parallel(
+                    parallel(
                         Actions.run {
                             countdown.setText((count).toString())
                             count--
                         },
-                        Actions.sequence(
-                            Actions.alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
-                            Actions.alpha(1f, 0.4f) // ... and animate to 1.0f quite quickly.
+                        sequence(
+                            alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
+                            alpha(1f, 0.4f) // ... and animate to 1.0f quite quickly.
                         ),
-                        Actions.sequence(
-                            Actions.scaleTo(
+                        sequence(
+                            scaleTo(
                                 3f,
                                 3f,
                                 0f
                             ), // Start at 3x size (hence duration 0f)...
-                            Actions.scaleTo(1f, 1f, 0.75f) // ... and scale back to normal size.
+                            scaleTo(1f, 1f, 0.75f) // ... and scale back to normal size.
                         ),
-                        Actions.delay(1f) // The other actions finish before the full second is up. Therefore ensure we show the counter for a full second before continuing.
+                        delay(1f) // The other actions finish before the full second is up. Therefore ensure we show the counter for a full second before continuing.
                     )
                 ),
 
@@ -577,11 +637,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
 sealed class Action {
     object AttemptToStartServer : Action()
-    class FindPublicServers : Action()
+    object FindPublicServers : Action()
+    object FindLocalServer : Action()
     class ShowPublicServers(val activeServers: List<ServerDetails>, val pendingServers: List<ServerMetadataDTO>, val inactiveServers: List<ServerMetadataDTO>) : Action()
     class PlayersChanged(val players: List<Player>): Action()
 
     object AttemptToJoinServer : Action()
+    object UnableToFindLocalServer : Action()
 
     object BeginGame : Action()
     class CountdownComplete(val gameDetails: GameDetails) : Action()
@@ -600,7 +662,7 @@ class Splash: UiState {
         return when(action) {
             is Action.AttemptToStartServer -> StartingServer()
             is Action.FindPublicServers -> SearchingForPublicServers()
-            is Action.AttemptToJoinServer -> ConnectingToServer()
+            is Action.FindLocalServer -> SearchingForLocalServer()
             else -> unsupported(action)
         }
     }
@@ -628,6 +690,16 @@ class SearchingForPublicServers: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
             is Action.ShowPublicServers -> if (action.activeServers.isEmpty() && action.pendingServers.isEmpty()) ShowEmptyServerList() else ShowingServerList(action.activeServers, action.pendingServers, action.inactiveServers)
+            else -> unsupported(action)
+        }
+    }
+}
+
+class SearchingForLocalServer: UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            is Action.AttemptToJoinServer -> ConnectingToServer()
+            is Action.UnableToFindLocalServer -> NoLocalServerFound()
             else -> unsupported(action)
         }
     }
@@ -675,6 +747,15 @@ class WaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
             action.players.size == 1 -> WaitingForOtherPlayers(action.players[0])
             action.players.any { it.status != Player.Status.lobby } -> WaitingForAllToReturnToLobby(action.players)
             else -> return ReadyToStart(action.players, this.players)
+        }
+    }
+}
+
+class NoLocalServerFound: UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            // The user must press the "back" button to continue.
+            else -> unsupported(action)
         }
     }
 }

@@ -48,9 +48,15 @@ private val httpClient = HttpClient(CIO) {
 }
 
 suspend fun fetchPublicServerList(): List<ServerMetadataDTO> {
-    val url = "http://localhost:8888/.well-known/com.serwylo.retrowars-servers.json"
+    return listOf(
+        ServerMetadataDTO(
+            "retrowars-server.herokuapp.com",
+            443
+        )
+    )
 
-    return httpClient.get(url)
+    // val url = "http://192.168.0.100:8888/.well-known/com.serwylo.retrowars-servers.json"
+    // return httpClient.get(url)
 }
 
 suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
