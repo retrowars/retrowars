@@ -37,6 +37,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             )
 
             RetrowarsServer.stop()
+
             RetrowarsClient.disconnect()
         }
     }
@@ -83,7 +84,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
                 GlobalScope.launch {
-                    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close of anny server and/or client connection.")
+                    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
                     close()
                     game.showMainMenu()
                 }

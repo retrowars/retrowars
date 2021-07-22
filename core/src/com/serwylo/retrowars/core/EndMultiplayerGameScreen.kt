@@ -80,6 +80,7 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): Scene2dScreen(game, {}) {
             client.listen(
                 scoreChangedListener = { _, _ -> markScreenDirty() },
                 playerStatusChangedListener = { _, _ -> markScreenDirty() },
+                playersChangedListener = { _ -> markScreenDirty() },
                 networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) }
             )
 
@@ -124,7 +125,9 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): Scene2dScreen(game, {}) {
 
             addActor(
                 makeButton(if (RetrowarsServer.get() == null) "Leave game" else "End game for all players", styles) {
-                    RetrowarsClient.disconnect()
+                    client.listen(networkCloseListener = {})
+                    client.close()
+
                     RetrowarsServer.stop()
                     game.showMainMenu()
                 }
