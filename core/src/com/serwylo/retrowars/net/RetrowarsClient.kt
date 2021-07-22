@@ -309,6 +309,7 @@ class WebSocketNetworkClient(
                 val obj = WebSocketMessage.fromJson(json)
                 onMessage(obj)
             }
+            Gdx.app.log(TAG, "No more messages to receive in client. Perhaps the server disconnected us.")
         } catch (e: Exception) {
             Gdx.app.error(TAG, "Error receiving websocket message in client", e)
         }
@@ -340,11 +341,10 @@ class WebSocketNetworkClient(
                 val receiveJob = launch { receiveMessages() }
                 val sendJob = launch { sendMessages() }
 
-                // TODO: What about the server killing receiveMessage() first?
-                sendJob.join()
+                receiveJob.join()
 
-                // TODO: If we failed nicely here, then we should politely send a cancel message to the server before cancelling this job (and hence moving forward to then terminate the job.
-                receiveJob.cancelAndJoin()
+                Gdx.app.log(TAG, "Finished receiving messages from the server, so now we will cancel the job used to send messages.")
+                sendJob.cancelAndJoin()
 
             }
 
@@ -356,11 +356,18 @@ class WebSocketNetworkClient(
             } else {
                 client.webSocket(HttpMethod.Get, host, port, "/ws", block = block)
             }
+
+            Gdx.app.log(TAG, "WebSocket client now closed.")
+            onDisconnected()
         }
     }
 
     override fun disconnect() {
-        client.close()
+        runBlocking {
+            scope.launch {
+                session?.close()
+            }
+        }
     }
 
 }
