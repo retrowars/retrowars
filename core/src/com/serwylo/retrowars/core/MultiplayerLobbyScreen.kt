@@ -6,6 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Container
 import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
@@ -13,7 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
 import kotlinx.coroutines.*
-import java.net.InetAddress
+import kotlinx.coroutines.channels.Channel
 import javax.jmdns.JmDNS
 import javax.jmdns.ServiceEvent
 import javax.jmdns.ServiceListener
@@ -164,6 +165,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     }
 
     private fun showServerList(activeServers: List<ServerDetails>, pendingServers: List<ServerMetadataDTO>, inactiveServers: List<ServerMetadataDTO>) {
+        Gdx.app.log(TAG, "Rendering server list of ${activeServers.size} active servers and ${pendingServers.size} pending servers.")
         wrapper.clear()
 
         wrapper.add(
@@ -172,10 +174,17 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.row().spaceBottom(UI_SPACE * 2)
 
-        activeServers.onEach { server ->
-            wrapper.row()
-            wrapper.add(makeServerInfo(server)).pad(UI_SPACE)
-        }
+        wrapper.row()
+        wrapper.add(
+            ScrollPane(Table().apply {
+                activeServers.onEach { server ->
+                    row()
+                    add(makeServerInfo(server)).pad(UI_SPACE)
+                }
+            }).apply {
+                setScrollingDisabled(true, false)
+            }
+        ).expandY().fillY()
 
         if (pendingServers.isNotEmpty()) {
             wrapper.row()
@@ -243,6 +252,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     }
 
     private fun roughTimeAgo(timestamp: Long): String {
+        if (timestamp <= 0) {
+            return "Never"
+        }
+
         val seconds = (System.currentTimeMillis() - timestamp) / 1000
         if (seconds < 60) {
             return "$seconds seconds ago"
@@ -412,7 +425,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 if (serverFound) {
                     // Great, we found a server, so we can assume we've already closed of jmdns
                     // (or we are in the process of closing it).
-                    Gdx.app.debug(TAG, "Timeout unneccesary, because we found a server. Will cancel coroutine and not bother closing off JmDNS.")
+                    Gdx.app.debug(TAG, "Timeout unnecessary, because we found a server. Will cancel coroutine and not bother closing off JmDNS.")
                     cancel()
                     return@launch
                 }
@@ -435,7 +448,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     private suspend fun findAndShowPublicServers() = withContext(Dispatchers.IO) {
         changeState(Action.FindPublicServers)
 
-        var pendingServers = fetchPublicServerList()
+        val allServers = fetchPublicServerList()
+
+        // Take a copy so we can iterate over allServers, but mutate pendingServers.
+        var pendingServers = allServers.toList()
         yield()
 
         var activeServers = listOf<ServerDetails>()
@@ -447,8 +463,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         update()
 
-        // Take a copy before iterating over, because we are going to mutate the original pendingServers list within this loop.
-        pendingServers.toList().onEach { server ->
+        data class ServerInfoResult(val server: ServerMetadataDTO, val info: ServerInfoDTO?, val pingTime: Long)
+
+        val serverInfoChannel = Channel<ServerInfoResult>()
+
+        val numServers = pendingServers.size
+
+        allServers.onEach { server ->
             launch {
                 Gdx.app.debug(TAG, "Fetching server metadata for ${server.hostname}")
                 val info: ServerInfoDTO?
@@ -456,16 +477,30 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     info = fetchServerInfo(server)
                 }
 
-                if (info == null) {
+                serverInfoChannel.send(ServerInfoResult(server, info, pingTime))
+            }
+        }
 
-                    Gdx.app.log(TAG, "Showing server ${server.hostname} as inactive.")
+        for (i in 0 until numServers) {
+            val result = serverInfoChannel.receive()
+
+            val info = result.info
+            val server = result.server
+            val pingTime = result.pingTime
+
+            if (info == null) {
+
+                Gdx.app.log(TAG, "Showing server ${server.hostname} as inactive.")
+                synchronized(this) {
                     inactiveServers = inactiveServers.plus(server)
+                }
 
 
-                    // Right now we don't yet support private rooms (they will require an invite mechanism to work).
-                } else if (info.type == "publicRandomRooms") {
+                // Right now we don't yet support private rooms (they will require an invite mechanism to work).
+            } else if (info.type == "publicRandomRooms") {
 
-                    Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
+                Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
+                synchronized(this) {
                     activeServers = activeServers.plus(ServerDetails(
                         server.hostname,
                         server.port,
@@ -476,14 +511,21 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                         info.currentPlayerCount,
                         info.lastGameTimestamp,
                         pingTime.toInt(),
-                    ))
-
+                    )).sortedBy {
+                        // We could sort by ping time, but it just isn't the only relevant metric here.
+                        // Equally we could sort by most active servers first, but again, may not be ideal.
+                        // As such, lets just let the authors of the server metadata file decide on the order.
+                        allServers.indexOf(server)
+                    }
                 }
-
-                Gdx.app.debug(TAG, "Updating list of servers with new information about ${server.hostname}")
-                pendingServers = pendingServers.filter { it !== server }
-                update()
             }
+
+            Gdx.app.debug(TAG, "Updating list of servers with new information about ${server.hostname}")
+            synchronized(this) {
+                pendingServers = pendingServers.filter { it !== server }
+            }
+
+            update()
         }
     }
 
@@ -752,7 +794,12 @@ class WaitingForOtherPlayers(val me: Player): UiState {
 class SearchingForPublicServers: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ShowPublicServers -> if (action.activeServers.isEmpty() && action.pendingServers.isEmpty()) ShowEmptyServerList() else ShowingServerList(action.activeServers, action.pendingServers, action.inactiveServers)
+            is Action.ShowPublicServers ->
+                if (action.activeServers.isEmpty() && action.pendingServers.isEmpty()) {
+                    ShowEmptyServerList()
+                } else {
+                    ShowingServerList(action.activeServers, action.pendingServers, action.inactiveServers)
+                }
             else -> unsupported(action)
         }
     }
@@ -771,7 +818,13 @@ class SearchingForLocalServer: UiState {
 class ShowingServerList(val activeServers: List<ServerDetails>, val pendingServers: List<ServerMetadataDTO>, val inactiveServers: List<ServerMetadataDTO>): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.ShowPublicServers -> if (action.activeServers.isEmpty() && action.pendingServers.isEmpty()) ShowEmptyServerList() else ShowingServerList(action.activeServers, action.pendingServers, action.inactiveServers)
+            is Action.ShowPublicServers ->
+                if (action.activeServers.isEmpty() && action.pendingServers.isEmpty()) {
+                    ShowEmptyServerList()
+                } else {
+                    ShowingServerList(action.activeServers, action.pendingServers, action.inactiveServers)
+                }
+
             is Action.AttemptToJoinServer -> ConnectingToServer()
             else -> unsupported(action)
         }
