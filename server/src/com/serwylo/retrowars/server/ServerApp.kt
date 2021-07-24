@@ -2,9 +2,8 @@ package com.serwylo.retrowars.server
 
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
-import com.serwylo.retrowars.net.*
-import io.javalin.Javalin
-import io.javalin.http.Context
+import com.serwylo.retrowars.net.RetrowarsServer
+import com.serwylo.retrowars.utils.DesktopPlatform
 
 class ServerApp(private val port: Int = 8080): ApplicationListener {
 
@@ -20,6 +19,7 @@ class ServerApp(private val port: Int = 8080): ApplicationListener {
         server = RetrowarsServer(
             rooms = RetrowarsServer.Rooms.PublicRandomRooms(5),
             port = port,
+            platform = DesktopPlatform()
         )
     }
 

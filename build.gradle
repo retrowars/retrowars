@@ -124,8 +124,5 @@ project(":server") {
         api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-        implementation "io.javalin:javalin:3.13.7"
-        implementation "org.slf4j:slf4j-simple:1.7.30" // Required for Javalin
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3" // Required for Javalin
     }
 }
