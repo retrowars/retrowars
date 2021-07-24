@@ -307,7 +307,11 @@ class WebSocketNetworkClient(
                 frame as? Frame.Text ?: continue
                 val json = frame.readText()
                 val obj = WebSocketMessage.fromJson(json)
-                onMessage(obj)
+                if (obj == null) {
+                    Gdx.app.debug(TAG, "Ignoring unsupported message: $json")
+                } else {
+                    onMessage(obj)
+                }
             }
             Gdx.app.log(TAG, "No more messages to receive in client. Perhaps the server disconnected us.")
         } catch (e: Exception) {
@@ -341,9 +345,20 @@ class WebSocketNetworkClient(
                 val receiveJob = launch { receiveMessages() }
                 val sendJob = launch { sendMessages() }
 
+                // Avoid network timeouts. Heroku defaults to 55 second timeouts (https://devcenter.heroku.com/articles/http-routing#timeouts)
+                // so lets just ping every 30 seconds in case other servers are even more conservative.
+                // Compared to the traffic during an actual game, this is nothing, so shouldn't be overwhelming.
+                val pingJob = launch {
+                    while (true) {
+                        delay(30000)
+                        sendMessage(Network.Server.Ping())
+                    }
+                }
+
                 receiveJob.join()
 
                 Gdx.app.log(TAG, "Finished receiving messages from the server, so now we will cancel the job used to send messages.")
+                pingJob.cancelAndJoin()
                 sendJob.cancelAndJoin()
 
             }

@@ -469,7 +469,11 @@ class WebSocketNetworkServer(
                         frame as? Frame.Text ?: continue
                         val json = frame.readText()
                         val obj = WebSocketMessage.fromJson(json)
-                        onMessage(obj, connection)
+                        if (obj == null) {
+                            Gdx.app.debug(TAG, "Ignoring unsupported message: $json")
+                        } else {
+                            onMessage(obj, connection)
+                        }
                     }
 
                     Gdx.app.log(TAG, "Finished processing websocket messages. Did the client close the connection?")

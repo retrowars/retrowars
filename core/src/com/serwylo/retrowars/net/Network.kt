@@ -1,5 +1,6 @@
 package com.serwylo.retrowars.net
 
+import com.badlogic.gdx.Gdx
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -18,6 +19,12 @@ object Network {
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
      */
     object Server {
+
+        /**
+         * Heroku times out websockets after 55 seconds of inactivity. To avoid this, we will ping
+         * periodically with an empty message.
+         */
+        class Ping
 
         /**
          * If a [roomId] is not specified, then it will request a new room to be created. If it is
@@ -145,13 +152,15 @@ object WebSocketMessage {
 
     private const val MESSAGE_TYPE_KEY = "_m"
     private const val MESSAGE_PAYLOAD_KEY = "_p"
+    private const val TAG = "WebSocketMessage"
 
-    fun fromJson(json: String): Any {
+    fun fromJson(json: String): Any? {
         val parsed = JsonParser.parseString(json).asJsonObject
         val type = parsed.get(MESSAGE_TYPE_KEY).asString
         val payload = parsed.get(MESSAGE_PAYLOAD_KEY).asJsonObject
         return when(type) {
 
+            Network.Server.Ping::class.simpleName -> Network.Server.Ping()
             Network.Server.RegisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.RegisterPlayer::class.java)
             Network.Server.UnregisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.UnregisterPlayer::class.java)
             Network.Server.UpdateScore::class.simpleName -> Gson().fromJson(payload, Network.Server.UpdateScore::class.java)
@@ -166,7 +175,10 @@ object WebSocketMessage {
             Network.Client.OnPlayerReturnedToLobby::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerReturnedToLobby::class.java)
             Network.Client.OnServerStopped::class.simpleName -> Gson().fromJson(payload, Network.Client.OnServerStopped::class.java)
 
-            else -> throw IllegalStateException("Unsupported message type: ${type}. Is this a newer client/server than we understand?")
+            else -> {
+                Gdx.app.error(TAG, "Unsupported message type: ${type}. Is this a newer client/server than we understand?")
+                null
+            }
 
         }
     }
