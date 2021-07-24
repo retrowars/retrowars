@@ -179,7 +179,14 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         if (pendingServers.isNotEmpty()) {
             wrapper.row()
-            wrapper.add(Label("Checking ${pendingServers.size} servers:\n${pendingServers.map { it.hostname }.joinToString("\n")}", styles.label.small))
+            wrapper.add(
+                Label(
+                    "Checking ${pendingServers.size} servers:\n${pendingServers.joinToString("\n") { it.hostname }}",
+                    styles.label.small
+                ).apply {
+                    setAlignment(Align.center)
+                }
+            )
         }
 
         wrapper.row().spaceTop(UI_SPACE * 2)
@@ -506,6 +513,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(Label("Has another player started a server?", styles.label.small))
         wrapper.row()
         wrapper.add(Label("Are you on the same WiFi network?", styles.label.small))
+        wrapper.row()
+        wrapper.add(Label("Do you both have the latest version of Super Retro Mega Wars?", styles.label.small))
     }
 
     private fun showConnectingToServer() {
