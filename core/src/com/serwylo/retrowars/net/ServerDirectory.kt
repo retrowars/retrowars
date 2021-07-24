@@ -50,8 +50,8 @@ private val httpClient = HttpClient(CIO) {
 suspend fun fetchPublicServerList(): List<ServerMetadataDTO> {
     return listOf(
         ServerMetadataDTO(
-            "retrowars-server.herokuapp.com",
-            443
+            "retrowars.serwylo.com",
+            80
         )
     )
 
