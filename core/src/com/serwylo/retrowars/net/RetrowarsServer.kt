@@ -7,7 +7,6 @@ import com.serwylo.retrowars.utils.Platform
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
-import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -17,7 +16,6 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.InetAddress
 import java.util.*
 import javax.jmdns.JmDNS
 import javax.jmdns.ServiceInfo
@@ -35,7 +33,6 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         fun getOrCreateRoom(requestedRoomId: Long): Room
         fun getRoomCount(): Int
         fun getPlayerCount(): Int
-        fun getLastGameTime(): Date?
         fun getName(): String
         fun remove(room: Room)
 
@@ -49,7 +46,6 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
             override fun getRoomCount() = 1
             override fun getPlayerCount() = room.players.size
-            override fun getLastGameTime() = room.lastGame
             override fun getName() = "singleLocalRoom"
             override fun remove(room: Room) {
                 // Do nothing. Single room can't be removed.
@@ -63,7 +59,6 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
             override fun getRoomCount() = rooms.size
             override fun getPlayerCount() = rooms.sumBy { it.players.size }
-            override fun getLastGameTime() = rooms.map { it.lastGame }.maxByOrNull { it?.time ?: 0 }
 
             override fun remove(room: Room) {
                 logger.info("Removing empty room: ${room.id}")
@@ -192,6 +187,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
     private var server: NetworkServer
     private var connections = mutableSetOf<NetworkServer.Connection>()
+    private var lastGame: Date? = null
 
     init {
 
@@ -232,7 +228,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
     fun getRoomCount() = rooms.getRoomCount()
     fun getPlayerCount() = rooms.getPlayerCount()
-    fun getLastGameTime() = rooms.getLastGameTime()
+    fun getLastGameTime() = lastGame
     fun getRoomType() = rooms.getName()
 
     private fun updateStatus(initiatingConnection: NetworkServer.Connection, status: String) {
@@ -384,6 +380,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         room.lastGame = Date()
         room.players.onEach { it.status = Player.Status.playing }
         room.sendToAll(Network.Client.OnStartGame(), connections)
+
+        lastGame = room.lastGame
     }
 
 }
@@ -456,7 +454,7 @@ class WebSocketNetworkServer(
                             maxRooms = 10, // TODO: This isn't actually implemented yet.
                             currentRoomCount = retrowarsServer.getRoomCount(),
                             currentPlayerCount = retrowarsServer.getPlayerCount(),
-                            lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: 0,
+                            lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: -1,
                         ))
                     }
                 }
