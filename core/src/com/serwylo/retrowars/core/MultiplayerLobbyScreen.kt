@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Container
@@ -171,23 +172,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.row().spaceBottom(UI_SPACE * 2)
 
-        wrapper.add(
-            Label("Select one to join a game", styles.label.medium)
-        )
-
-        wrapper.row().spaceBottom(UI_SPACE * 2)
-
         activeServers.onEach { server ->
             wrapper.row()
-            wrapper.add(
-                makeButton("${server.hostname} - ${server.currentPlayerCount} players in ${server.currentRoomCount} rooms", styles) {
-                    changeState(Action.AttemptToJoinServer)
-
-                    GlobalScope.launch(Dispatchers.IO) {
-                        createClient(server.hostname, server.port)
-                    }
-                }
-            )
+            wrapper.add(makeServerInfo(server)).pad(UI_SPACE)
         }
 
         if (pendingServers.isNotEmpty()) {
@@ -205,6 +192,72 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 Gdx.net.openURI("http://github.com/retrowars/retrowars#running-a-public-server")
             }
         )
+    }
+
+    private fun makeServerInfo(server: ServerDetails): Actor {
+        val styles = game.uiAssets.getStyles()
+        val skin = game.uiAssets.getSkin()
+        return Table().apply {
+            background = skin.getDrawable("window")
+            pad(UI_SPACE)
+
+            add(Label(server.hostname, styles.label.medium)).expandX().colspan(2).spaceBottom(UI_SPACE)
+            row()
+
+            val metadata = Table()
+
+            metadata.add(Label("Rooms:", styles.label.small)).right()
+            metadata.add(Label(server.currentRoomCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Players:", styles.label.small)).right()
+            metadata.add(Label(server.currentPlayerCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Last game:", styles.label.small)).right()
+            metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Fetched info in:", styles.label.small)).right()
+            metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            add(metadata).left().spaceRight(UI_SPACE * 2)
+            add(
+                makeButton("Join", styles) {
+                    changeState(Action.AttemptToJoinServer)
+
+                    GlobalScope.launch(Dispatchers.IO) {
+                        createClient(server.hostname, server.port)
+                    }
+                }
+            ).expandX().right()
+        }
+    }
+
+    private fun roughTimeAgo(timestamp: Long): String {
+        val seconds = (System.currentTimeMillis() - timestamp) / 1000
+        if (seconds < 60) {
+            return "$seconds seconds ago"
+        }
+
+        val minutes = seconds / 60
+        if (minutes < 60) {
+            return "$minutes minutes ago"
+        }
+
+        val hours = minutes / 60
+        if (hours < 24) {
+            return "$hours hours ago"
+        }
+
+        val days = hours / 24
+        if (days < 365) {
+            return "$days days ago"
+        }
+
+        val years = days / 365
+        return "$years years ago"
     }
 
     private fun showSplash() {
