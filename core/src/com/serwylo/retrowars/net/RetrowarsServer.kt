@@ -319,18 +319,23 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             return
         }
 
-        logger.info("Player removed: ${player.id}")
-
         room.players.remove(player)
+
+        logger.info("Player removed: ${player.id}")
 
         if (room.isEmpty()) {
             rooms.remove(room)
-            return
+        } else {
+            room.sendToAll(Network.Client.OnPlayerRemoved(player.id), connections)
+            checkForWinner(room)
         }
 
-        room.sendToAll(Network.Client.OnPlayerRemoved(player.id), connections)
+        logStats()
 
-        checkForWinner(room)
+    }
+
+    private fun logStats() {
+        logger.info("Stats: numPlayers=${rooms.getPlayerCount()} numRooms=${rooms.getRoomCount()}")
     }
 
     private fun newPlayer(connection: NetworkServer.Connection, roomId: Long = 0) {
@@ -361,6 +366,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         }
 
         room.players.add(player)
+
+        logStats()
     }
 
     fun close() {
