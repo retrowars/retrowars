@@ -3,7 +3,7 @@ package com.serwylo.retrowars.desktop
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration
 import com.serwylo.retrowars.RetrowarsGame
-import com.serwylo.retrowars.net.RetrowarsServer
+import com.serwylo.retrowars.utils.DesktopPlatform
 
 object DesktopLauncher {
     @JvmStatic

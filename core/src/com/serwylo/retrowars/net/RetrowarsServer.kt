@@ -15,6 +15,8 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.*
 import javax.jmdns.JmDNS
@@ -22,6 +24,10 @@ import javax.jmdns.ServiceInfo
 import kotlin.random.Random
 
 
+/**
+ * Note that this logs both via [Gdx.app] and [Logger]. The [Logger] is so that we can get some aggregate
+ * stats of how many people are using the server in a more permanent manner than the transient [Gdx.app] log.
+ */
 class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, val port: Int) {
 
     sealed interface Rooms {
@@ -31,6 +37,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         fun getPlayerCount(): Int
         fun getLastGameTime(): Date?
         fun getName(): String
+        fun remove(room: Room)
 
         class SingleLocalRoom: Rooms {
 
@@ -44,6 +51,9 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             override fun getPlayerCount() = room.players.size
             override fun getLastGameTime() = room.lastGame
             override fun getName() = "singleLocalRoom"
+            override fun remove(room: Room) {
+                // Do nothing. Single room can't be removed.
+            }
 
         }
 
@@ -54,6 +64,11 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             override fun getRoomCount() = rooms.size
             override fun getPlayerCount() = rooms.sumBy { it.players.size }
             override fun getLastGameTime() = rooms.map { it.lastGame }.maxByOrNull { it?.time ?: 0 }
+
+            override fun remove(room: Room) {
+                logger.info("Removing empty room: ${room.id}")
+                rooms.remove(room)
+            }
 
         }
 
@@ -108,6 +123,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
                 rooms.add(new)
 
                 Gdx.app.log(TAG, "No rooms with space, so creating a new room ${new.id}.")
+                logger.info("Created new room: ${new.id}")
                 return new
             }
 
@@ -117,6 +133,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
     companion object {
 
         private const val TAG = "RetrowarsServer"
+
+        private val logger = LoggerFactory.getLogger(RetrowarsServer::class.java)
 
         private var server: RetrowarsServer? = null
 
@@ -166,6 +184,10 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
                 }
         }
 
+        fun isEmpty(): Boolean {
+            return players.isEmpty()
+        }
+
     }
 
     private var server: NetworkServer
@@ -178,6 +200,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             is Rooms.MultiplePrivateRooms -> Gdx.app.log(TAG, "Starting a server that only allows to be joined if you know the room ID.")
             is Rooms.PublicRandomRooms -> Gdx.app.log(TAG, "Starting a server that puts players into random rooms.")
         }
+
+        logger.info("Starting server of type: ${rooms.getName()}")
 
         server = WebSocketNetworkServer(
             this,
@@ -299,7 +323,15 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             return
         }
 
+        logger.info("Player removed: ${player.id}")
+
         room.players.remove(player)
+
+        if (room.isEmpty()) {
+            rooms.remove(room)
+            return
+        }
+
         room.sendToAll(Network.Client.OnPlayerRemoved(player.id), connections)
 
         checkForWinner(room)
@@ -315,6 +347,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         val player = Player(Random.nextLong(), Games.allSupported.random().id)
 
         connection.player = player
+
+        logger.info("Player added: ${player.id}")
 
         val room = rooms.getOrCreateRoom(roomId)
 
@@ -345,6 +379,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         }
 
         Gdx.app.debug(TAG, "Server sending request to all players telling them to start the game.")
+        logger.info("Starting game. Room: ${room.id}, players: [${room.players.map { it.id }.joinToString(", ")}]")
         room.scores.clear()
         room.lastGame = Date()
         room.players.onEach { it.status = Player.Status.playing }
