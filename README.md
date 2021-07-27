@@ -48,8 +48,8 @@ Pull requests will be warmly received at [https://github.com/retrowars/retrowars
 
 ### Running a public server
 
-If you are able to run a public server, please submit an issue and we can add your server to the list of well known servers.
-Doing so will make it appear in the default retro wars client when searching for public servers.
+If you are able to run a public server, please [see the retrowars-server](https://github.com/retrowars/retrowars-servers/#contributing) project for more details.
+Doing so will make it appear in the default retro wars client when searching for public servers, and ensure that people can continue to play against eachother even if the official servers are down.
 
 #### Running a server on Heroku
 

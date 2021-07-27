@@ -159,7 +159,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row().spaceTop(UI_SPACE * 2)
         wrapper.add(
             makeButton("Learn how to help", styles) {
-                Gdx.net.openURI("http://github.com/retrowars/retrowars#running-a-public-server")
+                Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
             }
         )
     }
@@ -212,7 +212,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row().spaceTop(UI_SPACE)
         wrapper.add(
             makeSmallButton("Learn how to help", styles) {
-                Gdx.net.openURI("http://github.com/retrowars/retrowars#running-a-public-server")
+                Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
             }
         )
     }
