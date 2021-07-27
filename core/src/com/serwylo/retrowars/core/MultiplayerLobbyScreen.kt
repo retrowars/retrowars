@@ -2,12 +2,12 @@ package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
-import com.badlogic.gdx.scenes.scene2d.ui.Container
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
-import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
+import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
@@ -126,7 +126,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 is Splash -> showSplash()
                 is SearchingForPublicServers -> showSearchingForPublicServers()
                 is SearchingForLocalServer -> showSearchingForLocalServer()
-                is ShowingServerList -> showServerList(new.activeServers, new.pendingServers, new.inactiveServers)
+                is ShowingServerList -> showServerList(new.activeServers, new.pendingServers)
                 is ShowEmptyServerList -> showEmptyServerList()
                 is NoLocalServerFound -> showNoLocalServerFound()
                 is ConnectingToServer -> showConnectingToServer()
@@ -164,13 +164,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         )
     }
 
-    private fun showServerList(activeServers: List<ServerDetails>, pendingServers: List<ServerMetadataDTO>, inactiveServers: List<ServerMetadataDTO>) {
+    private fun showServerList(activeServers: List<ServerDetails>, pendingServers: List<ServerMetadataDTO>) {
         Gdx.app.log(TAG, "Rendering server list of ${activeServers.size} active servers and ${pendingServers.size} pending servers.")
         wrapper.clear()
-
-        wrapper.add(
-            Label("Public servers", styles.label.large)
-        )
 
         wrapper.row().spaceBottom(UI_SPACE * 2)
 
@@ -179,7 +175,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             ScrollPane(Table().apply {
                 activeServers.onEach { server ->
                     row()
-                    add(makeServerInfo(server)).pad(UI_SPACE)
+                    add(makeServerInfo(server)).pad(UI_SPACE).fillX()
                 }
             }).apply {
                 setScrollingDisabled(true, false)
@@ -194,6 +190,17 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     styles.label.small
                 ).apply {
                     setAlignment(Align.center)
+                    addAction(
+                        repeat(
+                            RepeatAction.FOREVER,
+                                sequence(
+                                    alpha(0f),
+                                    alpha(1f, 0.3f),
+                                    delay(0.5f),
+                                    alpha(0f, 0.3f),
+                                )
+                        )
+                    )
                 }
             )
         }
@@ -215,9 +222,18 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         val skin = game.uiAssets.getSkin()
         return Table().apply {
             background = skin.getDrawable("window")
-            pad(UI_SPACE)
+            padTop(UI_SPACE)
+            padBottom(UI_SPACE)
+            padLeft(UI_SPACE * 2)
+            padRight(UI_SPACE * 2)
 
-            add(Label(server.hostname, styles.label.medium)).expandX().colspan(2).spaceBottom(UI_SPACE)
+            add(
+                Label(
+                    server.hostname,
+                    styles.label.medium
+                )
+            ).expandX().colspan(2).spaceBottom(UI_SPACE).left()
+
             row()
 
             val metadata = Table()
@@ -238,7 +254,21 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            add(metadata).left().spaceRight(UI_SPACE * 2)
+            val infoCell:Cell<Actor> = add().left().top().spaceRight(UI_SPACE * 2)
+            infoCell.setActor(
+                VerticalGroup().apply {
+                    addActor(Label(calcServerActivitySummary(server), styles.label.small))
+                    addActor(
+                        makeSmallButton("View info", styles) {
+                            infoCell.clearActor()
+                            infoCell.setActor(metadata)
+                        }
+                    )
+                    space(UI_SPACE / 2f)
+                    columnAlign(Align.left)
+                }
+            )
+
             add(
                 makeButton("Join", styles) {
                     changeState(Action.AttemptToJoinServer)
@@ -246,14 +276,29 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     GlobalScope.launch(Dispatchers.IO) {
                         createClient(server.hostname, server.port)
                     }
+                }.apply {
+                    padLeft(UI_SPACE * 2)
+                    padRight(UI_SPACE * 2)
                 }
-            ).expandX().right()
+            ).expandX().right().bottom()
         }
+    }
+
+    private fun calcServerActivitySummary(server: ServerDetails): String {
+        if (server.lastGameTimestamp >= 0 && server.lastGameTimestamp < 10 * 1000 * 60 /* 10 minutes */) {
+            if (server.currentRoomCount > 1) {
+                return "Very active"
+            } else if (server.currentPlayerCount > 2) {
+                return "Somewhat active"
+            }
+        }
+
+        return "Not very active"
     }
 
     private fun roughTimeAgo(timestamp: Long): String {
         if (timestamp <= 0) {
-            return "Never"
+            return "A long time ago"
         }
 
         val seconds = (System.currentTimeMillis() - timestamp) / 1000
@@ -500,30 +545,26 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             } else if (info.type == "publicRandomRooms") {
 
                 Gdx.app.log(TAG, "Found stats for ${server.hostname} [rooms: ${info.currentRoomCount}, players: ${info.currentPlayerCount}, last game: ${info.lastGameTimestamp}].")
-                synchronized(this) {
-                    activeServers = activeServers.plus(ServerDetails(
-                        server.hostname,
-                        server.port,
-                        info.type,
-                        info.maxPlayersPerRoom,
-                        info.maxRooms,
-                        info.currentRoomCount,
-                        info.currentPlayerCount,
-                        info.lastGameTimestamp,
-                        pingTime.toInt(),
-                    )).sortedBy {
-                        // We could sort by ping time, but it just isn't the only relevant metric here.
-                        // Equally we could sort by most active servers first, but again, may not be ideal.
-                        // As such, lets just let the authors of the server metadata file decide on the order.
-                        allServers.indexOf(server)
-                    }
+                activeServers = activeServers.plus(ServerDetails(
+                    server.hostname,
+                    server.port,
+                    info.type,
+                    info.maxPlayersPerRoom,
+                    info.maxRooms,
+                    info.currentRoomCount,
+                    info.currentPlayerCount,
+                    info.lastGameTimestamp,
+                    pingTime.toInt(),
+                )).sortedBy { serverDetails ->
+                    // We could sort by ping time, but it just isn't the only relevant metric here.
+                    // Equally we could sort by most active servers first, but again, may not be ideal.
+                    // As such, lets just let the authors of the server metadata file decide on the order.
+                    allServers.map { it.hostname }.indexOf(serverDetails.hostname)
                 }
             }
 
             Gdx.app.debug(TAG, "Updating list of servers with new information about ${server.hostname}")
-            synchronized(this) {
-                pendingServers = pendingServers.filter { it !== server }
-            }
+            pendingServers = pendingServers.filter { it !== server }
 
             update()
         }
