@@ -3,10 +3,12 @@ package com.serwylo.retrowars.net
 import com.badlogic.gdx.Gdx
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import java.io.IOException
+import kotlin.system.measureTimeMillis
 
 private const val TAG = "ServerDirectory"
 
@@ -45,18 +47,15 @@ data class ServerDetails(
 
 private val httpClient = HttpClient(CIO) {
     install(JsonFeature)
+    install(HttpTimeout) {
+        requestTimeoutMillis = 30000
+        connectTimeoutMillis = 30000
+    }
 }
 
 suspend fun fetchPublicServerList(): List<ServerMetadataDTO> {
-    return listOf(
-        ServerMetadataDTO(
-            "retrowars.serwylo.com",
-            80
-        )
-    )
-
-    // val url = "http://192.168.0.100:8888/.well-known/com.serwylo.retrowars-servers.json"
-    // return httpClient.get(url)
+    val url = "https://retrowars.github.io/retrowars-servers/.well-known/com.serwylo.retrowars-servers.json"
+    return httpClient.get(url)
 }
 
 suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
@@ -68,7 +67,13 @@ suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
     ).build()
 
     try {
-        return httpClient.get(url)
+        val data: ServerInfoDTO?
+        val time = measureTimeMillis {
+            Gdx.app.log(TAG, "Fetching data for $url")
+            data = httpClient.get(url)
+        }
+        Gdx.app.log(TAG, "Fetched data for $url in ${time}ms.")
+        return data
     } catch (e: IOException) {
         Gdx.app.error(TAG, "Could not fetch server metadata from $url", e)
         return null

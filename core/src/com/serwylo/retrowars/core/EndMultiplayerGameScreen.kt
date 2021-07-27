@@ -127,6 +127,7 @@ class EndMultiplayerGameScreen(game: RetrowarsGame): Scene2dScreen(game, {}) {
                 makeButton(if (RetrowarsServer.get() == null) "Leave game" else "End game for all players", styles) {
                     client.listen(networkCloseListener = {})
                     client.close()
+                    RetrowarsClient.disconnect()
 
                     RetrowarsServer.stop()
                     game.showMainMenu()
