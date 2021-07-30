@@ -253,3 +253,29 @@ class TetrisSoftController(layout: Int, uiAssets: UiAssets): SoftController(
     }
 
 }
+
+class TempestSoftController(layout: Int, uiAssets: UiAssets): SoftController(
+    uiAssets,
+    getLayout(layouts, layout),
+    mapOf(
+        Buttons.MOVE_CLOCKWISE to uiAssets.getSprites().buttonIcons.rotate_clockwise,
+        Buttons.MOVE_COUNTER_CLOCKWISE to uiAssets.getSprites().buttonIcons.rotate_counter_clockwise,
+    )
+) {
+
+    companion object {
+
+        val layouts = listOf(
+            "[ move_counter_clockwise ][<---->][ move_clockwise ]",
+            "[ move_counter_clockwise ][ move_clockwise ][<---->]",
+            "[<---->][ move_counter_clockwise ][ move_clockwise ]",
+        )
+
+    }
+
+    object Buttons {
+        const val MOVE_CLOCKWISE = "move_clockwise"
+        const val MOVE_COUNTER_CLOCKWISE = "move_counter_clockwise"
+    }
+
+}

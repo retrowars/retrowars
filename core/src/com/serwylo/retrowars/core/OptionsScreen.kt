@@ -10,10 +10,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
-import com.serwylo.retrowars.input.AsteroidsSoftController
-import com.serwylo.retrowars.input.SnakeSoftController
-import com.serwylo.retrowars.input.SoftController
-import com.serwylo.retrowars.input.TetrisSoftController
+import com.serwylo.retrowars.input.*
 import com.serwylo.retrowars.ui.IconButton
 import com.serwylo.retrowars.utils.Options
 import kotlin.random.Random
@@ -98,6 +95,19 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                         }
                     )
 
+                    addActor(
+                        IconButton(skin, Games.tempest.icon(sprites)) {
+                            Gdx.app.postRunnable {
+                                game.screen = ControllerSelectScreen(
+                                    game,
+                                    Games.tempest,
+                                    TempestSoftController.layouts,
+                                ) { index -> TempestSoftController(index, game.uiAssets) }
+                            }
+                        }
+                    )
+
+
                 }
             )
 
@@ -112,7 +122,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                 Label("?", game.uiAssets.getStyles().label.medium)
             } else {
                 Avatar(playerId, game.uiAssets)
-            }
+                }
 
             add(
                 Button(avatar, game.uiAssets.getSkin()).apply {

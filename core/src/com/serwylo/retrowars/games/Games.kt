@@ -8,6 +8,7 @@ import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
 
 object Games {
@@ -33,6 +34,13 @@ object Games {
         { app -> SnakeGameScreen(app) }
     )
 
+    val tempest = GameDetails(
+        "tempest",
+        true,
+        { s -> s.icons.tempest },
+        { app -> TempestGameScreen(app) }
+    )
+
     val tetris = GameDetails(
         "tetris",
         true,
@@ -46,6 +54,7 @@ object Games {
         asteroids,
         missileCommand,
         snake,
+        tempest,
         tetris,
         other,
     )
