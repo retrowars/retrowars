@@ -145,6 +145,7 @@ class UiAssets(locale: Locale) {
             val asteroids = atlas.findRegion("icon_asteroids")!!
             val missileCommand = atlas.findRegion("icon_missile_command")!!
             val snake = atlas.findRegion("icon_snake")!!
+            val tempest = atlas.findRegion("icon_tempest")!!
             val tetris = atlas.findRegion("icon_tetris")!!
             val unknown = atlas.findRegion("icon_unknown")!!
         }
