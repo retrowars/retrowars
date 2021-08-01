@@ -1,9 +1,15 @@
 package com.serwylo.retrowars.games.tempest
 
 import com.badlogic.gdx.math.Vector2
+import com.serwylo.retrowars.games.tetris.ButtonState
 
 class TempestGameState(private val worldWidth: Float, private val worldHeight: Float) {
     val level: Level = makeThirdLevel(worldWidth, worldHeight)
+
+    var moveCounterClockwise = ButtonState.Unpressed
+    var moveClockwise = ButtonState.Unpressed
+
+    var playerSegment = level.segments[0]
 }
 
 data class Level(
@@ -117,3 +123,9 @@ data class Segment(
     val start: Vector2,
     val end: Vector2,
 )
+
+enum class ButtonState {
+    Unpressed,
+    JustPressed,
+    Held,
+}
