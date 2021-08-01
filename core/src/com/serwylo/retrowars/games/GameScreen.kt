@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.input.SoftController
 import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -18,6 +19,7 @@ import com.serwylo.retrowars.scoring.Stats
 import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.*
+import com.serwylo.retrowars.utils.Options
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -37,6 +39,12 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     protected val strings = game.uiAssets.getStrings()
 
     private val hud: HUD
+
+    protected val controller: SoftController? = if (gameDetails.controllerLayout != null) {
+        SoftController(game.uiAssets, gameDetails.controllerLayout, Options.getSoftController(gameDetails))
+    } else {
+        null
+    }
 
     private val startTime = System.currentTimeMillis()
 
@@ -64,6 +72,10 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
         hud = HUD(game.uiAssets)
+
+        if (controller != null) {
+            addGameOverlayToHUD(controller.getActor())
+        }
 
         client?.listen(
             networkCloseListener = { code, message -> game.showNetworkError(code, message) },

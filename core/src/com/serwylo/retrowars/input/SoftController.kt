@@ -10,26 +10,23 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.ui.IconButton
 
-open class SoftController(uiAssets: UiAssets, layout: String, expectedButtons: Map<String, TextureRegion>) {
+abstract class SoftControllerLayout {
+    abstract fun getLayouts(): List<String>
+    abstract fun getIcons(sprites: UiAssets.Sprites): Map<String, TextureRegion>
+}
+
+class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: Int) {
 
     private val table = Table()
     private val buttons: Map<String, IconButton>
 
     companion object {
         private const val TAG = "SoftController"
-
-        @JvmStatic
-        protected fun getLayout(layouts: List<String>, index: Int): String = if (layouts.size >= index) {
-            layouts[index]
-        } else {
-            Gdx.app.error(TAG, "Tried to use layout ${index}, but there are only ${layouts.size} available. Defaulting to 0.")
-            layouts[0]
-        }
     }
 
     init {
 
-        val cellContents = layout
+        val cellContents = getLayout(layout.getLayouts(), index)
             .split("\n")
             .map { it.trim() }
             .filter { it.isNotBlank() }
@@ -38,6 +35,8 @@ open class SoftController(uiAssets: UiAssets, layout: String, expectedButtons: M
                     cell.trim()
                 }
             }
+
+        val expectedButtons = layout.getIcons(uiAssets.getSprites())
 
         val missingButtons = expectedButtons.keys.filter { button ->
             val found = cellContents.any { row ->
@@ -87,6 +86,13 @@ open class SoftController(uiAssets: UiAssets, layout: String, expectedButtons: M
         this.buttons = buttons.toMap()
     }
 
+    private fun getLayout(layouts: List<String>, index: Int): String = if (layouts.size >= index) {
+        layouts[index]
+    } else {
+        Gdx.app.error(TAG, "Tried to use layout ${index}, but there are only ${layouts.size} available. Defaulting to 0.")
+        layouts[0]
+    }
+
     fun getActor() = table
 
     fun isPressed(button: String) = buttons[button]!!.isPressed
@@ -112,57 +118,7 @@ open class SoftController(uiAssets: UiAssets, layout: String, expectedButtons: M
 
 }
 
-class SnakeSoftController(layout: Int, uiAssets: UiAssets): SoftController(
-    uiAssets,
-    getLayout(layouts, layout),
-    mapOf(
-        Buttons.UP to uiAssets.getSprites().buttonIcons.up,
-        Buttons.DOWN to uiAssets.getSprites().buttonIcons.down,
-        Buttons.LEFT to uiAssets.getSprites().buttonIcons.left,
-        Buttons.RIGHT to uiAssets.getSprites().buttonIcons.right,
-    )
-) {
-
-    companion object {
-
-        val layouts = listOf(
-            """
-            [      ][  up  ][       ][<---------->]
-            [ left ][ down ][ right ][<---------->]
-            """,
-
-            """
-            [<---------->][      ][  up  ][       ]
-            [<---------->][ left ][ down ][ right ]
-            """,
-
-            """
-            [<--->][      ][  up  ][       ][<--->]
-            [<--->][ left ][ down ][ right ][<--->]
-            """,
-
-            """
-            [      ][       ][      ][    ][      ]
-            [ left ][ right ][<---->][ up ][ down ]
-            """,
-
-            """
-            [      ][       ][      ][      ][    ]
-            [ left ][ right ][<---->][ down ][ up ]
-            """,
-
-            """
-            [      ][    ][      ][      ][       ]
-            [ left ][ up ][<---->][ down ][ right ]
-            """,
-
-            """
-            [      ][      ][      ][    ][       ]
-            [ left ][ down ][<---->][ up ][ right ]
-            """,
-        )
-
-    }
+class SnakeSoftController: SoftControllerLayout() {
 
     object Buttons {
         const val UP = "up"
@@ -171,31 +127,68 @@ class SnakeSoftController(layout: Int, uiAssets: UiAssets): SoftController(
         const val RIGHT = "right"
     }
 
+    override fun getLayouts() = listOf(
+        """
+            [      ][  up  ][       ][<---------->]
+            [ left ][ down ][ right ][<---------->]
+            """,
+
+        """
+            [<---------->][      ][  up  ][       ]
+            [<---------->][ left ][ down ][ right ]
+            """,
+
+        """
+            [<--->][      ][  up  ][       ][<--->]
+            [<--->][ left ][ down ][ right ][<--->]
+            """,
+
+        """
+            [      ][       ][      ][    ][      ]
+            [ left ][ right ][<---->][ up ][ down ]
+            """,
+
+        """
+            [      ][       ][      ][      ][    ]
+            [ left ][ right ][<---->][ down ][ up ]
+            """,
+
+        """
+            [      ][    ][      ][      ][       ]
+            [ left ][ up ][<---->][ down ][ right ]
+            """,
+
+        """
+            [      ][      ][      ][    ][       ]
+            [ left ][ down ][<---->][ up ][ right ]
+            """,
+    )
+
+    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
+        Buttons.UP to sprites.buttonIcons.up,
+        Buttons.DOWN to sprites.buttonIcons.down,
+        Buttons.LEFT to sprites.buttonIcons.left,
+        Buttons.RIGHT to sprites.buttonIcons.right,
+    )
+
 }
 
-class AsteroidsSoftController(layout: Int, uiAssets: UiAssets): SoftController(
-    uiAssets,
-    getLayout(layouts, layout),
-    mapOf(
-        Buttons.THRUST to uiAssets.getSprites().buttonIcons.thrust,
-        Buttons.FIRE to uiAssets.getSprites().buttonIcons.fire,
-        Buttons.LEFT to uiAssets.getSprites().buttonIcons.left,
-        Buttons.RIGHT to uiAssets.getSprites().buttonIcons.right,
+class AsteroidsSoftController: SoftControllerLayout() {
+    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
+        Buttons.THRUST to sprites.buttonIcons.thrust,
+        Buttons.FIRE to sprites.buttonIcons.fire,
+        Buttons.LEFT to sprites.buttonIcons.left,
+        Buttons.RIGHT to sprites.buttonIcons.right,
     )
-) {
 
-    companion object {
-
-        val layouts = listOf(
-            "[ left   ][ right  ][<---->][ fire   ][ thrust ]",
-            "[ left   ][ right  ][<---->][ thrust ][ fire   ]",
-            "[ fire   ][ thrust ][<---->][ left   ][ right  ]",
-            "[ thrust ][ fire   ][<---->][ left   ][ right  ]",
-            "[ left   ][ fire   ][<---->][ thrust ][ right  ]",
-            "[ left   ][ thrust ][<---->][ fire   ][ right  ]",
-        )
-
-    }
+    override fun getLayouts() = listOf(
+        "[ left   ][ right  ][<---->][ fire   ][ thrust ]",
+        "[ left   ][ right  ][<---->][ thrust ][ fire   ]",
+        "[ fire   ][ thrust ][<---->][ left   ][ right  ]",
+        "[ thrust ][ fire   ][<---->][ left   ][ right  ]",
+        "[ left   ][ fire   ][<---->][ thrust ][ right  ]",
+        "[ left   ][ thrust ][<---->][ fire   ][ right  ]",
+    )
 
     object Buttons {
         const val THRUST = "thrust"
@@ -203,46 +196,39 @@ class AsteroidsSoftController(layout: Int, uiAssets: UiAssets): SoftController(
         const val LEFT = "left"
         const val RIGHT = "right"
     }
-
 }
 
-class TetrisSoftController(layout: Int, uiAssets: UiAssets): SoftController(
-    uiAssets,
-    getLayout(layouts, layout),
-    mapOf(
-        Buttons.LEFT to uiAssets.getSprites().buttonIcons.left,
-        Buttons.RIGHT to uiAssets.getSprites().buttonIcons.right,
-        Buttons.ROTATE_CW to uiAssets.getSprites().buttonIcons.rotate_clockwise,
-        Buttons.ROTATE_CCW to uiAssets.getSprites().buttonIcons.rotate_counter_clockwise,
-        Buttons.DROP to uiAssets.getSprites().buttonIcons.drop,
+class TetrisSoftController: SoftControllerLayout() {
+
+    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
+        Buttons.LEFT to sprites.buttonIcons.left,
+        Buttons.RIGHT to sprites.buttonIcons.right,
+        Buttons.ROTATE_CW to sprites.buttonIcons.rotate_clockwise,
+        Buttons.ROTATE_CCW to sprites.buttonIcons.rotate_counter_clockwise,
+        Buttons.DROP to sprites.buttonIcons.drop,
     )
-) {
 
-    companion object {
+    override fun getLayouts() = listOf(
+        """
+        [      ][       ][    ][            ][   drop    ]
+        [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
+        """,
 
-        val layouts = listOf(
-            """
-            [      ][       ][    ][            ][   drop    ]
-            [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
-            """,
+        """
+        [      ][       ][    ][ rotate_ccw ][ rotate_cw ]
+        [ left ][ right ][<-->][            ][   drop    ]
+        """,
 
-            """
-            [      ][       ][    ][ rotate_ccw ][ rotate_cw ]
-            [ left ][ right ][<-->][            ][   drop    ]
-            """,
+        """
+        [ left ][ right ][<-->][            ][           ]
+        [ drop ][       ][    ][ rotate_ccw ][ rotate_cw ]
+        """,
 
-            """
-            [ left ][ right ][<-->][            ][           ]
-            [ drop ][       ][    ][ rotate_ccw ][ rotate_cw ]
-            """,
-
-            """
-            [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
-            [ drop ][       ][    ][            ][           ]
-            """,
-        )
-
-    }
+        """
+        [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
+        [ drop ][       ][    ][            ][           ]
+        """,
+    )
 
     object Buttons {
         const val LEFT = "left"
@@ -254,24 +240,18 @@ class TetrisSoftController(layout: Int, uiAssets: UiAssets): SoftController(
 
 }
 
-class TempestSoftController(layout: Int, uiAssets: UiAssets): SoftController(
-    uiAssets,
-    getLayout(layouts, layout),
-    mapOf(
-        Buttons.MOVE_CLOCKWISE to uiAssets.getSprites().buttonIcons.rotate_clockwise,
-        Buttons.MOVE_COUNTER_CLOCKWISE to uiAssets.getSprites().buttonIcons.rotate_counter_clockwise,
+class TempestSoftController: SoftControllerLayout() {
+
+    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
+        Buttons.MOVE_CLOCKWISE to sprites.buttonIcons.rotate_clockwise,
+        Buttons.MOVE_COUNTER_CLOCKWISE to sprites.buttonIcons.rotate_counter_clockwise,
     )
-) {
 
-    companion object {
-
-        val layouts = listOf(
-            "[ move_counter_clockwise ][<---->][ move_clockwise ]",
-            "[ move_counter_clockwise ][ move_clockwise ][<---->]",
-            "[<---->][ move_counter_clockwise ][ move_clockwise ]",
-        )
-
-    }
+    override fun getLayouts() = listOf(
+        "[ move_counter_clockwise ][<---->][ move_clockwise ]",
+        "[ move_counter_clockwise ][ move_clockwise ][<---->]",
+        "[<---->][ move_counter_clockwise ][ move_clockwise ]",
+    )
 
     object Buttons {
         const val MOVE_CLOCKWISE = "move_clockwise"

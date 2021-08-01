@@ -15,7 +15,6 @@ import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 import com.serwylo.retrowars.input.AsteroidsSoftController
-import com.serwylo.retrowars.utils.Options
 
 class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, 400f, 400f) {
 
@@ -26,8 +25,6 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
 
     private val state = AsteroidsGameState(viewport.worldWidth, viewport.worldHeight)
 
-    private val controller = AsteroidsSoftController(Options.getSoftController(Games.asteroids), game.uiAssets)
-
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
     init {
@@ -37,7 +34,6 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
             state.bullets.add(it)
         }
 
-        addGameOverlayToHUD(controller.getActor())
         addGameScoreToHUD(lifeContainer)
         showMessage("Destroy the asteroids", "Protect your ship")
 
@@ -51,10 +47,10 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         state.timer += delta
 
         if (getState() == State.Playing) {
-            state.ship.left = controller.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-            state.ship.right = controller.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-            state.ship.shooting = controller.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
-            state.ship.thrust = controller.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
+            state.ship.left = controller!!.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+            state.ship.right = controller!!.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+            state.ship.shooting = controller!!.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
+            state.ship.thrust = controller!!.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
         }
 
         updateEntities(delta)

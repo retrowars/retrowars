@@ -10,12 +10,14 @@ import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
 import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
+import com.serwylo.retrowars.input.*
 
 object Games {
 
     val asteroids = GameDetails(
         "asteroids",
         true,
+        AsteroidsSoftController(),
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
     )
@@ -23,6 +25,7 @@ object Games {
     val missileCommand = GameDetails(
         "missile-command",
         true,
+        controllerLayout = null,
         { s -> s.icons.missileCommand },
         { app -> MissileCommandGameScreen(app) }
     )
@@ -30,6 +33,7 @@ object Games {
     val snake = GameDetails(
         "snake",
         true,
+        SnakeSoftController(),
         { s -> s.icons.snake },
         { app -> SnakeGameScreen(app) }
     )
@@ -37,6 +41,7 @@ object Games {
     val tempest = GameDetails(
         "tempest",
         true,
+        TempestSoftController(),
         { s -> s.icons.tempest },
         { app -> TempestGameScreen(app) }
     )
@@ -44,6 +49,7 @@ object Games {
     val tetris = GameDetails(
         "tetris",
         true,
+        TetrisSoftController(),
         { s -> s.icons.tetris },
         { app -> TetrisGameScreen(app) }
     )
@@ -66,6 +72,7 @@ object Games {
 class UnavailableGameDetails(name: String): GameDetails(
     name,
     false,
+    null,
     { s -> s.icons.unknown },
     { game -> UnimplementedGameScreen(game) }
 )
@@ -73,6 +80,7 @@ class UnavailableGameDetails(name: String): GameDetails(
 open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
+    val controllerLayout: SoftControllerLayout?,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame) -> Screen
 )

@@ -21,10 +21,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
 
     private val state = SnakeGameState()
 
-    private val controller = SnakeSoftController(Options.getSoftController(Games.snake), game.uiAssets)
-
     init {
-        addGameOverlayToHUD(controller.getActor())
         showMessage("Eat the fruit", "Avoid your tail")
     }
 
@@ -47,10 +44,10 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private fun recordInput() {
-        state.left = controller.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        state.right = controller.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        state.up = controller.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
-        state.down = controller.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+        state.left = controller!!.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+        state.right = controller!!.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        state.up = controller!!.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
+        state.down = controller!!.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
     }
 
     /**

@@ -24,33 +24,30 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
     private val state = TetrisGameState()
 
-    private val controller = TetrisSoftController(Options.getSoftController(Games.tetris), game.uiAssets)
-
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
     init {
 
-        controller.listen(TetrisSoftController.Buttons.LEFT,
+        controller!!.listen(TetrisSoftController.Buttons.LEFT,
             { state.moveLeft = if (state.moveLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveLeft = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.RIGHT,
+        controller!!.listen(TetrisSoftController.Buttons.RIGHT,
             { state.moveRight = if (state.moveRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveRight = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.ROTATE_CCW,
+        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CCW,
             { state.rotateLeft = if (state.rotateLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.rotateLeft = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.ROTATE_CW,
+        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CW,
             { state.rotateRight = if (state.rotateRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.rotateRight = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.DROP,
+        controller!!.listen(TetrisSoftController.Buttons.DROP,
             { state.drop = if (state.drop == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.drop = ButtonState.Unpressed })
 
-        addGameOverlayToHUD(controller.getActor())
         addGameScoreToHUD(linesLabel)
         showMessage("Fill complete rows", "Stay below the top")
 
