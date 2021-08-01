@@ -15,7 +15,7 @@ import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
+class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fill complete rows", "Stay below the top", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -49,7 +49,6 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             { state.drop = ButtonState.Unpressed })
 
         addGameScoreToHUD(linesLabel)
-        showMessage("Fill complete rows", "Stay below the top")
 
     }
 

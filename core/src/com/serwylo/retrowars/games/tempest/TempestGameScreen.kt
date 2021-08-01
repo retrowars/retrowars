@@ -6,7 +6,14 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 
-class TempestGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tempest, 400f, 400f) {
+class TempestGameScreen(game: RetrowarsGame) : GameScreen(
+    game,
+    Games.tempest,
+    "Shoot the enemies",
+    "Don't let them touch you",
+    400f,
+    400f
+) {
 
     companion object {
         @Suppress("unused")
@@ -14,10 +21,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tempest, 4
     }
 
     private val state = TempestGameState()
-
-    init {
-        showMessage("Shoot the enemies", "Don't let them touch you")
-    }
 
     override fun show() {
         Gdx.input.inputProcessor = getInputProcessor()

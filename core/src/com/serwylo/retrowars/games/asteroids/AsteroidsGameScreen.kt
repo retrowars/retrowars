@@ -16,7 +16,7 @@ import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 import com.serwylo.retrowars.input.AsteroidsSoftController
 
-class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, 400f, 400f) {
+class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, "Destroy the asteroids", "Protect your ship", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -35,7 +35,6 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         }
 
         addGameScoreToHUD(lifeContainer)
-        showMessage("Destroy the asteroids", "Protect your ship")
 
     }
 

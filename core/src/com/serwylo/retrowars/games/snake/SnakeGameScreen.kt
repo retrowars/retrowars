@@ -12,7 +12,7 @@ import com.serwylo.retrowars.input.SnakeSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f, 400f) {
+class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat the fruit", "Avoid your tail", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -20,10 +20,6 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private val state = SnakeGameState()
-
-    init {
-        showMessage("Eat the fruit", "Avoid your tail")
-    }
 
     override fun show() {
         Gdx.input.inputProcessor = getInputProcessor()

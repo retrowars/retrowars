@@ -10,7 +10,7 @@ import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.missilecommand.entities.*
 import kotlin.math.abs
 
-class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.missileCommand, 400f, 250f) {
+class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.missileCommand, "Protect the cities", "Conserve your missiles", 400f, 250f) {
 
     companion object {
         @Suppress("unused")
@@ -21,7 +21,6 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     init {
         queueEnemyMissile()
-        showMessage("Protect the cities", "Conserve your missiles")
     }
 
     override fun show() {

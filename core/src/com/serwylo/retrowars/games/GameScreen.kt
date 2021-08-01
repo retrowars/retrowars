@@ -23,7 +23,18 @@ import com.serwylo.retrowars.utils.Options
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
+/**
+ * @param positiveDescription One line message to explain how to get points in as few words as possible. Shown in large text when the game starts.
+ * @param negativeDescription One line message to explain how to avoid losing the game. Shown in smaller text when the game starts.
+ */
+abstract class GameScreen(
+    protected val game: RetrowarsGame,
+    private val gameDetails: GameDetails,
+    positiveDescription: String,
+    negativeDescription: String,
+    minWorldWidth: Float,
+    maxWorldWidth: Float
+) : Screen {
 
     companion object {
         const val TAG = "GameScreen"
@@ -76,6 +87,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         if (controller != null) {
             addGameOverlayToHUD(controller.getActor())
         }
+
+        hud.showMessage(positiveDescription, negativeDescription)
 
         client?.listen(
             networkCloseListener = { code, message -> game.showNetworkError(code, message) },
