@@ -2,7 +2,7 @@ package com.serwylo.retrowars.games.asteroids
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
-import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -192,7 +192,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         state.networkAsteroids.addAll(asteroids)
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
         val r = game.uiAssets.shapeRenderer
 
         // Make the ship disappear when respawning. It will then reappear in the future when ready to

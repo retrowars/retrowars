@@ -2,23 +2,25 @@ package com.serwylo.retrowars.games.tempest
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.tetris.ButtonState
 import com.serwylo.retrowars.input.TempestSoftController
-import com.serwylo.retrowars.input.TetrisSoftController
 
 class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     game,
     Games.tempest,
     "Shoot the enemies",
     "Don't let them touch you",
-    400f,
-    400f
+    40f,
+    40f,
+    isOrthographic = false,
 ) {
 
     companion object {
@@ -79,22 +81,37 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     override fun onReceiveDamage(strength: Int) {
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
+        camera.apply {
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f - viewport.worldHeight / 8f, viewport.worldHeight.coerceAtMost(viewport.worldWidth))
+            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, 0f)
+            update()
+        }
         renderLevel(camera)
     }
 
-    private fun renderLevel(camera: OrthographicCamera) {
+    private fun renderLevel(camera: Camera) {
         val r = game.uiAssets.shapeRenderer
 
         r.begin(ShapeRenderer.ShapeType.Line)
         r.projectionMatrix = camera.combined
 
+        r.color = Color.BLUE
         state.level.segments.forEach { segment ->
-            r.color = if (segment == state.playerSegment) Color.YELLOW else Color.BLUE
-            r.line(segment.start, segment.end)
+            renderSegment(r, segment)
         }
 
+        r.color = Color.YELLOW
+        renderSegment(r, state.playerSegment)
+
         r.end()
+    }
+
+    private fun renderSegment(shapeRenderer: ShapeRenderer, segment: Segment) {
+        shapeRenderer.line(segment.start.x, segment.start.y, -100f, segment.end.x, segment.end.y, -100f)
+        shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -100f)
+        shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -100f)
+        shapeRenderer.line(segment.start, segment.end)
     }
 
 }

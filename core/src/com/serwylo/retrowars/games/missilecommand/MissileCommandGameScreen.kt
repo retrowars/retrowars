@@ -2,7 +2,7 @@ package com.serwylo.retrowars.games.missilecommand
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
@@ -65,7 +65,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         }
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val r = game.uiAssets.shapeRenderer
 

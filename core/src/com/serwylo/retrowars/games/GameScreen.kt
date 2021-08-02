@@ -3,7 +3,9 @@ package com.serwylo.retrowars.games
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
@@ -33,7 +35,8 @@ abstract class GameScreen(
     positiveDescription: String,
     negativeDescription: String,
     minWorldWidth: Float,
-    maxWorldWidth: Float
+    maxWorldWidth: Float,
+    isOrthographic: Boolean = true,
 ) : Screen {
 
     companion object {
@@ -45,7 +48,9 @@ abstract class GameScreen(
         Finished,
     }
 
-    private val camera = OrthographicCamera()
+    private val camera = if (isOrthographic) { OrthographicCamera() } else {
+        PerspectiveCamera(67f, 1f, 1f)
+    }
     protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
     protected val strings = game.uiAssets.getStrings()
 
@@ -82,6 +87,15 @@ abstract class GameScreen(
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
+        if (!isOrthographic) {
+            camera.apply {
+                position.set(0f, 0f, -10f)
+                lookAt(0f, 0f, 0f)
+                near = 0f
+                far = 1000f
+                update()
+            }
+        }
         hud = HUD(game.uiAssets)
 
         if (controller != null) {
@@ -301,7 +315,7 @@ abstract class GameScreen(
     }
 
     protected abstract fun updateGame(delta: Float)
-    protected abstract fun renderGame(camera: OrthographicCamera)
+    protected abstract fun renderGame(camera: Camera)
 
     /**
      * When another player performs well, we will receive a message to tell us to get handicaped in some way.

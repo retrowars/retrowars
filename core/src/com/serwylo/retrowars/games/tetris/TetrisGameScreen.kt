@@ -2,8 +2,8 @@ package com.serwylo.retrowars.games.tetris
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.retrowars.RetrowarsGame
@@ -316,7 +316,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
         }
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val numCellsHigh = state.cells.size
         val numCellsWide = state.cells[0].size

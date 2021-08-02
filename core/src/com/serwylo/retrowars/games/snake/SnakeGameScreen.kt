@@ -2,8 +2,8 @@ package com.serwylo.retrowars.games.snake
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
@@ -131,7 +131,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat 
         state.queuedGrowth += strength
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val numCellsHigh = state.cells.size
         val numCellsWide = state.cells[0].size
