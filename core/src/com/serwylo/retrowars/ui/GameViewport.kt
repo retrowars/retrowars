@@ -33,7 +33,7 @@ class GameViewport(minWorldWidth: Float, minWorldHeight: Float, camera: Camera) 
     }
 
     fun renderIn(render: () -> Unit) {
-        apply(true)
+        apply()
         render()
         HdpiUtils.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
     }

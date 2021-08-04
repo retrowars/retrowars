@@ -8,11 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.ui.Window
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeButton
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.Player
@@ -22,9 +18,10 @@ import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
+import com.serwylo.retrowars.ui.ShakeAnimation
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.sin
 
 abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
 
@@ -223,13 +220,30 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
             attacksToApply.onEach {
                 hud.showAttackFrom(it.key, it.value)
+                startCameraShake()
             }
+        }
+    }
+
+    private val shakeAnimation = ShakeAnimation(0.5f, 5, 5f)
+
+    private fun startCameraShake() {
+        shakeAnimation.shake()
+        Gdx.input.vibrate(1000)
+    }
+
+    private fun shakeCamera(delta: Float) {
+        val shift = shakeAnimation.update(delta)
+        if (shift != 0f) {
+            camera.translate(0f, shift, 0f)
+            camera.update()
         }
     }
 
     override fun render(delta: Float) {
 
         maybeReceiveDamage()
+        shakeCamera(delta)
         updateGame(delta)
 
         game.uiAssets.getEffects().render {
