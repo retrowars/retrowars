@@ -174,7 +174,8 @@ class HUD(private val assets: UiAssets) {
                     if (avatar == null) {
                         Gdx.app.error(TAG, "Expected avatar for ${player.id}, but couldn't find it.")
                     } else {
-                        add(avatar)
+                        add(Label(client.getScoreFor(player).toString(), styles.label.medium))
+                        add(avatar).spaceRight(UI_SPACE * 2)
                     }
                 }
             }
@@ -184,6 +185,15 @@ class HUD(private val assets: UiAssets) {
     fun showAttackFrom(player: Player, strength: Int) {
         val avatar = avatars[player] ?: return
         avatar.addAction(CustomActions.bounce(strength * 3))
+    }
+
+    fun refreshScores() {
+        if (client != null) {
+            avatarCell?.apply {
+                clearActor()
+                setActor(makeAvatarTiles(client, avatars))
+            }
+        }
     }
 
 }

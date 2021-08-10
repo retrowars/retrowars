@@ -69,6 +69,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         client?.listen(
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
             playerStatusChangedListener = { player, status -> handlePlayerStatusChange(player, status) },
+            scoreChangedListener = { _, _ -> handleScoreChange() },
             scoreBreakpointListener = { player, strength -> handleBreakpointChange(player, strength) }
         )
     }
@@ -77,6 +78,10 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     protected fun showMessage(heading: String, body: String? = null) {
         hud.showMessage(heading, body)
+    }
+
+    private fun handleScoreChange() {
+        hud.refreshScores()
     }
 
     private fun handleBreakpointChange(player: Player, strength: Int) {
@@ -123,7 +128,6 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         isEnding = true
 
-        // TODO: Show end of game screen.
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
             GlobalScope.launch {
