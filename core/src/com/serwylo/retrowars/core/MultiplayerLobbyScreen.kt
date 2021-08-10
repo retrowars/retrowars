@@ -57,6 +57,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     private var currentState: UiState
     private var renderedState: UiState? = null
 
+    private val findPublicServersJob = Job()
+    private val findPublicServersScope = CoroutineScope(Dispatchers.IO + findPublicServersJob)
+
     init {
         stage.addActor(makeStageDecoration())
 
@@ -272,6 +275,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
             add(
                 makeButton("Join", styles) {
+                    Gdx.app.debug(TAG, "About to join server ${server.hostname}:${server.port}. Will cancel the job scheduled to find all servers in case there are any still in progress (no longer relevant now we have selected as server).")
+                    findPublicServersJob.cancel()
                     changeState(Action.AttemptToJoinServer)
 
                     GlobalScope.launch(Dispatchers.IO) {
@@ -370,7 +375,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.add(
             makeButton("Find a public server", styles) {
-                GlobalScope.launch {
+                findPublicServersScope.launch {
                     findAndShowPublicServers()
                 }
             }

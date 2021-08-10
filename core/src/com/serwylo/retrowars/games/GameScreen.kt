@@ -131,8 +131,8 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
             GlobalScope.launch {
-                saveHighScore(gameDetails, score)
-                recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id))
+                launch { saveHighScore(gameDetails, score) }
+                launch { recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id)) }
             }
             showEndGameScreen()
         } else {
