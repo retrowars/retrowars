@@ -159,7 +159,10 @@ class RetrowarsClient(host: String, port: Int) {
         // start a new one. Therefore we need to forget all we know about peoples scores before
         // continuing with a new game.
         scores.clear()
-        players.forEach { it.status = Player.Status.playing }
+        players.forEach {
+            it.status = Player.Status.playing
+            scores[it] = 0L
+        }
 
         Gdx.app.debug(TAG, "Game started. Invoking RetrowarsClient.startGameListener")
         startGameListener?.invoke()
@@ -237,6 +240,7 @@ class RetrowarsClient(host: String, port: Int) {
         val me = me()
         if (me != null) {
             scores[me] = score
+            scoreChangedListener?.invoke(me, score)
         }
         client.sendMessage(Network.Server.UpdateScore(score))
     }

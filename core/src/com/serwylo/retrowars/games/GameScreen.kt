@@ -21,7 +21,6 @@ import com.serwylo.retrowars.ui.HUD
 import com.serwylo.retrowars.ui.ShakeAnimation
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlin.math.sin
 
 abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
 
@@ -36,6 +35,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     private val camera = OrthographicCamera()
     protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
+    protected val strings = game.uiAssets.getStrings()
 
     private val hud: HUD
 
@@ -80,15 +80,80 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         hud.showMessage(heading, body)
     }
 
+    /**
+     * Remember the position of each player (1st, 2nd, etc - taking into account equal scores),
+     * so that when we get a score updated message from the server, we can tell if we have
+     * changed position. If so, we will notify the user by calling [HUD.logMessage].
+     */
+    private var myCurrentPosition = -1
+
+    /**
+     * Calculate the order of each player, but take into account that many people can be on the
+     * same score. The list is ordered such that the first element is all players who are equal 1st.
+     */
+    private fun calculatePlayerPositions(client: RetrowarsClient): List<Set<Player>> {
+        val sortedPositions = client.scores
+            .entries
+            .toList()
+            .sortedByDescending { it.value }
+
+        val positions = mutableListOf<MutableSet<Player>>()
+
+        // Temporarily store the current score so that we can build up a list of all players who have
+        // this score before moving onto the next list.
+        var currentScore = -1L
+        var playersWithCurrentScore = mutableSetOf<Player>()
+
+        for (p in sortedPositions) {
+
+            if (currentScore == -1L || p.value == currentScore) {
+
+                currentScore = p.value
+                playersWithCurrentScore.add(p.key)
+
+            } else {
+
+                // Move onto the next position, by recording all the players at the previous score
+                // and moving onto the next score.
+                positions.add(playersWithCurrentScore)
+                playersWithCurrentScore = mutableSetOf(p.key)
+                currentScore = p.value
+
+            }
+
+        }
+
+        positions.add(playersWithCurrentScore)
+
+        return positions
+    }
+
     private fun handleScoreChange() {
         hud.refreshScores()
+
+        val client = this.client
+        val me = client?.me()
+        if (client != null && me != null) {
+            val newPositions = calculatePlayerPositions(client)
+            val myNewPosition = newPositions.indexOfFirst { playersAtPosition ->
+                playersAtPosition.find { player ->
+                    player.id == me.id
+                } != null
+            } + 1
+
+            if (myNewPosition > 0 && myCurrentPosition != myNewPosition) {
+                hud.logMessage(strings.format("game-message.position-changed", myNewPosition, client.players.size))
+            }
+
+            myCurrentPosition = myNewPosition
+        }
     }
 
     private fun handleBreakpointChange(player: Player, strength: Int) {
 
         if (player.id == client?.me()?.id) {
-            // TODO: Show visual feedback that we are attacking other players.
             Gdx.app.log(TAG, "Ignoring damage from player ${player.id} of strength $strength as this is the current player.")
+            hud.logMessage(strings["game-message.attacking-other-players"])
             return
         }
 
@@ -104,13 +169,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     private fun handlePlayerStatusChange(player: Player, status: String) {
         val client = this.client ?: return
 
-        if (player.id != client.me()?.id) {
-            return
-        }
-
         if (status == Player.Status.dead) {
-            Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")
-            endGame()
+            if (player.id != client.me()?.id) {
+                hud.logMessage(strings["game-message.player-died"])
+            } else {
+                Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")
+                endGame()
+            }
         }
     }
 
@@ -224,6 +289,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
             attacksToApply.onEach {
                 hud.showAttackFrom(it.key, it.value)
+                hud.logMessage(strings["game-message.incoming-attack"])
                 startCameraShake()
             }
         }

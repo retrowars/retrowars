@@ -52,6 +52,21 @@ class HUD(private val assets: UiAssets) {
         padTop(UI_SPACE * 10)
     }
 
+    /**
+     * A rolling log of game events shown to the user in the top right of the screen.
+     * Messages are transient, start large, then go small and then fade away.
+     *
+     * Call [logMessage] to post new messages to the top of the list.
+     */
+    private var messages = VerticalGroup().apply {
+        setFillParent(true)
+        reverse()
+        pad(UI_SPACE)
+        space(UI_SPACE)
+        columnAlign(Align.right)
+        align(Align.topRight)
+    }
+
     private val gameScore: Cell<Actor>
 
     private val client = RetrowarsClient.get()
@@ -66,7 +81,8 @@ class HUD(private val assets: UiAssets) {
         gameWindow.add(
             Stack(
                 description,
-                gameOverlay
+                gameOverlay,
+                messages,
             )
         ).expand().fill()
 
@@ -122,7 +138,25 @@ class HUD(private val assets: UiAssets) {
     }
 
     /**
-     * Overlay a message in large text with an optional description below.
+     * Post a transient message to the top right of the screen. Starts large, then goes smaller
+     * and then eventually fades away.
+     */
+    fun logMessage(message: String) {
+        messages.addActor(Label(message, styles.label.medium).apply {
+            addAction(
+                sequence(
+                    delay(2f),
+                    Actions.run { style = styles.label.small },
+                    delay(5f),
+                    alpha(0f, 0.5f),
+                    removeActor(),
+                )
+            )
+        })
+    }
+
+    /**
+     * Overlay a message in the middle of the screen in large text with an optional description below.
      * Examples include a nice single line of text when first starting the game (e.g. "Defend the cities" or "Destroy the asteroids")
      */
     fun showMessage(heading: String, body: String? = null) {
