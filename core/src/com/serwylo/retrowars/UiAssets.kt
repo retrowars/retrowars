@@ -132,6 +132,7 @@ class UiAssets(locale: Locale) {
         val characters = Characters()
 
         inner class Characters {
+            val overlay_dead = atlas.findRegion("overlay_dead")!!
             val beards = (0..19).toList().map { i -> atlas.findRegion("beard_${i}_")!! }
             val bodies = (0..7).toList().map { i -> atlas.findRegion("body_${i}_")!! }
             val hair = (0..59).toList().map { i -> atlas.findRegion("hair_${i}_")!! }

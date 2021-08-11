@@ -171,6 +171,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         if (status == Player.Status.dead) {
             if (player.id != client.me()?.id) {
+                hud.handleDeadPlayer(player)
                 hud.logMessage(strings["game-message.player-died"])
             } else {
                 Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")

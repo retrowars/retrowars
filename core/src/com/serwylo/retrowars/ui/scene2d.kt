@@ -96,15 +96,15 @@ val UI_WIDTH = 800f
 val UI_HEIGHT = 600f
 const val UI_SPACE = 10f
 
-// TODO: When players are no longer playing, show a red cross over their name.
-// TODO: Even better, when they are doing very well, e.g. scoring frequently, indicate that they are on fire or something.
-class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
+class Avatar(player: Player, uiAssets: UiAssets): Actor() {
 
     companion object {
         const val ICON_SIZE = 64f
         const val PADDING = UI_SPACE
         const val SIZE = ICON_SIZE + UI_SPACE * 2f
     }
+
+    private val sprites = uiAssets.getSprites()
 
     private val beard: TextureRegion
     private val body: TextureRegion
@@ -113,10 +113,10 @@ class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
     private val torso: TextureRegion
     private var hasBeard: Boolean
 
+    var isDead = false
+
     init {
         val random = Random(player.id)
-
-        val sprites = uiAssets.getSprites()
 
         beard = sprites.characters.beards.random(random)
         body = sprites.characters.bodies.random(random)
@@ -146,6 +146,10 @@ class Avatar(player: Player, private val uiAssets: UiAssets): Actor() {
         }
         batch.draw(torso, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
         batch.draw(leg, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+
+        if (isDead) {
+            batch.draw(sprites.characters.overlay_dead, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
+        }
     }
 }
 

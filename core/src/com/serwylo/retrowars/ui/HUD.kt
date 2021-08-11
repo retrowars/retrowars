@@ -230,4 +230,8 @@ class HUD(private val assets: UiAssets) {
         }
     }
 
+    fun handleDeadPlayer(player: Player) {
+        avatars[player]?.isDead = true
+    }
+
 }
