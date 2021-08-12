@@ -2,6 +2,7 @@ package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
@@ -208,7 +209,11 @@ class HUD(private val assets: UiAssets) {
                     if (avatar == null) {
                         Gdx.app.error(TAG, "Expected avatar for ${player.id}, but couldn't find it.")
                     } else {
-                        add(Label(client.getScoreFor(player).toString(), styles.label.medium))
+                        val label = Label(client.getScoreFor(player).toString(), styles.label.medium)
+                        if (player.status == Player.Status.dead) {
+                            label.color = Color(0.6f, 0.6f, 0.6f, 1f)
+                        }
+                        add(label)
                         add(avatar).spaceRight(UI_SPACE * 2)
                     }
                 }
@@ -232,6 +237,7 @@ class HUD(private val assets: UiAssets) {
 
     fun handleDeadPlayer(player: Player) {
         avatars[player]?.isDead = true
+        refreshScores()
     }
 
 }
