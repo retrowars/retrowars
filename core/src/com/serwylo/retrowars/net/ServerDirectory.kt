@@ -13,10 +13,20 @@ import kotlin.system.measureTimeMillis
 private const val TAG = "ServerDirectory"
 
 /**
- * @param httpPort Used to fetch statistics about the server.
+ * This is the data known by the global directory of servers.
+ * We ping the global directory once to get a list of well known public servers, and with this
+ * information we can then request more specific information from each server by asking for:
+ * http(s)://hostname/.well-known/com.serwylo.retrowars-servers.json which will in turn contain
+ * a [ServerInfoDTO] object containing more information about the server.
+ * @param port Used to fetch statistics about the server.
  */
 data class ServerMetadataDTO(val hostname: String, val port: Int)
 
+/**
+ * Realtime information about a well-known public server. Can be used to infer whether this
+ * server is currently being used by many people. If we know the answer to that, then users can
+ * stop wasting time sitting in the lobby for servers that rarely get used.
+ */
 data class ServerInfoDTO(
     val type: String,
     val maxPlayersPerRoom: Int,
@@ -27,7 +37,10 @@ data class ServerInfoDTO(
 )
 
 /**
- * @param info If this is null, it means that we have been unable to contact the server.
+ * After fetching the hostname and port from the global server directory, and then using that to
+ * fetch more specific information about the server, these two things are combined into a [ServerDetails]
+ * object. In addition, it will include [ServerDetails.pingTime] which is an approximation of how
+ * long it takes to reach the server.
  */
 data class ServerDetails(
     val hostname: String,
@@ -48,6 +61,10 @@ data class ServerDetails(
 private val httpClient = HttpClient(CIO) {
     install(JsonFeature)
     install(HttpTimeout) {
+        // These timeouts are much higher than what would normally offer a good user experience.
+        // The reason for this is because some of the public servers are running on free Heroku Dyno's
+        // which go to sleep after 30mins of inactivity, and can take up to 20 seconds to restart.
+        // A 30 second timeout should be enough to have the Dyno startup and the server to start.
         requestTimeoutMillis = 30000
         connectTimeoutMillis = 30000
     }
