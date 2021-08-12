@@ -237,10 +237,14 @@ class RetrowarsClient(host: String, port: Int) {
     }
 
     fun updateScore(score: Long) {
+        // Normally the server would be responsible for telling us if a player updated their score,
+        // or if a player hit a scoring breakpoint. However we intentionally don't parrot that back
+        // from the server to the client who sent the message as it is just informational at that
+        // point. It is more efficient to just trigger the same behaviour directly to ourselves
+        // without the round trip back to the server.
         val me = me()
         if (me != null) {
-            scores[me] = score
-            scoreChangedListener?.invoke(me, score)
+            onScoreChanged(me.id, score)
         }
         client.sendMessage(Network.Server.UpdateScore(score))
     }
