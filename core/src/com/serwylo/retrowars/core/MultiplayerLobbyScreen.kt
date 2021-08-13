@@ -341,6 +341,24 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.clear()
 
         wrapper.add(
+            Label("Play other retro fans\nover the internet", game.uiAssets.getStyles().label.medium).apply {
+                setAlignment(Align.center)
+            }
+        ).colspan(2).spaceBottom(UI_SPACE)
+
+        wrapper.row()
+
+        wrapper.add(
+            makeButton("Find a public server", styles) {
+                findPublicServersScope.launch {
+                    findAndShowPublicServers()
+                }
+            }
+        ).colspan(2)
+
+        wrapper.row().spaceTop(UI_SPACE * 4)
+
+        wrapper.add(
             Label("Play on your WiFi network", game.uiAssets.getStyles().label.medium).apply {
                 setAlignment(Align.center)
             }
@@ -367,26 +385,6 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 findAndJoinLocalServer()
             }
         )
-
-        wrapper.row().spaceTop(UI_SPACE * 4)
-
-        wrapper.add(
-            Label("Play other retro fans\nover the internet", game.uiAssets.getStyles().label.medium).apply {
-                setAlignment(Align.center)
-            }
-        ).colspan(2).spaceBottom(UI_SPACE)
-
-        wrapper.row()
-
-        wrapper.add(
-            makeButton("Find a public server", styles) {
-                findPublicServersScope.launch {
-                    findAndShowPublicServers()
-                }
-            }
-        ).colspan(2)
-
-        wrapper.row()
 
     }
 
