@@ -146,7 +146,7 @@ class HUD(private val assets: UiAssets) {
         messages.addActor(Label(message, styles.label.medium).apply {
             addAction(
                 sequence(
-                    delay(2f),
+                    delay(5f),
                     Actions.run { style = styles.label.small },
                     delay(5f),
                     alpha(0f, 0.5f),
