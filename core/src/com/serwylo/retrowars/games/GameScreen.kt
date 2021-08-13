@@ -154,6 +154,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         if (player.id == client?.me()?.id) {
             Gdx.app.log(TAG, "Ignoring damage from player ${player.id} of strength $strength as this is the current player.")
             hud.logMessage(strings["game-message.attacking-other-players"])
+            Gdx.input.vibrate(100) // Shorter vibrate then when being attacked to differentiate.
             return
         }
 
