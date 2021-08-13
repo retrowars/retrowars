@@ -421,7 +421,23 @@ class WebSocketNetworkServer(
 ): NetworkServer {
 
     companion object {
+
         private const val TAG = "WebSocketNetworkServer"
+
+        /**
+         * If there are any breaking changes in the server which require corresponding changes
+         * in the client, then bump this version.
+         *
+         * When a client below this version sees this server in their list of public servers, it
+         * will receive a warning. Depending on the client, it may still try and connect and hope
+         * for the best, or it may suppress this server from the list (perhaps with some kind of
+         * prompt about upgrading the game).
+         *
+         * At present, version 0.7.0 (9) is the first version with true multiplayer support at all).
+         */
+        private const val MIN_SUPPORTED_CLIENT_VERSION_CODE = 9
+        private const val MIN_SUPPORTED_CLIENT_VERSION_NAME = "0.7.0"
+
     }
 
     internal class PlayerConnection(val session: DefaultWebSocketSession): NetworkServer.Connection {
@@ -456,6 +472,9 @@ class WebSocketNetworkServer(
                 if (type != "singleLocalRoom") {
                     get("/info") {
                         call.respond(ServerInfoDTO(
+                            version = AppProperties.appVersionCode,
+                            minSupportedClientVersionCode = MIN_SUPPORTED_CLIENT_VERSION_CODE,
+                            minSupportedClientVersionName = MIN_SUPPORTED_CLIENT_VERSION_NAME,
                             type = type,
                             maxPlayersPerRoom = 5,
                             maxRooms = 10, // TODO: This isn't actually implemented yet.

@@ -2,17 +2,16 @@ package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
 import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
+import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import javax.jmdns.JmDNS
@@ -171,19 +170,20 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         Gdx.app.log(TAG, "Rendering server list of ${activeServers.size} active servers and ${pendingServers.size} pending servers.")
         wrapper.clear()
 
-        wrapper.row().spaceBottom(UI_SPACE * 2)
-
         wrapper.row()
         wrapper.add(
             ScrollPane(Table().apply {
                 activeServers.onEach { server ->
                     row()
-                    add(makeServerInfo(server)).pad(UI_SPACE).fillX()
+                    add(makeServerInfo(server)).pad(UI_SPACE).expandX().fillX()
                 }
             }).apply {
                 setScrollingDisabled(true, false)
             }
-        ).expandY().fillY()
+        ).expandY().fillY().fillX()
+
+        wrapper.row()
+        wrapper.add(Label("v${AppProperties.appVersionName}", styles.label.small)).right()
 
         if (pendingServers.isNotEmpty()) {
             wrapper.row()
@@ -261,6 +261,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             val infoCell:Cell<Actor> = add().left().top().spaceRight(UI_SPACE * 2)
             infoCell.setActor(
                 VerticalGroup().apply {
+                    if (server.minSupportedClientVersionCode < AppProperties.appVersionCode) {
+                        addActor(Label(calcServerActivitySummary(server), styles.label.small))
+                    }
                     addActor(Label(calcServerActivitySummary(server), styles.label.small))
                     addActor(
                         makeSmallButton("View info", styles) {
@@ -291,11 +294,13 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
     }
 
     private fun calcServerActivitySummary(server: ServerDetails): String {
-        if (server.lastGameTimestamp >= 0 && server.lastGameTimestamp < 10 * 1000 * 60 /* 10 minutes */) {
+        if (server.lastGameTimestamp >= 0 && server.lastGameTimestamp < 60 * 1000 * 60 /* 1hr */) {
             if (server.currentRoomCount > 1) {
                 return "Very active"
-            } else if (server.currentPlayerCount > 2) {
-                return "Somewhat active"
+            } else if (server.currentPlayerCount > 1) {
+                return "Active"
+            } else {
+                return "Recently active"
             }
         }
 
@@ -554,6 +559,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 activeServers = activeServers.plus(ServerDetails(
                     server.hostname,
                     server.port,
+                    info.version,
+                    info.minSupportedClientVersionCode,
+                    info.minSupportedClientVersionName,
                     info.type,
                     info.maxPlayersPerRoom,
                     info.maxRooms,

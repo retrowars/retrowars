@@ -112,7 +112,10 @@ project(":core") {
 
     // https://stackoverflow.com/a/54006518
     processResources {
-        expand(['appVersionCode': appVersionCode])
+        expand([
+                'appVersionCode': appVersionCode,
+                'appVersionName': appVersionName,
+        ])
     }
 }
 
