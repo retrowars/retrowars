@@ -254,6 +254,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
+            metadata.add(Label("Version:", styles.label.small)).right()
+            metadata.add(Label("v${server.versionName}", styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
             metadata.add(Label("Fetched info in:", styles.label.small)).right()
             metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
@@ -557,7 +561,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 activeServers = activeServers.plus(ServerDetails(
                     server.hostname,
                     server.port,
-                    info.version,
+                    info.versionCode,
+                    info.versionName,
                     info.minSupportedClientVersionCode,
                     info.minSupportedClientVersionName,
                     info.type,

@@ -472,7 +472,8 @@ class WebSocketNetworkServer(
                 if (type != "singleLocalRoom") {
                     get("/info") {
                         call.respond(ServerInfoDTO(
-                            version = AppProperties.appVersionCode,
+                            versionCode = AppProperties.appVersionCode,
+                            versionName = AppProperties.appVersionName,
                             minSupportedClientVersionCode = MIN_SUPPORTED_CLIENT_VERSION_CODE,
                             minSupportedClientVersionName = MIN_SUPPORTED_CLIENT_VERSION_NAME,
                             type = type,

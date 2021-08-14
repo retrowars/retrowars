@@ -28,7 +28,8 @@ data class ServerMetadataDTO(val hostname: String, val port: Int)
  * stop wasting time sitting in the lobby for servers that rarely get used.
  */
 data class ServerInfoDTO(
-    val version: Int,
+    val versionCode: Int,
+    val versionName: String,
     val minSupportedClientVersionCode: Int,
     val minSupportedClientVersionName: String,
     val type: String,
@@ -48,7 +49,8 @@ data class ServerInfoDTO(
 data class ServerDetails(
     val hostname: String,
     val port: Int,
-    val version: Int,
+    val versionCode: Int,
+    val versionName: String,
     val minSupportedClientVersionCode: Int,
     val minSupportedClientVersionName: String,
     val type: String,
