@@ -5,6 +5,7 @@ import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import com.serwylo.retrowars.utils.Platform
 import io.ktor.application.*
+import io.ktor.client.features.json.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.cio.websocket.*
@@ -464,7 +465,9 @@ class WebSocketNetworkServer(
 
             install(WebSockets)
             install(ContentNegotiation) {
-                gson()
+                gson {
+                    setVersion(AppProperties.appVersionCode.toDouble())
+                }
             }
 
             routing {

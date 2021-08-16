@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
+import io.ktor.gson.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.*

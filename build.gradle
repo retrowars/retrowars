@@ -26,8 +26,8 @@ allprojects {
         // The format here must remain consistent in order for the F-Droid checkupdates bot to pick
         // them up. Normally it just checks the android apps build.gradle or AndroidManifest, but
         // we dynamically inject them via these properties.
-        appVersionCode = 8
-        appVersionName = "0.6.2"
+        appVersionCode = 9
+        appVersionName = "0.7.0"
 
         gdxVersion = '1.10.0'
         kotlinCoroutinesVersion = '1.4.2'

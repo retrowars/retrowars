@@ -1,18 +1,14 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-import com.google.gson.JsonPrimitive
+import com.google.gson.*
 import com.google.gson.annotations.SerializedName
+import com.google.gson.annotations.Since
+import com.serwylo.retrowars.utils.AppProperties
 
-// TODO: Send the app version code through to clients, and if there is a mismatch, prompt people to
-//       upgrade to the same (latest) version.
 object Network {
 
     const val defaultPort = 8080
-    const val defaultUdpPort = defaultPort + 1
     const val jmdnsServiceName = "_retrowars._tcp.local."
 
     /**
@@ -31,9 +27,11 @@ object Network {
          * a LAN server then it will use the default room.
          */
         class RegisterPlayer(
+            @Since(9.0)
             @SerializedName("v")
             var appVersionCode: Int = 0,
 
+            @Since(9.0)
             @SerializedName("r")
             var roomId: Long = 0
         ) {
@@ -49,6 +47,7 @@ object Network {
         }
 
         class UpdateScore(
+            @Since(9.0)
             @SerializedName("s")
             val score: Long
         ) {
@@ -58,6 +57,7 @@ object Network {
         }
 
         class UpdateStatus(
+            @Since(9.0)
             @SerializedName("s")
             val status: String
         ) {
@@ -81,15 +81,19 @@ object Network {
          * already registered player.
          */
         class OnPlayerAdded(
+            @Since(9.0)
             @SerializedName("r")
             var roomId: Long,
 
+            @Since(9.0)
             @SerializedName("i")
             var id: Long,
 
+            @Since(9.0)
             @SerializedName("g")
             var game: String,
 
+            @Since(9.0)
             @SerializedName("v")
             var serverVersionCode: Int
         ) {
@@ -98,6 +102,7 @@ object Network {
         }
 
         class OnPlayerRemoved(
+            @Since(9.0)
             @SerializedName("i")
             var id: Long
         ) {
@@ -106,9 +111,11 @@ object Network {
         }
 
         class OnPlayerScored(
+            @Since(9.0)
             @SerializedName("i")
             var id: Long,
 
+            @Since(9.0)
             @SerializedName("s")
             var score: Long
         ) {
@@ -118,9 +125,11 @@ object Network {
         }
 
         class OnPlayerStatusChange(
+            @Since(9.0)
             @SerializedName("i")
             var id: Long,
 
+            @Since(9.0)
             @SerializedName("s")
             var status: String
         ) {
@@ -130,9 +139,11 @@ object Network {
         }
 
         class OnPlayerReturnedToLobby(
+            @Since(9.0)
             @SerializedName("i")
             var id: Long,
 
+            @Since(9.0)
             @SerializedName("g")
             var game: String
         ) {
@@ -158,22 +169,24 @@ object WebSocketMessage {
         val parsed = JsonParser.parseString(json).asJsonObject
         val type = parsed.get(MESSAGE_TYPE_KEY).asString
         val payload = parsed.get(MESSAGE_PAYLOAD_KEY).asJsonObject
+
+        val gson = GsonBuilder().setVersion(AppProperties.appVersionCode.toDouble()).create()
         return when(type) {
 
             Network.Server.Ping::class.simpleName -> Network.Server.Ping()
-            Network.Server.RegisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.RegisterPlayer::class.java)
-            Network.Server.UnregisterPlayer::class.simpleName -> Gson().fromJson(payload, Network.Server.UnregisterPlayer::class.java)
-            Network.Server.UpdateScore::class.simpleName -> Gson().fromJson(payload, Network.Server.UpdateScore::class.java)
-            Network.Server.UpdateStatus::class.simpleName -> Gson().fromJson(payload, Network.Server.UpdateStatus::class.java)
-            Network.Server.StartGame::class.simpleName -> Gson().fromJson(payload, Network.Server.StartGame::class.java)
+            Network.Server.RegisterPlayer::class.simpleName -> gson.fromJson(payload, Network.Server.RegisterPlayer::class.java)
+            Network.Server.UnregisterPlayer::class.simpleName -> gson.fromJson(payload, Network.Server.UnregisterPlayer::class.java)
+            Network.Server.UpdateScore::class.simpleName -> gson.fromJson(payload, Network.Server.UpdateScore::class.java)
+            Network.Server.UpdateStatus::class.simpleName -> gson.fromJson(payload, Network.Server.UpdateStatus::class.java)
+            Network.Server.StartGame::class.simpleName -> gson.fromJson(payload, Network.Server.StartGame::class.java)
 
-            Network.Client.OnPlayerAdded::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerAdded::class.java)
-            Network.Client.OnPlayerRemoved::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerRemoved::class.java)
-            Network.Client.OnPlayerScored::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerScored::class.java)
-            Network.Client.OnStartGame::class.simpleName -> Gson().fromJson(payload, Network.Client.OnStartGame::class.java)
-            Network.Client.OnPlayerStatusChange::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerStatusChange::class.java)
-            Network.Client.OnPlayerReturnedToLobby::class.simpleName -> Gson().fromJson(payload, Network.Client.OnPlayerReturnedToLobby::class.java)
-            Network.Client.OnServerStopped::class.simpleName -> Gson().fromJson(payload, Network.Client.OnServerStopped::class.java)
+            Network.Client.OnPlayerAdded::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerAdded::class.java)
+            Network.Client.OnPlayerRemoved::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerRemoved::class.java)
+            Network.Client.OnPlayerScored::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerScored::class.java)
+            Network.Client.OnStartGame::class.simpleName -> gson.fromJson(payload, Network.Client.OnStartGame::class.java)
+            Network.Client.OnPlayerStatusChange::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerStatusChange::class.java)
+            Network.Client.OnPlayerReturnedToLobby::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerReturnedToLobby::class.java)
+            Network.Client.OnServerStopped::class.simpleName -> gson.fromJson(payload, Network.Client.OnServerStopped::class.java)
 
             else -> {
                 Gdx.app.error(TAG, "Unsupported message type: ${type}. Is this a newer client/server than we understand?")

@@ -1,6 +1,8 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
+import com.google.gson.annotations.Since
+import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.*
@@ -19,25 +21,60 @@ private const val TAG = "ServerDirectory"
  * http(s)://hostname/.well-known/com.serwylo.retrowars-servers.json which will in turn contain
  * a [ServerInfoDTO] object containing more information about the server.
  * @param port Used to fetch statistics about the server.
+ *
+ * Version history:
+ *  - 9 (v0.7.0) Initial support for online multiplayer.
  */
-data class ServerMetadataDTO(val hostname: String, val port: Int)
+data class ServerMetadataDTO(
+
+    @Since(9.0)
+    val hostname: String,
+
+    @Since(9.0)
+    val port: Int,
+
+)
 
 /**
  * Realtime information about a well-known public server. Can be used to infer whether this
  * server is currently being used by many people. If we know the answer to that, then users can
  * stop wasting time sitting in the lobby for servers that rarely get used.
+ *
+ * Version history:
+ *  - 9 (v0.7.0) Initial support for online multiplayer.
  */
 data class ServerInfoDTO(
+
+    @Since(9.0)
     val versionCode: Int,
+
+    @Since(9.0)
     val versionName: String,
+
+    @Since(9.0)
     val minSupportedClientVersionCode: Int,
+
+    @Since(9.0)
     val minSupportedClientVersionName: String,
+
+    @Since(9.0)
     val type: String,
+
+    @Since(9.0)
     val maxPlayersPerRoom: Int,
+
+    @Since(9.0)
     val maxRooms: Int,
+
+    @Since(9.0)
     val currentRoomCount: Int,
+
+    @Since(9.0)
     val currentPlayerCount: Int,
+
+    @Since(9.0)
     val lastGameTimestamp: Long,
+
 )
 
 /**
@@ -67,7 +104,13 @@ data class ServerDetails(
 )
 
 private val httpClient = HttpClient(CIO) {
-    install(JsonFeature)
+
+    install(JsonFeature) {
+        serializer = GsonSerializer {
+            setVersion(AppProperties.appVersionCode.toDouble())
+        }
+    }
+
     install(HttpTimeout) {
         // These timeouts are much higher than what would normally offer a good user experience.
         // The reason for this is because some of the public servers are running on free Heroku Dyno's
@@ -76,6 +119,7 @@ private val httpClient = HttpClient(CIO) {
         requestTimeoutMillis = 30000
         connectTimeoutMillis = 30000
     }
+
 }
 
 suspend fun fetchPublicServerList(): List<ServerMetadataDTO> {
