@@ -395,7 +395,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row()
 
         wrapper.add(
-            makeButton("Find a public server", styles) {
+            makeLargeButton("Play online", styles) {
                 findPublicServersScope.launch {
                     findAndShowPublicServers()
                 }
@@ -405,7 +405,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.row().spaceTop(UI_SPACE * 4)
 
         wrapper.add(
-            Label("Play on your WiFi network", game.uiAssets.getStyles().label.medium).apply {
+            Label("Play friends on your WiFi network", game.uiAssets.getStyles().label.medium).apply {
                 setAlignment(Align.center)
             }
         ).colspan(2).spaceBottom(UI_SPACE)
