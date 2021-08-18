@@ -4,17 +4,15 @@ Welcome to Super Retro Mega Wars!
 
 Play against your friends, with each of you can competing by playing a different game. Score points in your game and every other game will be handicaped in their own unique way. But watch out, as others score, your game will become more difficult too.
 
-Still in early stage development (networking is quite buggy), but currently supports four different single and multi-player versions of games based on classic retro titles.
+Still in early stage development (may be a bit buggy), but currently supports four different single and multi-player versions of games based on classic retro titles.
 
 No ads. No in game purchases. Just retro games and good times.
 
-Any feedback is very welcome at <a href="https://github.com/retrowars/retrowars/issues">GitHub</a>.
+Any feedback is very welcome at GitHub.
 
 Known limitations:
 
-* Networking is quite buggy.
-* Only local network play supported.
-* Thorough play testing required to balance the games.
+* Thorough play testing required to balance the games and identify and remove bugs from the server.
 * Untested on multiple screen sizes.
 
-Please support further development at <a href="https://github.com/sponsors/pserwylo">GitHub sponsors</a> or <a href="https://liberapay.com/retrowars/">Liberapay</a>.
+Please support further development at GitHub sponsors or Liberapay.
