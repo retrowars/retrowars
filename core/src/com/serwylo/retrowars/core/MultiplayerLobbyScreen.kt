@@ -12,6 +12,8 @@ import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
+import com.serwylo.retrowars.ui.createPlayerSummaries
+import com.serwylo.retrowars.ui.roughTimeAgo
 import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -67,13 +69,15 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         currentState = if (client != null) {
 
+            val state = when {
+                client.players.any { it.status == Player.Status.playing } -> ObservingGameInProgress(client.me()!!, client.scores)
+                client.players.any { it.status == Player.Status.dead } -> FinalScores(client.me()!!, client.scores)
+                else -> ReadyToStart(client.players, listOf())
+            }
+
             listenToClient(client)
 
-            // A bit of a hack, but we want to use the same business logic that the WaitingForAllToReturnToLobby
-            // uses to decide whether or not we are waiting for players to return, or ready to start. Therefore,
-            // start with the premise we are waiting, and then provide a list of players and see what that state
-            // transition logic has to say about the matter.
-            WaitingForAllToReturnToLobby(client.players).consumeAction(Action.PlayersChanged(client.players))
+            state
 
         } else {
 
@@ -136,7 +140,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 is StartingServer -> showStartingServer()
                 is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
                 is WaitingForOtherPlayers -> showServerWaitingForClients(new.me)
-                is WaitingForAllToReturnToLobby -> showServerWaitingForAllToReturnToLobby(new.players)
+                is ObservingGameInProgress -> showObservingGameInProgress(new.me, new.scores)
+                is FinalScores -> showFinalScores(new.me, new.scores)
                 is CountdownToGame -> showCountdownToGame()
                 is LaunchingGame -> game.launchGame(new.gameDetails)
             }
@@ -351,35 +356,6 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
 
         return "Not very active"
-    }
-
-    private fun roughTimeAgo(timestamp: Long): String {
-        if (timestamp <= 0) {
-            return "A long time ago"
-        }
-
-        val seconds = (System.currentTimeMillis() - timestamp) / 1000
-        if (seconds < 60) {
-            return "$seconds seconds ago"
-        }
-
-        val minutes = seconds / 60
-        if (minutes < 60) {
-            return "$minutes minutes ago"
-        }
-
-        val hours = minutes / 60
-        if (hours < 24) {
-            return "$hours hours ago"
-        }
-
-        val days = hours / 24
-        if (days < 365) {
-            return "$days days ago"
-        }
-
-        val years = days / 365
-        return "$years years ago"
     }
 
     private fun showSplash() {
@@ -723,16 +699,25 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         wrapper.add(makeAvatarTiles(listOf(me), listOf()))
     }
 
-    private fun showServerWaitingForAllToReturnToLobby(players: List<Player>) {
+
+    private fun showObservingGameInProgress(me: Player, scores: Map<Player, Long>) {
         wrapper.clear()
 
-        wrapper.add(Label("Waiting for everyone to return to lobby", styles.label.medium))
-
+        wrapper.add(Label("Game in progress", styles.label.medium))
         wrapper.row()
-
-        wrapper.add(makeAvatarTiles(players, listOf()))
-
+        wrapper.add(Label("You will join the next game...", styles.label.small))
         wrapper.row()
+        wrapper.add(createPlayerSummaries(me, scores, showDeaths = true, game.uiAssets))
+    }
+
+    private fun showFinalScores(me: Player, scores: Map<Player, Long>) {
+        wrapper.clear()
+
+        wrapper.add(Label("Final scores", styles.label.medium))
+        wrapper.row()
+        wrapper.add(Label("The next game will begin soon...", styles.label.small))
+        wrapper.row()
+        wrapper.add(createPlayerSummaries(me, scores, showDeaths = false, game.uiAssets))
     }
 
     private fun makeAvatarTiles(players: List<Player>, previousPlayers: List<Player>) = Table().apply {
@@ -774,6 +759,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                             Player.Status.playing -> "Playing"
                             Player.Status.dead -> "Dead"
                             Player.Status.lobby -> "Ready"
+                            Player.Status.pending -> "Ready"
                             else -> "?"
                         },
                         uiAssets.getStyles().label.medium
@@ -853,7 +839,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             startGameListener = { changeState(Action.BeginGame)},
             networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
             playersChangedListener = { players -> changeState(Action.PlayersChanged(players))},
+            scoreChangedListener = { _, _ -> changeState(Action.ScoreUpdated(RetrowarsClient.get()?.scores?.toMap() ?: mapOf()))},
             playerStatusChangedListener = { _, _ -> changeState(Action.PlayersChanged(RetrowarsClient.get()?.players ?: listOf())) },
+            returnToLobbyListener = { changeState(Action.ReturnToLobby(client.players)) },
         )
     }
 
@@ -871,7 +859,12 @@ sealed class Action {
     object FindPublicServers : Action()
     object FindLocalServer : Action()
     class ShowPublicServers(val activeServers: List<ServerDetails>, val pendingServers: List<ServerMetadataDTO>, val inactiveServers: List<ServerMetadataDTO>, val unsupportedServers: List<ServerDetails>) : Action()
-    class PlayersChanged(val players: List<Player>): Action()
+    class PlayersChanged(val players: List<Player>): Action() {
+        fun isPending() = players.isNotEmpty() && players[0].status == Player.Status.pending
+    }
+    class ScoreUpdated(val scores: Map<Player, Long>): Action()
+    class ShowFinalScores(val scores: Map<Player, Long>): Action()
+    class ReturnToLobby(val players: List<Player>): Action()
 
     object AttemptToJoinServer : Action()
     object UnableToFindLocalServer : Action()
@@ -911,7 +904,12 @@ class StartingServer: UiState {
 class WaitingForOtherPlayers(val me: Player): UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> if (action.players.size == 1) this else ReadyToStart(action.players, listOf(me))
+            is Action.PlayersChanged ->
+                when {
+                    action.players.size == 1 -> this
+                    action.players.size > 1 -> ReadyToStart(action.players, listOf())
+                    else -> throw IllegalStateException("Received a PlayersChanged event with no players. Should have at least myself.")
+                }
             else -> unsupported(action)
         }
     }
@@ -989,33 +987,64 @@ class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>)
     }
 }
 
-class WaitingForAllToReturnToLobby(val players: List<Player>) : UiState {
+class ObservingGameInProgress(val me: Player, val scores: Map<Player, Long>) : UiState {
     override fun consumeAction(action: Action): UiState {
-        if (action !is Action.PlayersChanged) {
-            unsupported(action)
+        return when(action) {
+            is Action.PlayersChanged ->
+                if (action.players.none { it.status == Player.Status.playing }) {
+                    // If no players are playing any more, go to the final scores screen. At some
+                    // point in the future, we will receive a subsequent event from the server asking
+                    // us to go to the lobby - but that will happen in the FinalScores state, not
+                    // the ObservingGameInProgress state.
+                    FinalScores(me, scores)
+                } else {
+                    // If a player was added, then add them to the list in their "pending" state so that
+                    // we can explain to others they will join in the next game.
+                    // If a player was removed, don't show their scores any more.
+                    ObservingGameInProgress(me, scores.filter { action.players.contains(it.key) })
+                }
+            is Action.ScoreUpdated -> ObservingGameInProgress(me, action.scores)
+            is Action.ShowFinalScores -> FinalScores(me, action.scores)
+            else -> unsupported(action)
         }
+    }
+}
 
-        return when {
-            action.players.size == 1 -> WaitingForOtherPlayers(action.players[0])
-            action.players.any { it.status != Player.Status.lobby } -> WaitingForAllToReturnToLobby(action.players)
-            else -> return ReadyToStart(action.players, this.players)
+class FinalScores(val me: Player, val scores: Map<Player, Long>) : UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            // Make all players appear anew when we go from an end game screen to a ready-to-start screen.
+            is Action.ReturnToLobby -> ReadyToStart(action.players, listOf())
+
+            // If a player was removed, filter that player out and then display the same screen again.
+            // If a player was added, just ignore it and display the same list of scores we already had - the new
+            // player obviously wasn't part of the last game, so no need to display their scores here.
+            is Action.PlayersChanged -> FinalScores(me, scores.filter { score -> action.players.any { player -> score.key.id == player.id } })
+
+            else -> unsupported(action)
         }
     }
 }
 
 class NoLocalServerFound: UiState {
     override fun consumeAction(action: Action): UiState {
-        return when(action) {
-            // The user must press the "back" button to continue.
-            else -> unsupported(action)
-        }
+        // The user must press the "back" button to continue, we don't expect any action to be
+        // triggered here (as we are not connected to a network, so we can't be proactively notified
+        // about any change events).
+        unsupported(action)
     }
 }
 
 class ConnectingToServer: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> if (action.players.size == 1) WaitingForOtherPlayers(action.players[0]) else ReadyToStart(action.players, listOf())
+            is Action.PlayersChanged ->
+                when {
+                    action.isPending() -> ObservingGameInProgress(action.players[0], mapOf())
+                    action.players.size == 1 -> WaitingForOtherPlayers(action.players[0])
+                    action.players.size > 1 -> ReadyToStart(action.players, action.players)
+                    else -> throw IllegalStateException("Expected at least one player but got zero.")
+                }
             else -> unsupported(action)
         }
     }
@@ -1026,6 +1055,12 @@ class CountdownToGame: UiState {
         return when(action) {
             is Action.CountdownComplete -> LaunchingGame(action.gameDetails)
             is Action.BeginGame -> CountdownToGame()
+
+            // If a player joins while we are counting down, then ignore them and continue showing
+            // the current state. Those players will be observing the current game so we only care
+            // about them after the current game ends.
+            is Action.PlayersChanged -> this
+
             else -> unsupported(action)
         }
     }

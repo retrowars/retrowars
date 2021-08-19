@@ -184,6 +184,28 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             return players.isEmpty()
         }
 
+        /**
+         * If there is a game that is in progress, then the player is added in the 'pending' state.
+         * This means that they will not be shown to other players who are mid-game, or even in their
+         * end-game screen - only when other players return to the lobby will they see this new player.
+         * However, the player who is 'pending' will be sent straight to the lobby where they can
+         * watch other players scores change as the game is played.
+         *
+         * @return The status that is assigned to this player (see [Player.Status]) - note this will
+         *         also be applied to the player which is passed here.
+         */
+        fun statusForNewPlayer(): String {
+            if (players.any { it.status == Player.Status.playing }) {
+                return Player.Status.pending
+            }
+
+            return Player.Status.lobby
+        }
+
+        fun addPlayer(player: Player) {
+            players.add(player)
+        }
+
     }
 
     private var server: NetworkServer
@@ -247,14 +269,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
         player.status = status
 
-        // If returning to the lobby, then decide on a new random game to give this player.
-        if (status == Player.Status.lobby) {
-            player.game = Games.allSupported.random().id
-            room.sendToAll(Network.Client.OnPlayerReturnedToLobby(player.id, player.game), connections)
-        } else {
-            // Don't send the message back to the player, because they already know about this status change (they requested it).
-            room.sendToAllExcept(Network.Client.OnPlayerStatusChange(player.id, status), connections, allExcept)
-        }
+        // Don't send the message back to the player, because they already know about this status change (they requested it).
+        room.sendToAllExcept(Network.Client.OnPlayerStatusChange(player.id, status), connections, allExcept)
 
         checkForWinner(room)
 
@@ -293,6 +309,16 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         }
 
         updateStatus(survivingPlayer, room, Player.Status.dead)
+
+        GlobalScope.launch {
+            Gdx.app.debug(TAG, "Waiting for 5 seconds before telling each player to return to the main lobby for this room.")
+            delay(5000)
+
+            val newGames = room.players.associate { it.id to Games.allSupported.random().id }
+
+            Gdx.app.debug(TAG, "Broadcasting to all players to return to the lobby and assign new games: ${newGames.map { "${it.key}: ${it.value}" }.joinToString(", ")}.")
+            room.sendToAll(Network.Client.OnReturnToLobby(newGames), connections)
+        }
     }
 
     private fun updateScore(initiatingConnection: NetworkServer.Connection, score: Long) {
@@ -345,28 +371,34 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             return
         }
 
+        val room = rooms.getOrCreateRoom(roomId)
+
         // TODO: Ensure this ID doesn't already exist on the server.
-        val player = Player(Random.nextLong(), Games.allSupported.random().id)
+        val player = Player(Random.nextLong(), Games.allSupported.random().id, room.statusForNewPlayer())
 
         connection.player = player
 
         logger.info("Player added: ${player.id}")
-
-        val room = rooms.getOrCreateRoom(roomId)
 
         connection.room = room
 
         // First tell people about the new player (before sending a list of all existing players to
         // this newly registered client). That means that the first PlayerAdded message received by
         // a new client will always be for themselves.
-        room.sendToAll(Network.Client.OnPlayerAdded(room.id, player.id, player.game, AppProperties.appVersionCode), connections)
+        room.sendToAll(Network.Client.OnPlayerAdded(room.id, player.id, player.game, player.status, AppProperties.appVersionCode), connections)
 
         // Then notify the current player about all others.
         room.players.forEach { existingPlayer ->
-            connection.sendMessage(Network.Client.OnPlayerAdded(room.id, existingPlayer.id, existingPlayer.game, AppProperties.appVersionCode))
+            connection.sendMessage(Network.Client.OnPlayerAdded(room.id, existingPlayer.id, existingPlayer.game, existingPlayer.status, AppProperties.appVersionCode))
+
+            // If the player is waiting for a game to be completed, also let them know about the
+            // scores for each player as it currently stands so they can observe.
+            if (player.status == Player.Status.pending) {
+                connection.sendMessage(Network.Client.OnPlayerScored(existingPlayer.id, room.scores[existingPlayer] ?: 0))
+            }
         }
 
-        room.players.add(player)
+        room.addPlayer(player)
 
         logStats()
     }

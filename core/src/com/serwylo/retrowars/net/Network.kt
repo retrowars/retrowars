@@ -94,11 +94,15 @@ object Network {
             var game: String,
 
             @Since(9.0)
+            @SerializedName("s")
+            var status: String,
+
+            @Since(9.0)
             @SerializedName("v")
             var serverVersionCode: Int
         ) {
-            constructor() : this(0, 0, "", 0)
-            override fun toString() = "OnPlayerAdded[room id: $roomId, player id: $id, game type: $game, server version: $serverVersionCode]"
+            constructor() : this(0, 0, "", "", 0)
+            override fun toString() = "OnPlayerAdded[room id: $roomId, player id: $id, game type: $game, status: $status, server version: $serverVersionCode]"
         }
 
         class OnPlayerRemoved(
@@ -138,19 +142,17 @@ object Network {
             override fun toString() = "OnPlayerStatusChange[player id: $id, status: $status]"
         }
 
-        class OnPlayerReturnedToLobby(
-            @Since(9.0)
-            @SerializedName("i")
-            var id: Long,
+        class OnReturnToLobby(
 
+            /**
+             * A map of [Player.id] to game names. When we return to the lobby, players are
+             * assigned new games to play.
+             */
             @Since(9.0)
             @SerializedName("g")
-            var game: String
-        ) {
-            constructor() : this(0, "")
+            var newGames: Map<Long, String>,
 
-            override fun toString() = "OnPlayerReturnedToLobby[player id: $id, game: $game]"
-        }
+        )
 
         class OnStartGame
         class OnServerStopped
@@ -185,7 +187,7 @@ object WebSocketMessage {
             Network.Client.OnPlayerScored::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerScored::class.java)
             Network.Client.OnStartGame::class.simpleName -> gson.fromJson(payload, Network.Client.OnStartGame::class.java)
             Network.Client.OnPlayerStatusChange::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerStatusChange::class.java)
-            Network.Client.OnPlayerReturnedToLobby::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerReturnedToLobby::class.java)
+            Network.Client.OnReturnToLobby::class.simpleName -> gson.fromJson(payload, Network.Client.OnReturnToLobby::class.java)
             Network.Client.OnServerStopped::class.simpleName -> gson.fromJson(payload, Network.Client.OnServerStopped::class.java)
 
             else -> {

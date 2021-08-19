@@ -17,7 +17,7 @@ class ServerApp(private val port: Int = 8080): ApplicationListener {
         Gdx.app.log(TAG, "Launching server app on port $port")
 
         server = RetrowarsServer(
-            rooms = RetrowarsServer.Rooms.PublicRandomRooms(5),
+            rooms = RetrowarsServer.Rooms.PublicRandomRooms(4),
             port = port,
             platform = DesktopPlatform()
         )
