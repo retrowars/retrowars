@@ -81,6 +81,7 @@ class RetrowarsClient(host: String, port: Int) {
     private var scoreBreakpointListener: ((player: Player, strength: Int) -> Unit)? = null
     private var playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
     private var networkCloseListener: ((wasGraceful: Boolean) -> Unit)? = null
+    private var returnToLobbyListener: (() -> Unit)? = null
 
     /**
      * The only wayt o listen to network events is via this function. It ensures that no previous
@@ -101,7 +102,8 @@ class RetrowarsClient(host: String, port: Int) {
         startGameListener: (() -> Unit)? = null,
         scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null,
         scoreBreakpointListener: ((player: Player, strength: Int) -> Unit)? = null,
-        playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
+        playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null,
+        returnToLobbyListener: (() -> Unit)? = null,
     ) {
         this.playersChangedListener = playersChangedListener
         this.startGameListener = startGameListener
@@ -109,6 +111,7 @@ class RetrowarsClient(host: String, port: Int) {
         this.scoreBreakpointListener = scoreBreakpointListener
         this.playerStatusChangedListener = playerStatusChangedListener
         this.networkCloseListener = networkCloseListener
+        this.returnToLobbyListener = returnToLobbyListener
     }
 
     init {
@@ -129,11 +132,11 @@ class RetrowarsClient(host: String, port: Int) {
                 Gdx.app.log(TAG, "Received message from server: $obj")
 
                 when(obj) {
-                    is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game)
+                    is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game, obj.status)
                     is Network.Client.OnPlayerRemoved -> onPlayerRemoved(obj.id)
                     is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
                     is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
-                    is Network.Client.OnPlayerReturnedToLobby -> onReturnedToLobby(obj.id, obj.game)
+                    is Network.Client.OnReturnToLobby -> onReturnToLobby(obj.newGames)
                     is Network.Client.OnStartGame -> onStartGame()
                     is Network.Client.OnServerStopped -> onServerStopped()
                 }
@@ -169,8 +172,8 @@ class RetrowarsClient(host: String, port: Int) {
         startGameListener?.invoke()
     }
 
-    private fun onPlayerAdded(id: Long, game: String) {
-        players.add(Player(id, game))
+    private fun onPlayerAdded(id: Long, game: String, status: String) {
+        players.add(Player(id, game, status))
 
         Gdx.app.debug(TAG, "Player added. Invoking RetrowarsClient.playersChangedListener (Number of players is now ${players.size}, new player: ${id})")
         playersChangedListener?.invoke(players.toList())
@@ -219,17 +222,23 @@ class RetrowarsClient(host: String, port: Int) {
         playerStatusChangedListener?.invoke(player, status)
     }
 
-    private fun onReturnedToLobby(playerId: Long, playersNewGame: String) {
-        val player = players.find { it.id == playerId } ?: return
+    private fun onReturnToLobby(playerIdToNewGame: Map<Long, String>) {
+        Gdx.app.log(TAG, "Received return to lobby request.")
 
-        // TODO: Validate game.
+        players.forEach {
+            it.status = Player.Status.lobby
 
-        Gdx.app.log(TAG, "Received return to lobby request for player $playerId. New game: $playersNewGame")
-        player.status = Player.Status.lobby
-        player.game = playersNewGame
+            // Not all players will necessarily have a game here. It is possible that those who
+            // were just observing already have a game that has not been played, and so they will
+            // just keep the game they already have.
+            val newGame = playerIdToNewGame[it.id]
+            if (newGame != null) {
+                it.game = newGame
+            }
+        }
 
-        Gdx.app.debug(TAG, "Player returning to lobby. Invoking RetrowarsClient.playerStatusChangedListener (player $playerId, status: ${Player.Status.lobby})")
-        playerStatusChangedListener?.invoke(player, Player.Status.lobby)
+        Gdx.app.debug(TAG, "Invoking RetrowarsClient.returnToLobbyListener")
+        returnToLobbyListener?.invoke()
     }
 
     fun changeStatus(status: String) {

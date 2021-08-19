@@ -67,7 +67,7 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game
     fun showEndMultiplayerGame() {
         Gdx.app.log(TAG, "Showing end multiplayer game screen")
         Gdx.app.postRunnable {
-            setScreen(EndMultiplayerGameScreen(this))
+            setScreen(MultiplayerLobbyScreen(this))
         }
     }
 
