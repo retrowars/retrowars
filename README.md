@@ -56,7 +56,7 @@ Doing so will make it appear in the default retro wars client when searching for
 Before pushing to your Heroku app, make sure to set the following config:
 
 ```
-heroku config:set GRADLE_TASK="-PonlyServer stage"
+heroku config:set GRADLE_TASK="-PexcludeAndroid stage"
 ```
 
 Explanation: Newer versions of the Android Gradle plugin require an Android SDK to even configure the `:android` subproject of a libgdx project, not just to compile it.
