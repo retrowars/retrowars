@@ -106,7 +106,7 @@ project(":core") {
         implementation "io.ktor:ktor-gson:$ktor_version"
         implementation "io.ktor:ktor-client-websockets:$ktor_version"
         implementation "io.ktor:ktor-websockets:$ktor_version"
-        implementation "ch.qos.logback:logback-classic:1.2.3" // For ktor
+        implementation "ch.qos.logback:logback-classic:1.2.3" // For server related logging (not Android - and hence game - logging, that uses Gdx.app.log)
         implementation 'org.jmdns:jmdns:3.5.7'
     }
 
@@ -127,5 +127,8 @@ project(":server") {
         api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        api 'org.slf4j:slf4j-api:1.7.30'
+        implementation 'ch.qos.logback:logback-core:1.2.3'
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
     }
 }

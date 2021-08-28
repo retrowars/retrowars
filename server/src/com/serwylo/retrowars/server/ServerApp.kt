@@ -1,20 +1,20 @@
 package com.serwylo.retrowars.server
 
 import com.badlogic.gdx.ApplicationListener
-import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.net.RetrowarsServer
 import com.serwylo.retrowars.utils.DesktopPlatform
+import org.slf4j.LoggerFactory
 
 class ServerApp(private val port: Int = 8080): ApplicationListener {
 
     companion object {
-        const val TAG = "ServerApp"
+        private val logger = LoggerFactory.getLogger(ServerApp::class.java)
     }
 
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        Gdx.app.log(TAG, "Launching server app on port $port")
+        logger.info("Launching server app on port $port.")
 
         server = RetrowarsServer(
             rooms = RetrowarsServer.Rooms.PublicRandomRooms(4),

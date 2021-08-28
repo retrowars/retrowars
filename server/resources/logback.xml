@@ -1,0 +1,16 @@
+<configuration scan="true">
+
+    <!-- If this file exists, lets use it. If not, no worries, just log to stdout by default. -->
+    <include file="/etc/retrowars/logback.xml"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

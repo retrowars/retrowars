@@ -1,6 +1,6 @@
 sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
-sourceSets.main.resources.srcDirs = ["../android/assets"]
+sourceSets.main.resources.srcDirs = ["../android/assets", "resources/"]
 
 project.ext.mainClassName = "com.serwylo.retrowars.server.ServerLauncher"
 project.ext.assetsDir = new File("../android/assets")
