@@ -47,7 +47,6 @@ allprojects {
 
 task stage(dependsOn: [':server:dist'])
 
-if (!hasProperty('onlyServer')) {
 project(":texture-packer") {
     apply plugin: "kotlin"
 
@@ -69,6 +68,7 @@ project(":desktop") {
     }
 }
 
+if (!hasProperty('excludeAndroid')) {
 project(":android") {
     apply plugin: "android"
     apply plugin: "kotlin-android"
