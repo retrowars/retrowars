@@ -5,7 +5,6 @@ import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import com.serwylo.retrowars.utils.Platform
 import io.ktor.application.*
-import io.ktor.client.features.json.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.cio.websocket.*
@@ -27,15 +26,17 @@ import kotlin.random.Random
  * Note that this logs both via [Gdx.app] and [Logger]. The [Logger] is so that we can get some aggregate
  * stats of how many people are using the server in a more permanent manner than the transient [Gdx.app] log.
  */
-class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, val port: Int) {
+class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, port: Int) {
 
     sealed interface Rooms {
 
-        fun getOrCreateRoom(requestedRoomId: Long): Room
+        fun getOrCreateRoom(requestedRoomId: Long): Room?
         fun getRoomCount(): Int
         fun getPlayerCount(): Int
         fun getName(): String
         fun remove(room: Room)
+        fun getRoomSize(): Int
+        fun getMaxRooms(): Int
 
         class SingleLocalRoom: Rooms {
 
@@ -45,6 +46,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
                 return room
             }
 
+            override fun getRoomSize(): Int = 10
+            override fun getMaxRooms(): Int = 1
             override fun getRoomCount() = 1
             override fun getPlayerCount() = room.players.size
             override fun getName() = "singleLocalRoom"
@@ -54,12 +57,14 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
         }
 
-        abstract class MultipleRooms: Rooms {
+        abstract class MultipleRooms(private val roomSize: Int, private val maxRooms: Int): Rooms {
 
             protected val rooms = mutableListOf<Room>()
 
+            override fun getRoomSize(): Int = roomSize
+            override fun getMaxRooms(): Int = maxRooms
             override fun getRoomCount() = rooms.size
-            override fun getPlayerCount() = rooms.sumBy { it.players.size }
+            override fun getPlayerCount() = rooms.sumOf { it.players.size }
 
             override fun remove(room: Room) {
                 logger.info("Removing empty room: ${room.id}")
@@ -73,7 +78,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
          * You can request a new room is created by passing in a zero for the room ID, and one will be created.
          * However, other players must obtain this room ID using some external means (e.g. QR code, SMS, etc) in order to join.
          */
-        class MultiplePrivateRooms: MultipleRooms() {
+        class MultiplePrivateRooms(roomSize: Int, maxRooms: Int): MultipleRooms(roomSize, maxRooms) {
 
             override fun getName() = "multiplePrivateRooms"
 
@@ -103,16 +108,21 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
          *  - If there is space in an existing room, add the player to that room, otherwise.
          *  - Create a new room and put the player in there waiting for others to join.
          */
-        class PublicRandomRooms(private val maxPlayersPerRoom: Int = 4): MultipleRooms() {
+        class PublicRandomRooms(roomSize: Int, maxRooms: Int): MultipleRooms(roomSize, maxRooms) {
 
             override fun getName() = "publicRandomRooms"
 
-            override fun getOrCreateRoom(requestedRoomId: Long): Room {
-                val existing = rooms.find { it.players.size < maxPlayersPerRoom }
+            override fun getOrCreateRoom(requestedRoomId: Long): Room? {
+                val existing = rooms.find { it.players.size < getRoomSize() }
 
                 if (existing != null) {
                     Gdx.app.log(TAG, "Adding player to existing room ${existing.id} with ${existing.players.size} other player(s).")
                     return existing
+                }
+
+                if (rooms.size >= getMaxRooms()) {
+                    Gdx.app.log(TAG, "Request to join server denied, already have ${getMaxRooms()} rooms.")
+                    return null
                 }
 
                 val new = Room(Random.nextLong())
@@ -218,6 +228,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             is Rooms.SingleLocalRoom -> Gdx.app.log(TAG, "Starting singleton server, with only one room.")
             is Rooms.MultiplePrivateRooms -> Gdx.app.log(TAG, "Starting a server that only allows to be joined if you know the room ID.")
             is Rooms.PublicRandomRooms -> Gdx.app.log(TAG, "Starting a server that puts players into random rooms.")
+            else -> Gdx.app.log(TAG, "Not sure what type of server we should be starting here. Was asked to start a ${rooms.getName()} server.")
         }
 
         logger.info("Starting server of type: ${rooms.getName()}")
@@ -246,13 +257,12 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         )
 
         Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port $port")
-        server.connect(platform, port, rooms.getName())
+        server.connect(platform, port, rooms)
     }
 
     fun getRoomCount() = rooms.getRoomCount()
     fun getPlayerCount() = rooms.getPlayerCount()
     fun getLastGameTime() = lastGame
-    fun getRoomType() = rooms.getName()
 
     private fun updateStatus(initiatingConnection: NetworkServer.Connection, status: String) {
         val player = initiatingConnection.player
@@ -372,6 +382,12 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         }
 
         val room = rooms.getOrCreateRoom(roomId)
+        if (room == null) {
+            logger.warn("Request to join room denied, likely because we already have a maximum number of rooms.")
+            logStats()
+            connection.sendMessage(Network.Client.OnFatalError(Network.ErrorCodes.NO_ROOMS_AVAILABLE, "Sorry, no rooms available. Please try again later."))
+            return
+        }
 
         // TODO: Ensure this ID doesn't already exist on the server.
         val player = Player(Random.nextLong(), Games.allSupported.random().id, room.statusForNewPlayer())
@@ -409,7 +425,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         server.disconnect(platform)
     }
 
-    fun startGame(room: Room?) {
+    private fun startGame(room: Room?) {
         if (room == null) {
             return
         }
@@ -427,7 +443,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 }
 
 interface NetworkServer {
-    fun connect(platform: Platform, port: Int, type: String)
+    fun connect(platform: Platform, port: Int, rooms: RetrowarsServer.Rooms)
     fun disconnect(platform: Platform)
 
     interface Connection {
@@ -473,7 +489,7 @@ class WebSocketNetworkServer(
 
     }
 
-    internal class PlayerConnection(val session: DefaultWebSocketSession): NetworkServer.Connection {
+    internal class PlayerConnection(private val session: DefaultWebSocketSession): NetworkServer.Connection {
         override var player: Player? = null
         override var room: RetrowarsServer.Room? = null
 
@@ -485,13 +501,13 @@ class WebSocketNetworkServer(
         }
     }
 
-    var httpServer: NettyApplicationEngine? = null
-    var jmdns: JmDNS? = null
+    private var httpServer: NettyApplicationEngine? = null
+    private var jmdns: JmDNS? = null
 
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
-    override fun connect(platform: Platform, port: Int, type: String) {
+    override fun connect(platform: Platform, port: Int, rooms: RetrowarsServer.Rooms) {
         Gdx.app.log(TAG, "Creating websocket server on port $port.")
         httpServer = embeddedServer(Netty, port) {
 
@@ -504,16 +520,16 @@ class WebSocketNetworkServer(
 
             routing {
 
-                if (type != "singleLocalRoom") {
+                if (rooms.getName() != "singleLocalRoom") {
                     get("/info") {
                         call.respond(ServerInfoDTO(
                             versionCode = AppProperties.appVersionCode,
                             versionName = AppProperties.appVersionName,
                             minSupportedClientVersionCode = MIN_SUPPORTED_CLIENT_VERSION_CODE,
                             minSupportedClientVersionName = MIN_SUPPORTED_CLIENT_VERSION_NAME,
-                            type = type,
-                            maxPlayersPerRoom = 5,
-                            maxRooms = 10, // TODO: This isn't actually implemented yet.
+                            type = rooms.getName(),
+                            maxPlayersPerRoom = rooms.getRoomSize(),
+                            maxRooms = rooms.getMaxRooms(),
                             currentRoomCount = retrowarsServer.getRoomCount(),
                             currentPlayerCount = retrowarsServer.getPlayerCount(),
                             lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: -1,
@@ -544,7 +560,7 @@ class WebSocketNetworkServer(
             }
         }
 
-        if (type == "singleLocalRoom") {
+        if (rooms.getName() == "singleLocalRoom") {
             scope.launch {
                 runCatching {
                     Gdx.app.log(TAG, "Starting JmDNS discovery service to broadcast that we are available on port $port.")

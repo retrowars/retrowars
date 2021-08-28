@@ -67,7 +67,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         hud = HUD(game.uiAssets)
 
         client?.listen(
-            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
+            networkCloseListener = { code, message -> game.showNetworkError(code, message) },
             playerStatusChangedListener = { player, status -> handlePlayerStatusChange(player, status) },
             scoreChangedListener = { _, _ -> handleScoreChange() },
             scoreBreakpointListener = { player, strength -> handleBreakpointChange(player, strength) }

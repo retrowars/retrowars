@@ -37,9 +37,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             RetrowarsClient.get()?.listen(
                 // Don't do anything upon network close, because we know we are about to shut down our
                 // own server.
-                networkCloseListener = {}
+                networkCloseListener = { _, _ -> }
             )
 
+            // If we are running a local server, then stop it.
             RetrowarsServer.stop()
 
             RetrowarsClient.disconnect()
@@ -346,12 +347,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
     private fun calcServerActivitySummary(server: ServerDetails): String {
         if (server.lastGameTimestamp >= 0 && server.lastGameTimestamp < 60 * 1000 * 60 /* 1hr */) {
-            if (server.currentRoomCount > 1) {
-                return "Very active"
-            } else if (server.currentPlayerCount > 1) {
-                return "Active"
-            } else {
-                return "Recently active"
+            return when {
+                server.currentRoomCount > 1 -> "Very active"
+                server.currentPlayerCount > 1 -> "Active"
+                else -> "Recently active"
             }
         }
 
@@ -837,7 +836,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         Gdx.app.log(TAG, "Listening to start game, network close, or player change related events from the server.")
         client.listen(
             startGameListener = { changeState(Action.BeginGame)},
-            networkCloseListener = { wasGraceful -> game.showNetworkError(game, wasGraceful) },
+            networkCloseListener = { code, message -> game.showNetworkError(code, message) },
             playersChangedListener = { players -> changeState(Action.PlayersChanged(players))},
             scoreChangedListener = { _, _ -> changeState(Action.ScoreUpdated(RetrowarsClient.get()?.scores?.toMap() ?: mapOf()))},
             playerStatusChangedListener = { _, _ -> changeState(Action.PlayersChanged(RetrowarsClient.get()?.players ?: listOf())) },

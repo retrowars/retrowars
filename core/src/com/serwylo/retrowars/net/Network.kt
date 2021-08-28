@@ -11,6 +11,34 @@ object Network {
     const val defaultPort = 8080
     const val jmdnsServiceName = "_retrowars._tcp.local."
 
+    object ErrorCodes {
+
+        /**
+         * The server did not have anything interesting to tell us, wo all we can do is show the
+         * user an "Unknown error occurred" or something similar. Typically this event will not
+         * be sent explicitly from the server, but rather triggered by the client when something
+         * happens that has not been explained by the server (e.g. client network disconnect).
+         */
+        const val UNKNOWN_ERROR = -1
+
+        /**
+         * The server has been shut down. In the case of a local network server, this will be
+         * in response to the user who started the server finishing up and closing the server.
+         * In a public server, this is not yet defined, and server shutdowns will likely not
+         * be graceful enough to send this message yet (but perhaps in the future they can listen
+         * for SIGTERM signals and respond with this to the client before shutting down).
+         */
+        const val SERVER_SHUTDOWN = 1
+
+        /**
+         * Servers will continue to accept users until a certain limit. When they have run
+         * out of space, they will return this. The user can then try to reconnect in the future
+         * and hope that some users have dropped out making space for them.
+         */
+        const val NO_ROOMS_AVAILABLE = 2
+
+    }
+
     /**
      * Messages sent *to* the [RetrowarsServer] sent *from* the [RetrowarsClient].
      */
@@ -154,6 +182,38 @@ object Network {
 
         )
 
+        /**
+         * Miscellaneous fatal errors which will cause the client to completely disconnect from the
+         * server and display an error message to the user. After hitting "back", the player will
+         * then be taken back to the main screen to start over all again (if they wish).
+         *
+         * This is generally reserved for errors which the server can explain why it occurred. That
+         * is to say, if the server doesn't have enough room to accept another player, then they
+         * should politely send back a [OnFatalError] message explaining this to the user.
+         *
+         * However if the network cuts out unexpectedly, then the server can't and shouldn't have to
+         * be responsible for explaining that to the client. Therefore that will not result in a
+         * [OnFatalError] and the client will have to come up with their own way of handling and
+         * explaining it to the user.
+         */
+        class OnFatalError(
+
+            @Since(9.0)
+            @SerializedName("r")
+            var code: Int,
+
+            /**
+             * Prefer the [code] over this, because that will be able to be internationalised
+             * by clients. However, if a client is unable to interpret the code (e.g. it is from an
+             * older client that doesn't understand that code) then it can at least fall back to
+             * this message that is passed along with the error.
+             */
+            @Since(9.0)
+            @SerializedName("m")
+            var message: String,
+
+        )
+
         class OnStartGame
         class OnServerStopped
 
@@ -189,6 +249,7 @@ object WebSocketMessage {
             Network.Client.OnPlayerStatusChange::class.simpleName -> gson.fromJson(payload, Network.Client.OnPlayerStatusChange::class.java)
             Network.Client.OnReturnToLobby::class.simpleName -> gson.fromJson(payload, Network.Client.OnReturnToLobby::class.java)
             Network.Client.OnServerStopped::class.simpleName -> gson.fromJson(payload, Network.Client.OnServerStopped::class.java)
+            Network.Client.OnFatalError::class.simpleName -> gson.fromJson(payload, Network.Client.OnFatalError::class.java)
 
             else -> {
                 Gdx.app.error(TAG, "Unsupported message type: ${type}. Is this a newer client/server than we understand?")
