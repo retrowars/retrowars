@@ -550,7 +550,12 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                 Gdx.app.debug(TAG, "Fetching server metadata for ${server.hostname}")
                 val info: ServerInfoDTO?
                 val pingTime = measureTimeMillis {
-                    info = fetchServerInfo(server)
+                    info = try {
+                        fetchServerInfo(server)
+                    } catch (e: Exception) {
+                        Gdx.app.error(TAG, "Could not fetch server metadata from ${server.hostname}:${server.port}. Will ignore it.", e)
+                        null
+                    }
                 }
 
                 serverInfoChannel.send(ServerInfoResult(server, info, pingTime))

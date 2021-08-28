@@ -136,7 +136,6 @@ suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
         encodedPath = "info"
     ).build()
 
-    try {
         val data: ServerInfoDTO?
         val time = measureTimeMillis {
             Gdx.app.log(TAG, "Fetching data for $url")
@@ -144,8 +143,4 @@ suspend fun fetchServerInfo(server: ServerMetadataDTO): ServerInfoDTO? {
         }
         Gdx.app.log(TAG, "Fetched data for $url in ${time}ms.")
         return data
-    } catch (e: IOException) {
-        Gdx.app.error(TAG, "Could not fetch server metadata from $url", e)
-        return null
-    }
 }
