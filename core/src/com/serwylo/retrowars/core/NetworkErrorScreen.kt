@@ -10,9 +10,10 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.net.RetrowarsServer
 
-class NetworkErrorScreen(game: RetrowarsGame, wasGraceful: Boolean): Scene2dScreen(game, { game.showMainMenu() }) {
+class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene2dScreen(game, { game.showMainMenu() }) {
 
     init {
+
         // Ensure that we don't have any lingering network connections around.
         RetrowarsClient.disconnect()
         RetrowarsServer.stop()
@@ -31,10 +32,7 @@ class NetworkErrorScreen(game: RetrowarsGame, wasGraceful: Boolean): Scene2dScre
         )
 
         container.addActor(
-            Label(
-                if (wasGraceful) strings["network-error.disconnected.server-stopped"] else strings["network-error.disconnected.unexpected"],
-                styles.label.medium
-            ).apply {
+            Label(message, styles.label.medium).apply {
                 setAlignment(Align.center)
             }
         )

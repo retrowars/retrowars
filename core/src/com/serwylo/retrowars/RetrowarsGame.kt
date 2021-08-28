@@ -71,10 +71,10 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game
         }
     }
 
-    fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
+    fun showNetworkError(code: Int, message: String) {
         Gdx.app.log(TAG, "Showing network error screen")
         Gdx.app.postRunnable {
-            setScreen(NetworkErrorScreen(this, wasGraceful))
+            setScreen(NetworkErrorScreen(this, code, message))
         }
     }
 

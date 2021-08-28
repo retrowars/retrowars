@@ -70,17 +70,18 @@ class RetrowarsClient(host: String, port: Int) {
 
     /**
      * Record if we receive a nice graceful message from the server.
-     * If we *haven't* but we still get disconnected, we can show an error message to the user.
-     * If we *have* shut down gracefully by the time we receive the disconnect event, then we can display a friendlier message.
+     * If we *haven't* but we still get disconnected, we can show a misc network disconnected error message to the user.
+     * If we *have* more information by the time we receive the disconnect event, then we can display a friendlier message.
      */
-    private var hasShutdownGracefully = false
+    private var serverErrorCode: Int? = null
+    private var serverErrorMessage: String? = null
 
     private var playersChangedListener: ((List<Player>) -> Unit)? = null
     private var startGameListener: (() -> Unit)? = null
     private var scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null
     private var scoreBreakpointListener: ((player: Player, strength: Int) -> Unit)? = null
     private var playerStatusChangedListener: ((player: Player, status: String) -> Unit)? = null
-    private var networkCloseListener: ((wasGraceful: Boolean) -> Unit)? = null
+    private var networkCloseListener: ((code: Int, message: String) -> Unit)? = null
     private var returnToLobbyListener: (() -> Unit)? = null
 
     /**
@@ -94,10 +95,10 @@ class RetrowarsClient(host: String, port: Int) {
      *
      *  All are optional except for [networkCloseListener], if you choose to interact with the
      *  client, then you need to make sure you handle disconnections properly, because we don't
-     *  know when these could happen.
+     *  know when these could happen. See [Network.ErrorCodes] for a list of known error codes.
      */
     fun listen(
-        networkCloseListener: ((wasGraceful: Boolean) -> Unit),
+        networkCloseListener: ((code: Int, message: String) -> Unit),
         playersChangedListener: ((List<Player>) -> Unit)? = null,
         startGameListener: (() -> Unit)? = null,
         scoreChangedListener: ((player: Player, score: Long) -> Unit)? = null,
@@ -118,14 +119,16 @@ class RetrowarsClient(host: String, port: Int) {
 
         client = WebSocketNetworkClient(
             onDisconnected = {
-                if (hasShutdownGracefully) {
-                    Gdx.app.log(TAG, "Client received disconnected event. Previously received a graceful shutdown so will broadcast that.")
+                if (serverErrorCode != null) {
+                    Gdx.app.log(TAG, "Client received disconnected event. Previously received an error message from the server so will show that.")
                 } else {
-                    Gdx.app.log(TAG, "Client received disconnected event. No graceful shutdown from server, so will broadcast that.")
+                    Gdx.app.log(TAG, "Client received disconnected event. No more information provided from server, so will show a misc error.")
                 }
 
-                Gdx.app.debug(TAG, "Disconnected. Invoking RetrowarsClient.networkCloseListener (${if (hasShutdownGracefully) "shut down gracefully" else "ungraceful shutdown"})")
-                networkCloseListener?.invoke(hasShutdownGracefully)
+                networkCloseListener?.invoke(
+                    serverErrorCode ?: Network.ErrorCodes.UNKNOWN_ERROR,
+                    serverErrorMessage ?: "An unknown error occurred",
+                )
             },
 
             onMessage = { obj ->
@@ -139,6 +142,7 @@ class RetrowarsClient(host: String, port: Int) {
                     is Network.Client.OnReturnToLobby -> onReturnToLobby(obj.newGames)
                     is Network.Client.OnStartGame -> onStartGame()
                     is Network.Client.OnServerStopped -> onServerStopped()
+                    is Network.Client.OnFatalError -> onFatalError(obj.code, obj.message)
                 }
             }
         )
@@ -153,9 +157,17 @@ class RetrowarsClient(host: String, port: Int) {
 
     }
 
+    private fun onFatalError(code: Int, message: String) {
+        Gdx.app.error(TAG, "Received fatal error code $code: $message")
+        serverErrorCode = code
+        serverErrorMessage = message
+        client.disconnect() // This will trigger an onDisconnected event, which will in turn then notify via the networkCloseListener. A bit messy, but should work.
+    }
+
     private fun onServerStopped() {
         Gdx.app.log(TAG, "Recording that server stopped somewhat-gracefully.")
-        hasShutdownGracefully = true
+        serverErrorCode = Network.ErrorCodes.SERVER_SHUTDOWN
+        serverErrorMessage = "Server has stopped running."
     }
 
     private fun onStartGame() {
