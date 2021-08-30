@@ -91,12 +91,12 @@ private fun summarisePlayerStatus(
     }
 
     if (player.status == Player.Status.playing) {
-        val stillPlayingLabel = Label(strings["end-multiplayer.still-playing"], styles.label.small)
+        val stillPlayingLabel = Label(strings["end-multiplayer.still-playing"], styles.label.medium)
         addActor(stillPlayingLabel)
 
         val scoreNeeded = highestScore + 1 - score
         if (isLastPlayerStanding && scoreNeeded > 0) {
-            val needsMoreLabel = Label("Needs $scoreNeeded more point${if (scoreNeeded == 1L) "" else "s" } to win!", styles.label.small)
+            val needsMoreLabel = Label("Needs $scoreNeeded more point${if (scoreNeeded == 1L) "" else "s" } to win!", styles.label.medium)
             addActor(needsMoreLabel)
         }
     }

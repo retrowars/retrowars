@@ -26,7 +26,13 @@ import kotlin.random.Random
  * Note that this logs both via [Gdx.app] and [Logger]. The [Logger] is so that we can get some aggregate
  * stats of how many people are using the server in a more permanent manner than the transient [Gdx.app] log.
  */
-class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, port: Int) {
+class RetrowarsServer(private val platform: Platform, private val config: Config) {
+
+    data class Config(
+        val rooms: Rooms,
+        val port: Int,
+        val finalScoreDelay: Int,
+    )
 
     sealed interface Rooms {
 
@@ -157,7 +163,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(platform, Rooms.SingleLocalRoom(), 8080)
+            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500))
             server = newServer
             return newServer
         }
@@ -226,6 +232,7 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
     }
 
+    private val rooms = config.rooms
     private var server: NetworkServer
     private var connections = mutableSetOf<NetworkServer.Connection>()
     private var lastGame: Date? = null
@@ -264,8 +271,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
             },
         )
 
-        Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port $port")
-        server.connect(platform, port, rooms)
+        Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port ${config.port}")
+        server.connect(platform, config.port, rooms)
     }
 
     fun getRoomCount() = rooms.getRoomCount()
@@ -329,8 +336,8 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
         updateStatus(survivingPlayer, room, Player.Status.dead)
 
         GlobalScope.launch {
-            Gdx.app.debug(TAG, "Waiting for 5 seconds before telling each player to return to the main lobby for this room.")
-            delay(5000)
+            Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelay}ms seconds before telling each player to return to the main lobby for this room.")
+            delay(config.finalScoreDelay.toLong())
 
             val newGames = room.players.associate { it.id to Games.allSupported.random().id }
 
