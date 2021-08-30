@@ -134,15 +134,22 @@ class RetrowarsClient(host: String, port: Int) {
             onMessage = { obj ->
                 Gdx.app.log(TAG, "Received message from server: $obj")
 
-                when(obj) {
-                    is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game, obj.status)
-                    is Network.Client.OnPlayerRemoved -> onPlayerRemoved(obj.id)
-                    is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
-                    is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
-                    is Network.Client.OnReturnToLobby -> onReturnToLobby(obj.newGames)
-                    is Network.Client.OnStartGame -> onStartGame()
-                    is Network.Client.OnServerStopped -> onServerStopped()
-                    is Network.Client.OnFatalError -> onFatalError(obj.code, obj.message)
+                // Ensure all messages are handled on the main thread. This is required to prevent
+                // random issues with scene2d when labels are measured in order to display a score,
+                // in the HUD, but then on a different thread we update the score and by the time
+                // actually rendering happens, the width of the new value is different than when
+                // measured.
+                Gdx.app.postRunnable {
+                    when(obj) {
+                        is Network.Client.OnPlayerAdded -> onPlayerAdded(obj.id, obj.game, obj.status)
+                        is Network.Client.OnPlayerRemoved -> onPlayerRemoved(obj.id)
+                        is Network.Client.OnPlayerScored -> onScoreChanged(obj.id, obj.score)
+                        is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
+                        is Network.Client.OnReturnToLobby -> onReturnToLobby(obj.newGames)
+                        is Network.Client.OnStartGame -> onStartGame()
+                        is Network.Client.OnServerStopped -> onServerStopped()
+                        is Network.Client.OnFatalError -> onFatalError(obj.code, obj.message)
+                    }
                 }
             }
         )
