@@ -140,6 +140,14 @@ class RetrowarsServer(private val platform: Platform, private val rooms: Rooms, 
 
         private const val TAG = "RetrowarsServer"
 
+        /**
+         * Logback is used in addition to Gdx.app.(debug|log|error) because it will prove more
+         * fruitful when running a proper server. For instance, it will allow for rolling logs
+         * to be archived, gzipped, etc.
+         *
+         * Messages logged here should be those which are helpful for the running, monitoring, and
+         * diagnosing of issues on such servers.
+         */
         private val logger = LoggerFactory.getLogger(RetrowarsServer::class.java)
 
         private var server: RetrowarsServer? = null

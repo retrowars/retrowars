@@ -1025,6 +1025,12 @@ class FinalScores(val me: Player, val scores: Map<Player, Long>) : UiState {
             // player obviously wasn't part of the last game, so no need to display their scores here.
             is Action.PlayersChanged -> FinalScores(me, scores.filter { score -> action.players.any { player -> score.key.id == player.id } })
 
+            // Sometimes this event will come through when the final scores are already being shown.
+            // Perhaps a race condition?
+            // TODO: Find out why this is the case and ensure that once we've been directed to the
+            //       FinalScores screen that we never send a ScoreUpdated even afterwards.
+            is Action.ScoreUpdated -> this
+
             else -> unsupported(action)
         }
     }
