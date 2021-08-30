@@ -6,8 +6,7 @@ import com.serwylo.retrowars.utils.Platform
 import org.slf4j.LoggerFactory
 
 class ServerApp(
-    private val port: Int,
-    private val rooms: RetrowarsServer.Rooms,
+    private val config: RetrowarsServer.Config,
     private val platform: Platform,
 ): ApplicationListener {
 
@@ -18,9 +17,9 @@ class ServerApp(
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        logger.info("Launching server app on port $port.")
+        logger.info("Launching server app on port ${config.port}.")
 
-        server = RetrowarsServer(platform, rooms, port)
+        server = RetrowarsServer(platform, config)
     }
 
     override fun resize(width: Int, height: Int) {}
