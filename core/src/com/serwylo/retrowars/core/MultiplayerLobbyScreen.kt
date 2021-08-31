@@ -13,6 +13,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
 import com.serwylo.retrowars.ui.createPlayerSummaries
+import com.serwylo.retrowars.ui.makeContributeServerWidget
 import com.serwylo.retrowars.ui.roughTimeAgo
 import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.*
@@ -162,15 +163,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.add(Label("No servers found", styles.label.large))
         wrapper.row().spaceTop(UI_SPACE * 2)
-        wrapper.add(Label("Want to help the Super Retro Mega Wars project\nby running a public server?", styles.label.medium).apply {
-            setAlignment(Align.center)
-        })
-        wrapper.row().spaceTop(UI_SPACE * 2)
-        wrapper.add(
-            makeButton("Learn how to help", styles) {
-                Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
-            }
-        )
+        wrapper.add(makeContributeServerWidget(styles))
     }
 
     private fun showServerList(
@@ -226,15 +219,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
 
         wrapper.row().spaceTop(UI_SPACE * 2)
-        wrapper.add(Label("Want to help the Super Retro Mega Wars community\nby running a public server?", styles.label.small).apply {
-            setAlignment(Align.center)
-        })
-        wrapper.row().spaceTop(UI_SPACE)
-        wrapper.add(
-            makeSmallButton("Learn how to help", styles) {
-                Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
-            }
-        )
+        wrapper.add(makeContributeServerWidget(styles))
     }
 
     private fun makeUnsupportedServerInfo(server: ServerDetails): Actor {

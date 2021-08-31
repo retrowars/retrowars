@@ -5,9 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.Avatar
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeGameIcon
+import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player
@@ -104,6 +102,18 @@ private fun summarisePlayerStatus(
     val scoreString = score.toString()
     val scoreLabel = Label(scoreString, styles.label.medium)
     addActor(scoreLabel)
+}
+
+fun makeContributeServerWidget(styles: UiAssets.Styles) = VerticalGroup().apply {
+    space(UI_SPACE)
+    addActor(Label("Want to help the Super Retro Mega Wars project\nby running a public server?", styles.label.small).apply {
+        setAlignment(Align.center)
+    })
+    addActor(
+        makeSmallButton("Learn how to help", styles) {
+            Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
+        }
+    )
 }
 
 fun roughTimeAgo(timestamp: Long): String {
