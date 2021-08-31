@@ -17,7 +17,7 @@ class ServerApp(
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        logger.info("Launching server app on port ${config.port}.")
+        logger.info("Launching server app [port: ${config.port}, rooms: [type: ${config.rooms.getName()}, maxRooms: ${config.rooms.getMaxRooms()}, roomSize: ${config.rooms.getRoomSize()}], finalScoreDelay: ${config.finalScoreDelay}]")
 
         server = RetrowarsServer(platform, config)
     }
