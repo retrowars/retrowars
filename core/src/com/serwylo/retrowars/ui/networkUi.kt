@@ -104,7 +104,7 @@ private fun summarisePlayerStatus(
     addActor(scoreLabel)
 }
 
-fun makeContributeServerWidget(styles: UiAssets.Styles) = VerticalGroup().apply {
+fun makeContributeServerInfo(styles: UiAssets.Styles) = VerticalGroup().apply {
     space(UI_SPACE)
     addActor(Label("Want to help the Super Retro Mega Wars project\nby running a public server?", styles.label.small).apply {
         setAlignment(Align.center)
