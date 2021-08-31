@@ -204,7 +204,12 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
             showEndGameScreen()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
-            client.changeStatus(Player.Status.dead)
+            if (client.me()?.status == Player.Status.dead) {
+                Gdx.app.debug(RetrowarsGame.TAG, "This request to head to the end game lobby was triggered by the server telling us we won, so we already know our status is dead - no need to update it.")
+            } else {
+                Gdx.app.debug(RetrowarsGame.TAG, "This request to head to the end game lobby was triggered by us dying. Therefore we need to notify the server that this has happened.")
+                client.changeStatus(Player.Status.dead)
+            }
             game.showEndMultiplayerGame()
         }
     }
