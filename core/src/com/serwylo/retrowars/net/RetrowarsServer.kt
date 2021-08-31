@@ -279,26 +279,31 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     fun getPlayerCount() = rooms.getPlayerCount()
     fun getLastGameTime() = lastGame
 
+    private var returnToLobbyTask: Job? = null
+
+    /**
+     * Handle the fact that a player has died. If so, check if all players are dead and if so then
+     * schedule a background task to send the players back to the lobby.
+     */
     private fun updateStatus(initiatingConnection: NetworkServer.Connection, status: String) {
         val player = initiatingConnection.player
         val room = initiatingConnection.room
 
-        updateStatus(player, room, status, initiatingConnection)
-    }
-
-    private fun updateStatus(player: Player?, room: Room?, status: String, allExcept: NetworkServer.Connection? = null) {
         if (player == null || room == null) {
             Gdx.app.error(TAG, "Ignoring updateStatus request because Player ($player) or Room ($room) is null.")
             return
         }
 
+        changeAndBroadcastStatus(player, room, status, initiatingConnection)
+
+        checkForEndGame(room)
+    }
+
+    private fun changeAndBroadcastStatus(player: Player, room: Room, status: String, allExcept: NetworkServer.Connection? = null) {
         player.status = status
 
         // Don't send the message back to the player, because they already know about this status change (they requested it).
         room.sendToAllExcept(Network.Client.OnPlayerStatusChange(player.id, status), connections, allExcept)
-
-        checkForWinner(room)
-
     }
 
     /**
@@ -309,8 +314,27 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
      * Letting that player go on forever smashing everyone else in scores will be not very fun for
      * the others to watch, especially because they can't actually watch the game, only the score.
      */
-    private fun checkForWinner(room: Room) {
+    private fun checkForEndGame(room: Room) {
+
+        // We have already determined the game should end and queued up a task to send everyone
+        // back to the lobby. This is likely because we:
+        //  - Had one sole surviver.
+        //  - That surviver had the highest score, so we sent an update state message to them to
+        //    tell them they are dead (that will kick them to the end game screen which will know
+        //    that the game has ended and to display them as the winner).
+        //  - We then receive notification of that update status, and again ended up here where we
+        //    check for an end game.
+        if (returnToLobbyTask != null) {
+            Gdx.app.error(TAG, "Secondary check for end game. Should only ever need to do this once. Ignoring this request.")
+            return
+        }
+
         val stillPlaying = room.players.filter { it.status == Player.Status.playing }
+
+        if (stillPlaying.isEmpty()) {
+            Gdx.app.log(TAG, "Scheduling return to lobby. No players remain alive.")
+            scheduleReturnToLobby(room)
+        }
 
         if (stillPlaying.size != 1) {
             return
@@ -333,9 +357,19 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             return
         }
 
-        updateStatus(survivingPlayer, room, Player.Status.dead)
+        changeAndBroadcastStatus(survivingPlayer, room, Player.Status.dead)
 
-        GlobalScope.launch {
+        Gdx.app.log(TAG, "Scheduling return to lobby. Only one player remains and their score was highest. Notified them to change their status to 'dead', and now will schedule the job to return to the lobby in the future.")
+        scheduleReturnToLobby(room)
+    }
+
+    private fun scheduleReturnToLobby(room: Room) {
+        if (returnToLobbyTask != null) {
+            Gdx.app.error(TAG, "Should not try to schedule a return to the lobby if we have already scheduled one. Ignoring request.")
+            return
+        }
+
+        returnToLobbyTask = GlobalScope.launch {
             Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelay}ms seconds before telling each player to return to the main lobby for this room.")
             delay(config.finalScoreDelay.toLong())
 
@@ -343,6 +377,9 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
             Gdx.app.debug(TAG, "Broadcasting to all players to return to the lobby and assign new games: ${newGames.map { "${it.key}: ${it.value}" }.joinToString(", ")}.")
             room.sendToAll(Network.Client.OnReturnToLobby(newGames), connections)
+
+            Gdx.app.debug(TAG, "Clearing returnToLobbyTask now that it is complete.")
+            returnToLobbyTask = null
         }
     }
 
@@ -359,7 +396,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
         room.sendToAllExcept(Network.Client.OnPlayerScored(player.id, score), connections, initiatingConnection)
 
-        checkForWinner(room)
+        checkForEndGame(room)
     }
 
     private fun removePlayer(initiatingConnection: NetworkServer.Connection) {
@@ -379,7 +416,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             rooms.remove(room)
         } else {
             room.sendToAll(Network.Client.OnPlayerRemoved(player.id), connections)
-            checkForWinner(room)
+            checkForEndGame(room)
         }
 
         logStats()
