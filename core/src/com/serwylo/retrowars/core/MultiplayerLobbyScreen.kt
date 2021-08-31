@@ -13,7 +13,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
 import com.serwylo.retrowars.ui.createPlayerSummaries
-import com.serwylo.retrowars.ui.makeContributeServerWidget
+import com.serwylo.retrowars.ui.makeContributeServerInfo
 import com.serwylo.retrowars.ui.roughTimeAgo
 import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.*
@@ -163,7 +163,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         wrapper.add(Label("No servers found", styles.label.large))
         wrapper.row().spaceTop(UI_SPACE * 2)
-        wrapper.add(makeContributeServerWidget(styles))
+        wrapper.add(makeContributeServerInfo(styles))
     }
 
     private fun showServerList(
@@ -219,7 +219,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
 
         wrapper.row().spaceTop(UI_SPACE * 2)
-        wrapper.add(makeContributeServerWidget(styles))
+        wrapper.add(makeContributeServerInfo(styles))
     }
 
     private fun makeUnsupportedServerInfo(server: ServerDetails): Actor {
