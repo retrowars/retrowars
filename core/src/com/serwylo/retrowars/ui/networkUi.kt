@@ -122,25 +122,16 @@ fun roughTimeAgo(timestamp: Long): String {
     }
 
     val seconds = (System.currentTimeMillis() - timestamp) / 1000
-    if (seconds < 60) {
-        return "$seconds seconds ago"
-    }
-
     val minutes = seconds / 60
-    if (minutes < 60) {
-        return "$minutes minutes ago"
-    }
-
     val hours = minutes / 60
-    if (hours < 24) {
-        return "$hours hours ago"
-    }
-
     val days = hours / 24
-    if (days < 365) {
-        return "$days days ago"
-    }
 
-    val years = days / 365
-    return "$years years ago"
+    return when {
+        seconds < 60 -> "Seconds ago"
+        minutes < 60 -> "Minutes ago"
+        hours < 24 -> "Hours ago"
+        days < 30 -> "Days ago"
+        days < 365 -> "Months ago"
+        else -> "Years ago"
+    }
 }
