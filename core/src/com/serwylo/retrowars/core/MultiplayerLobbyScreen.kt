@@ -264,54 +264,28 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             padLeft(UI_SPACE * 2)
             padRight(UI_SPACE * 2)
 
-            add(
-                Label(
-                    server.hostname,
-                    styles.label.medium
-                )
-            ).expandX().colspan(2).spaceBottom(UI_SPACE).left()
+            val summary: Label
 
-            row()
-
-            val metadata = Table()
-
-            metadata.add(Label("Rooms:", styles.label.small)).right()
-            metadata.add(Label(server.currentRoomCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            metadata.add(Label("Players:", styles.label.small)).right()
-            metadata.add(Label(server.currentPlayerCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            metadata.add(Label("Last game:", styles.label.small)).right()
-            metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            metadata.add(Label("Version:", styles.label.small)).right()
-            metadata.add(Label("v${server.versionName}", styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            metadata.add(Label("Fetched info in:", styles.label.small)).right()
-            metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            val infoCell:Cell<Actor> = add().left().top().spaceRight(UI_SPACE * 2)
-            infoCell.setActor(
-                VerticalGroup().apply {
-                    if (server.minSupportedClientVersionCode < AppProperties.appVersionCode) {
-                        addActor(Label(calcServerActivitySummary(server), styles.label.small))
-                    }
-                    addActor(Label(calcServerActivitySummary(server), styles.label.small))
-                    addActor(
-                        makeSmallButton("View info", styles) {
-                            infoCell.clearActor()
-                            infoCell.setActor(metadata)
-                        }
+            val serverInfoWrapper = VerticalGroup().apply {
+                addActor(
+                    Label(
+                        server.hostname,
+                        styles.label.medium
                     )
-                    space(UI_SPACE / 2f)
-                    columnAlign(Align.left)
-                }
-            )
+                )
+
+                summary = Label("${server.currentPlayerCount} player${if (server.currentPlayerCount == 1) "" else "s"}", styles.label.small)
+
+                addActor(summary)
+
+                columnAlign(Align.left)
+            }
+
+            add(serverInfoWrapper).expandX().left().padRight(UI_SPACE * 2)
+
+            // Populate ths later, so that we have a reference to a subsequent table cell we plan
+            // on clearing and repoulating in respond to tapping the button here.
+            val viewInfoButtonCell:Cell<Actor> = add().right()
 
             add(
                 makeButton("Join", styles) {
@@ -326,20 +300,40 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                     padLeft(UI_SPACE * 2)
                     padRight(UI_SPACE * 2)
                 }
-            ).expandX().right().bottom()
-        }
-    }
+            ).right()
 
-    private fun calcServerActivitySummary(server: ServerDetails): String {
-        if (server.lastGameTimestamp >= 0 && server.lastGameTimestamp < 60 * 1000 * 60 /* 1hr */) {
-            return when {
-                server.currentRoomCount > 1 -> "Very active"
-                server.currentPlayerCount > 1 -> "Active"
-                else -> "Recently active"
-            }
-        }
+            row()
 
-        return "Not very active"
+            val metadata = Table()
+
+            metadata.add(Label("Last game:", styles.label.small)).right()
+            metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Rooms:", styles.label.small)).right()
+            metadata.add(Label("${server.currentRoomCount}/${server.maxRooms}", styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Players:", styles.label.small)).right()
+            metadata.add(Label(server.currentPlayerCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Version:", styles.label.small)).right()
+            metadata.add(Label("v${server.versionName}", styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            metadata.add(Label("Fetched info in:", styles.label.small)).right()
+            metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.row()
+
+            viewInfoButtonCell.setActor(
+                makeSmallButton("Info", styles) {
+                    viewInfoButtonCell.clearActor()
+                    serverInfoWrapper.removeActor(summary)
+                    serverInfoWrapper.addActor(metadata)
+                }
+            )
+        }
     }
 
     private fun showSplash() {
