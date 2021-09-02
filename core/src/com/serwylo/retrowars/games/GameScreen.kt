@@ -19,6 +19,7 @@ import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.GameViewport
 import com.serwylo.retrowars.ui.HUD
 import com.serwylo.retrowars.ui.ShakeAnimation
+import com.serwylo.retrowars.ui.filterActivePlayers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -142,7 +143,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
             } + 1
 
             if (myNewPosition > 0 && myCurrentPosition != myNewPosition) {
-                hud.logMessage(strings.format("game-message.position-changed", myNewPosition, client.players.size))
+                hud.logMessage(strings.format("game-message.position-changed", myNewPosition, filterActivePlayers(client.players).size))
             }
 
             myCurrentPosition = myNewPosition
