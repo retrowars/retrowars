@@ -37,6 +37,32 @@ object Network {
          */
         const val NO_ROOMS_AVAILABLE = 2
 
+        /**
+         * If the player closes their Android app (e.g. answers a call, locks the screen, anything
+         * else to move it into the background), then forceably disconnect from the network and show
+         * an error.
+         *
+         * This would not be required if the games were actually run on the server like a true
+         * multiplayer game, because the game could continue in their absence. However without that,
+         * it is important that we can't have some people pause the game (and hence stop receiving
+         * network events that impact the game state, thus preventing themselves from being attacked
+         * meaningfully).
+         *
+         * In the future, if we ever get to moving game state to the server, then we can do away
+         * with this hack.
+         *
+         * NOTE: This isn't actually sent from the server, we trigger it from [GameScreen.pause] and
+         *       also from [MultiplayerLobbyScreen.pause] if there is an active network connection.
+          */
+        const val CLIENT_CLOSED_APP = 3
+
+        /**
+         * If the server doesn't get a [Network.Server.GameplayKeepAlive] within a certain time
+         * frame, the player will be booted from the server with this error code.
+         * See [Network.Server.GameplayKeepAlive] for a more detailed explanation.
+         */
+        const val REMOVED_DUE_TO_INACTIVITY = 4
+
     }
 
     /**
@@ -48,7 +74,45 @@ object Network {
          * Heroku times out websockets after 55 seconds of inactivity. To avoid this, we will ping
          * periodically with an empty message.
          */
-        class Ping
+        class NetworkKeepAlive {
+            override fun toString() = "NetworkKeepAlive"
+        }
+
+        /**
+         * This is a workaround for an issue identified during play testing.
+         *
+         * The issue was that a player put their phone away and stopped playing. However, their
+         * phone was still connected and sending [NetworkKeepAlive] requests to the server.
+         * This meant:
+         *  - They occupied space in a room
+         *  - When another player joined this room, started the game, then died, they were stuck
+         *    on the Final Scores screen observing the game while the stuck player sat on 0 points
+         *    for the duration.
+         *  - If the game screen is not active, they will never notify the server that they are dead.
+         *  - Even if the game screen was open, and they stay there until they die, they would still
+         *    just return to the lobby to repeat the same thing again, meaning every game is filled
+         *    with a dead weight.
+         *
+         * Therefore, we now demand that the client periodically tell us when a few things happen:
+         *
+         *  - When the game begins on the client side after the server told them to start (this
+         *    lets us know that their device is awake and open, and therefore we can at least
+         *    expect a death message from them at some point).
+         *
+         *  - When the player interacts with the device (e.g. touching the screen, pressing a button).
+         *    This tells us that a player is actively engaging and regardless of whether we hear
+         *    nothing from them, we still should let them remain in the game. This should not happen
+         *    *every* time they interact, only after a certain period. If we haven't heard from them
+         *    in a while, we will boot them.
+         *    WARNING: Some games like Missile Command can genuinely go for some time without any
+         *    interactivity, as the player waits for missiles to come closer to them at the start
+         *    of a level so they can blast them all at once.
+         *
+         * TODO: Reproduce this by opening a game, then locking the screen midway through.
+         */
+        class GameplayKeepAlive {
+            override fun toString() = "GameplayKeepAlive"
+        }
 
         /**
          * If a [roomId] is not specified, then it will request a new room to be created. If it is
@@ -235,7 +299,7 @@ object WebSocketMessage {
         val gson = GsonBuilder().setVersion(AppProperties.appVersionCode.toDouble()).create()
         return when(type) {
 
-            Network.Server.Ping::class.simpleName -> Network.Server.Ping()
+            Network.Server.NetworkKeepAlive::class.simpleName -> Network.Server.NetworkKeepAlive()
             Network.Server.RegisterPlayer::class.simpleName -> gson.fromJson(payload, Network.Server.RegisterPlayer::class.java)
             Network.Server.UnregisterPlayer::class.simpleName -> gson.fromJson(payload, Network.Server.UnregisterPlayer::class.java)
             Network.Server.UpdateScore::class.simpleName -> gson.fromJson(payload, Network.Server.UpdateScore::class.java)

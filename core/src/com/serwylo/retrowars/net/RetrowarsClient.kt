@@ -313,6 +313,13 @@ class RetrowarsClient(host: String, port: Int) {
         client.sendMessage(Network.Server.StartGame())
     }
 
+    /**
+     * See [Network.Server.GameplayKeepAlive].
+     */
+    fun keepAlive() {
+        client.sendMessage(Network.Server.GameplayKeepAlive())
+    }
+
 }
 
 interface NetworkClient {
@@ -388,7 +395,7 @@ class WebSocketNetworkClient(
                 val pingJob = launch {
                     while (true) {
                         delay(30000)
-                        sendMessage(Network.Server.Ping())
+                        sendMessage(Network.Server.NetworkKeepAlive())
                     }
                 }
 

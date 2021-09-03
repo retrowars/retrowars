@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.scoring.Stats
@@ -323,6 +324,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         maybeReceiveDamage()
         shakeCamera(delta)
         updateGame(delta)
+        keepAlive()
 
         game.uiAssets.getEffects().render {
             viewport.renderIn {
@@ -332,6 +334,11 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
             hud.render(score, delta)
         }
 
+    }
+
+    private fun keepAlive() {
+        // Gdx.input.justTouched()
+        // client?.keepAlive()
     }
 
     fun getInputProcessor() = hud.getInputProcessor()
@@ -377,6 +384,12 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     }
 
     override fun pause() {
+        with(client) {
+            if (this != null) {
+                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game cannot be paused during multiplayer, you must keep the game screen active while playing. Please rejoin to continue playing.")
+                RetrowarsClient.disconnect()
+            }
+        }
     }
 
     override fun resume() {

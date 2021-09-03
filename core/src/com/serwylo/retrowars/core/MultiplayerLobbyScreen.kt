@@ -88,6 +88,17 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
+    override fun pause() {
+        super.pause()
+
+        with(RetrowarsClient.get()) {
+            if (this != null) {
+                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game cannot be paused while connected to the server. Please rejoin to continue playing.")
+                RetrowarsClient.disconnect()
+            }
+        }
+    }
+
     private fun makeStageDecoration(): Table {
         return Table().apply {
             setFillParent(true)
