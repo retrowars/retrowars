@@ -10,9 +10,7 @@ class Player(
     /**
      * Lookup the corresponding [GameDetails] in [Games.all]
      */
-    var game: String
-
-) {
+    var game: String,
 
     /**
      * Covers the full lifecycle:
@@ -23,14 +21,22 @@ class Player(
      *  - Lost network connection
      *  - Quit the game gracefully
      */
-    var status: String = Status.lobby
+    var status: String,
+
+) {
 
     object Status {
+        /**
+         * Other players are playing a game, and we joined the room midway through. Therefore, we
+         * need to wait for them to complete before we are shown to them properly (i.e. don't
+         * show us in the end game screen or in the in-game screen, just in the main lobby).
+         */
+        const val pending = "pending"
         const val lobby = "lobby"
         const val playing = "playing"
         const val dead = "dead"
 
-        private val all = listOf(lobby, playing, dead)
+        private val all = listOf(pending, lobby, playing, dead)
 
         fun isValid(status: String) = all.contains(status)
     }

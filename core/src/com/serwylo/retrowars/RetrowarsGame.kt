@@ -10,9 +10,10 @@ import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.scoring.saveHighScore
+import com.serwylo.retrowars.utils.Platform
 import java.util.*
 
-class RetrowarsGame(private val verbose: Boolean) : Game() {
+class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game() {
 
     companion object {
         const val TAG = "RetrowarsGame"
@@ -66,14 +67,14 @@ class RetrowarsGame(private val verbose: Boolean) : Game() {
     fun showEndMultiplayerGame() {
         Gdx.app.log(TAG, "Showing end multiplayer game screen")
         Gdx.app.postRunnable {
-            setScreen(EndMultiplayerGameScreen(this))
+            setScreen(MultiplayerLobbyScreen(this))
         }
     }
 
-    fun showNetworkError(game: RetrowarsGame, wasGraceful: Boolean) {
+    fun showNetworkError(code: Int, message: String) {
         Gdx.app.log(TAG, "Showing network error screen")
         Gdx.app.postRunnable {
-            setScreen(NetworkErrorScreen(this, wasGraceful))
+            setScreen(NetworkErrorScreen(this, code, message))
         }
     }
 

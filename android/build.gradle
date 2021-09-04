@@ -1,6 +1,6 @@
 android {
     buildToolsVersion "30.0.3"
-    compileSdkVersion 29
+    compileSdkVersion 30
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -15,6 +15,10 @@ android {
     }
     packagingOptions {
         exclude 'META-INF/robovm/ios/robovm.xml'
+
+        // https://github.com/Tinder/Scarlet/issues/105#issuecomment-533987965
+        pickFirst "META-INF/INDEX.LIST"
+        pickFirst "META-INF/io.netty.versions.properties"
     }
     defaultConfig {
         applicationId "com.serwylo.retrowars"
@@ -24,10 +28,15 @@ android {
         // Pull these from the parent project build.gradle.
         versionCode = appVersionCode
         versionName = appVersionName
+
+        // After adding ktor dependencies and others, end up with:
+        // "Cannot fit requested classes in a single dex file (# methods: 98691 > 65536)"
+        // https://stackoverflow.com/a/62094000/2391921
+        multiDexEnabled true
     }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -96,7 +105,7 @@ task run(type: Exec) {
     }
 
     def adb = path + "/platform-tools/adb"
-    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.serwyloretrowars/com.serwyloretrowars.AndroidLauncher'
+    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.serwylo.retrowars/com.serwylo.retrowars.AndroidLauncher'
 }
 
 eclipse.project.name = appName + "-android"

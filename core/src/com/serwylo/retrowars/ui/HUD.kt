@@ -2,6 +2,7 @@ package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
@@ -52,6 +53,21 @@ class HUD(private val assets: UiAssets) {
         padTop(UI_SPACE * 10)
     }
 
+    /**
+     * A rolling log of game events shown to the user in the top right of the screen.
+     * Messages are transient, start large, then go small and then fade away.
+     *
+     * Call [logMessage] to post new messages to the top of the list.
+     */
+    private var messages = VerticalGroup().apply {
+        setFillParent(true)
+        reverse()
+        pad(UI_SPACE)
+        space(UI_SPACE)
+        columnAlign(Align.right)
+        align(Align.topRight)
+    }
+
     private val gameScore: Cell<Actor>
 
     private val client = RetrowarsClient.get()
@@ -66,7 +82,8 @@ class HUD(private val assets: UiAssets) {
         gameWindow.add(
             Stack(
                 description,
-                gameOverlay
+                gameOverlay,
+                messages,
             )
         ).expand().fill()
 
@@ -122,7 +139,25 @@ class HUD(private val assets: UiAssets) {
     }
 
     /**
-     * Overlay a message in large text with an optional description below.
+     * Post a transient message to the top right of the screen. Starts large, then goes smaller
+     * and then eventually fades away.
+     */
+    fun logMessage(message: String) {
+        messages.addActor(Label(message, styles.label.medium).apply {
+            addAction(
+                sequence(
+                    delay(5f),
+                    Actions.run { style = styles.label.small },
+                    delay(5f),
+                    alpha(0f, 0.5f),
+                    removeActor(),
+                )
+            )
+        })
+    }
+
+    /**
+     * Overlay a message in the middle of the screen in large text with an optional description below.
      * Examples include a nice single line of text when first starting the game (e.g. "Defend the cities" or "Destroy the asteroids")
      */
     fun showMessage(heading: String, body: String? = null) {
@@ -174,7 +209,12 @@ class HUD(private val assets: UiAssets) {
                     if (avatar == null) {
                         Gdx.app.error(TAG, "Expected avatar for ${player.id}, but couldn't find it.")
                     } else {
-                        add(avatar)
+                        val label = Label(client.getScoreFor(player).toString(), styles.label.medium)
+                        if (player.status == Player.Status.dead) {
+                            label.color = Color(0.6f, 0.6f, 0.6f, 1f)
+                        }
+                        add(label)
+                        add(avatar).spaceRight(UI_SPACE * 2)
                     }
                 }
             }
@@ -184,6 +224,20 @@ class HUD(private val assets: UiAssets) {
     fun showAttackFrom(player: Player, strength: Int) {
         val avatar = avatars[player] ?: return
         avatar.addAction(CustomActions.bounce(strength * 3))
+    }
+
+    fun refreshScores() {
+        if (client != null) {
+            avatarCell?.apply {
+                clearActor()
+                setActor(makeAvatarTiles(client, avatars))
+            }
+        }
+    }
+
+    fun handleDeadPlayer(player: Player) {
+        avatars[player]?.isDead = true
+        refreshScores()
     }
 
 }

@@ -26,11 +26,12 @@ allprojects {
         // The format here must remain consistent in order for the F-Droid checkupdates bot to pick
         // them up. Normally it just checks the android apps build.gradle or AndroidManifest, but
         // we dynamically inject them via these properties.
-        appVersionCode = 8
-        appVersionName = "0.6.2"
+        appVersionCode = 9
+        appVersionName = "0.7.0"
 
         gdxVersion = '1.10.0'
         kotlinCoroutinesVersion = '1.4.2'
+        ktor_version = '1.6.0'
     }
 
     repositories {
@@ -42,15 +43,9 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url 'https://jitpack.io' }
     }
-
-    // Newer versions of objenesis (used by kryonet to deserialize classes) requires minSdk 26.
-    // Not particularly interested in bumping from 14 just to solve this issue.
-    // https://github.com/mockk/mockk/issues/281#issuecomment-483329039
-    configurations.all {
-        resolutionStrategy.force 'org.objenesis:objenesis:2.6'
-    }
-
 }
+
+task stage(dependsOn: [':server:dist'])
 
 project(":texture-packer") {
     apply plugin: "kotlin"
@@ -73,6 +68,7 @@ project(":desktop") {
     }
 }
 
+if (!hasProperty('excludeAndroid')) {
 project(":android") {
     apply plugin: "android"
     apply plugin: "kotlin-android"
@@ -90,6 +86,7 @@ project(":android") {
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutinesVersion"
     }
 }
+}
 
 project(":core") {
     apply plugin: "kotlin"
@@ -99,14 +96,39 @@ project(":core") {
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
         implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion"
         implementation 'com.gmail.blueboxware:libgdxpluginannotations:1.16'
-        implementation 'com.github.crykn:kryonet:2.22.7'
         implementation 'com.google.code.gson:gson:2.8.6'
         implementation 'com.crashinvaders.vfx:gdx-vfx-core:0.5.0'
         implementation 'com.crashinvaders.vfx:gdx-vfx-effects:0.5.0'
+        implementation "io.ktor:ktor-client-core:$ktor_version"
+        implementation "io.ktor:ktor-server-netty:$ktor_version"
+        implementation "io.ktor:ktor-client-cio:$ktor_version"
+        implementation "io.ktor:ktor-client-gson:$ktor_version"
+        implementation "io.ktor:ktor-gson:$ktor_version"
+        implementation "io.ktor:ktor-client-websockets:$ktor_version"
+        implementation "io.ktor:ktor-websockets:$ktor_version"
+        implementation "ch.qos.logback:logback-classic:1.2.3" // For server related logging (not Android - and hence game - logging, that uses Gdx.app.log)
+        implementation 'org.jmdns:jmdns:3.5.7'
     }
 
     // https://stackoverflow.com/a/54006518
     processResources {
-        expand(['appVersionCode': appVersionCode])
+        expand([
+                'appVersionCode': appVersionCode,
+                'appVersionName': appVersionName,
+        ])
+    }
+}
+
+project(":server") {
+    apply plugin: "kotlin"
+
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        api 'org.slf4j:slf4j-api:1.7.30'
+        implementation 'ch.qos.logback:logback-core:1.2.3'
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
     }
 }
