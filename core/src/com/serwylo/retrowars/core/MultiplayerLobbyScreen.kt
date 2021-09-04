@@ -88,6 +88,18 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
+    override fun pause() {
+        super.pause()
+
+        with(RetrowarsClient.get()) {
+            if (this != null) {
+                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game must remain active while connected to the server.\nPlease rejoin to continue playing.")
+                listen({ _, _ -> })
+                RetrowarsClient.disconnect()
+            }
+        }
+    }
+
     private fun makeStageDecoration(): Table {
         return Table().apply {
             setFillParent(true)
@@ -306,23 +318,23 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
             val metadata = Table()
 
-            metadata.add(Label("Last game:", styles.label.small)).right()
+            metadata.add(Label("Last game:", styles.label.small)).left()
             metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Rooms:", styles.label.small)).right()
+            metadata.add(Label("Rooms:", styles.label.small)).left()
             metadata.add(Label("${server.currentRoomCount}/${server.maxRooms}", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Players:", styles.label.small)).right()
+            metadata.add(Label("Players:", styles.label.small)).left()
             metadata.add(Label(server.currentPlayerCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Version:", styles.label.small)).right()
+            metadata.add(Label("Version:", styles.label.small)).left()
             metadata.add(Label("v${server.versionName}", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Fetched info in:", styles.label.small)).right()
+            metadata.add(Label("Query time:", styles.label.small)).left()
             metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
@@ -965,6 +977,18 @@ class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>)
         return when(action) {
             is Action.PlayersChanged -> ReadyToStart(action.players, this.players)
             is Action.BeginGame -> CountdownToGame()
+
+            // In practice, we shouldn't receive this. However during testing, there were sometimes
+            // edge cases which resulted in the server sending these events twice. Those edge cases
+            // have since been resolved, but nevertheless it is harmless to just stay in the lobby
+            // if we have already received one of these events.
+            //
+            // The worst case is that the game we are actually playing is going to be different to
+            // what the server and other players think we are playing, but that doesn't really matter
+            // at this point in time because all gameplay is performed on the client side anyway.
+            // All the server cares about is that we get points, then we die.
+            is Action.ReturnToLobby -> this
+
             else -> unsupported(action)
         }
     }

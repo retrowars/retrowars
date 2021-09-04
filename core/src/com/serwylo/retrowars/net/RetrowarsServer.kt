@@ -329,6 +329,11 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             return
         }
 
+        if (room.players.all { it.status == Player.Status.lobby }) {
+            Gdx.app.error(TAG, "Checking for end game but all players are in the lobby. Ignoring this request.")
+            return
+        }
+
         val stillPlaying = room.players.filter { it.status == Player.Status.playing }
 
         if (stillPlaying.isEmpty()) {
@@ -373,7 +378,12 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelay}ms seconds before telling each player to return to the main lobby for this room.")
             delay(config.finalScoreDelay.toLong())
 
-            val newGames = room.players.associate { it.id to Games.allSupported.random().id }
+            room.players.onEach {
+                it.game = Games.allSupported.random().id
+                it.status = Player.Status.lobby
+            }
+
+            val newGames = room.players.associate { it.id to it.game }
 
             Gdx.app.debug(TAG, "Broadcasting to all players to return to the lobby and assign new games: ${newGames.map { "${it.key}: ${it.value}" }.joinToString(", ")}.")
             room.sendToAll(Network.Client.OnReturnToLobby(newGames), connections)
@@ -472,7 +482,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     }
 
     fun close() {
-        val message = Network.Client.OnServerStopped()
+        val message = Network.Client.OnFatalError(Network.ErrorCodes.SERVER_SHUTDOWN, "Server has been shutdown.")
         connections.onEach { it.sendMessage(message) }
         server.disconnect(platform)
     }

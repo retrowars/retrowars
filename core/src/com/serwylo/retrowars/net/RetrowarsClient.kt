@@ -147,7 +147,6 @@ class RetrowarsClient(host: String, port: Int) {
                         is Network.Client.OnPlayerStatusChange -> onStatusChanged(obj.id, obj.status)
                         is Network.Client.OnReturnToLobby -> onReturnToLobby(obj.newGames)
                         is Network.Client.OnStartGame -> onStartGame()
-                        is Network.Client.OnServerStopped -> onServerStopped()
                         is Network.Client.OnFatalError -> onFatalError(obj.code, obj.message)
                     }
                 }
@@ -169,12 +168,6 @@ class RetrowarsClient(host: String, port: Int) {
         serverErrorCode = code
         serverErrorMessage = message
         client.disconnect() // This will trigger an onDisconnected event, which will in turn then notify via the networkCloseListener. A bit messy, but should work.
-    }
-
-    private fun onServerStopped() {
-        Gdx.app.log(TAG, "Recording that server stopped somewhat-gracefully.")
-        serverErrorCode = Network.ErrorCodes.SERVER_SHUTDOWN
-        serverErrorMessage = "Server has stopped running."
     }
 
     private fun onStartGame() {
@@ -388,7 +381,7 @@ class WebSocketNetworkClient(
                 val pingJob = launch {
                     while (true) {
                         delay(30000)
-                        sendMessage(Network.Server.Ping())
+                        sendMessage(Network.Server.NetworkKeepAlive())
                     }
                 }
 

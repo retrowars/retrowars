@@ -22,6 +22,7 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
 
         // Ensure that we don't have any lingering network connections around.
         GlobalScope.launch {
+            RetrowarsClient.get()?.listen({ _, _ -> })
             RetrowarsClient.disconnect()
             RetrowarsServer.stop()
         }
@@ -53,17 +54,35 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
 
     private fun makeErrorInfo(code: Int, message: String, styles: UiAssets.Styles): Actor = when (code) {
         Network.ErrorCodes.NO_ROOMS_AVAILABLE -> showNoRoomsAvailable(styles)
-        else -> makeErrorLabel(message, styles)
+        Network.ErrorCodes.CLIENT_CLOSED_APP -> showClientClosedApp(styles)
+        Network.ErrorCodes.SERVER_SHUTDOWN -> showServerShutdown(styles)
+        else -> makeTitle(message, styles)
     }
 
     private fun showNoRoomsAvailable(styles: UiAssets.Styles) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeErrorLabel("Sorry, no rooms available. Please try again later.", styles))
+        addActor(makeTitle("Maximum number of players for this server has been reached.\nPlease try again later or join another server.", styles))
         addActor(makeContributeServerInfo(styles))
     }
 
-    private fun makeErrorLabel(errorMessage: String, styles: UiAssets.Styles) =
+    private fun showClientClosedApp(styles: UiAssets.Styles) = VerticalGroup().apply {
+        space(UI_SPACE * 2)
+        addActor(makeTitle("Game must remain open while connected to the server.\nPlease rejoin to continue playing.", styles))
+    }
+
+    private fun showServerShutdown(styles: UiAssets.Styles) = VerticalGroup().apply {
+        space(UI_SPACE * 2)
+        addActor(makeTitle("The server has been shutdown", styles))
+        addActor(makeDetails("This may be for scheduled maintenance, or it could have crashed.\nHopefully it will be back up again soon.\n\nPlease join another server to continue playing.", styles))
+    }
+
+    private fun makeTitle(errorMessage: String, styles: UiAssets.Styles) =
         Label(errorMessage, styles.label.medium).apply {
+            setAlignment(Align.center)
+        }
+
+    private fun makeDetails(details: String, styles: UiAssets.Styles) =
+        Label(details, styles.label.small).apply {
             setAlignment(Align.center)
         }
 

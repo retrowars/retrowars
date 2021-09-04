@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.scoring.Stats
@@ -377,6 +378,13 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     }
 
     override fun pause() {
+        with(client) {
+            if (this != null) {
+                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game must remain active while connected to the server.\nPlease rejoin to continue playing.")
+                listen({ _, _ -> })
+                RetrowarsClient.disconnect()
+            }
+        }
     }
 
     override fun resume() {

@@ -20,6 +20,11 @@ class ServerApp(
         logger.info("Launching server app [port: ${config.port}, rooms: [type: ${config.rooms.getName()}, maxRooms: ${config.rooms.getMaxRooms()}, roomSize: ${config.rooms.getRoomSize()}], finalScoreDelay: ${config.finalScoreDelay}]")
 
         server = RetrowarsServer(platform, config)
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            logger.info("Shutting down server app (will politely ask server to close all connections)")
+            server.close()
+        })
     }
 
     override fun resize(width: Int, height: Int) {}
@@ -27,4 +32,5 @@ class ServerApp(
     override fun pause() {}
     override fun resume() {}
     override fun dispose() {}
+
 }
