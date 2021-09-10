@@ -1,0 +1,13 @@
+Online multiplayer! Compete with players across the globe for retro glory!
+
+No accounts required.
+
+Limitations:
+* Play with random people (invite games to be introduced in future)
+* Only public servers can be joined (will allow custom servers in future)
+
+Able to help by running a server? Join us on GitHub.
+
+0.7.1: Game select screen improvements
+
+Please donate to support further development.
