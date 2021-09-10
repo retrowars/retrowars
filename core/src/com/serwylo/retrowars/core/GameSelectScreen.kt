@@ -34,9 +34,9 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         // density independent pixel calculations (even though the math is simple, it didn't
         // seem to set proper breakpoints, perhaps because of the arbitrary math in calcDensityScaleFactor()
         // from before it occurred we could use DIPs).
-        val gamesPerRow = if (Gdx.app.type == Application.ApplicationType.Desktop) 5 else 4
+        val gamesPerRow = 5
         val width = (stage.width - UI_SPACE * 4) / gamesPerRow
-        val height = width * 5 / 4
+        val height = width * 6 / 5
 
         val container = VerticalGroup().apply {
             space(UI_SPACE)
@@ -156,13 +156,17 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         val subText = if (!game.isAvailable) {
             strings["unimplemented-game.coming-soon"]
         } else if (highScore.attempts > 0) {
-            "Best: ${highScore.score}"
+            "High Score\n${highScore.score}"
         } else {
             ""
         }
 
         table.row()
-        table.add(Label(subText, styles.label.small))
+        table.add(
+            Label(subText, styles.label.small).apply {
+                setAlignment(Align.center)
+            }
+        )
 
         return WidgetGroup(button, table)
 
