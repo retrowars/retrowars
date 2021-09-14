@@ -8,6 +8,6 @@ Limitations:
 
 Able to help by running a server? Join us on GitHub.
 
-0.7.1: Better fire icon for Asteroids.
+0.7.2: Better fire icon for Asteroids.
 
 Please donate to support further development.
