@@ -156,7 +156,7 @@ class UiAssets(locale: Locale) {
             val down = atlas.findRegion("arrow_down")!!
             val thrust = atlas.findRegion("thrust")!!
             val drop = atlas.findRegion("drop")!!
-            val button_x = atlas.findRegion("button_x")!!
+            val fire = atlas.findRegion("fire")!!
             val rotate_clockwise = atlas.findRegion("rotate_clockwise")!!
             val rotate_counter_clockwise = atlas.findRegion("rotate_counter_clockwise")!!
         }

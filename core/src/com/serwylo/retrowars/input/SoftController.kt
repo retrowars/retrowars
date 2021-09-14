@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.UiAssets
-import com.serwylo.retrowars.games.tetris.ButtonState
 import com.serwylo.retrowars.ui.IconButton
 
 open class SoftController(uiAssets: UiAssets, layout: String, expectedButtons: Map<String, TextureRegion>) {
@@ -179,7 +178,7 @@ class AsteroidsSoftController(layout: Int, uiAssets: UiAssets): SoftController(
     getLayout(layouts, layout),
     mapOf(
         Buttons.THRUST to uiAssets.getSprites().buttonIcons.thrust,
-        Buttons.FIRE to uiAssets.getSprites().buttonIcons.button_x,
+        Buttons.FIRE to uiAssets.getSprites().buttonIcons.fire,
         Buttons.LEFT to uiAssets.getSprites().buttonIcons.left,
         Buttons.RIGHT to uiAssets.getSprites().buttonIcons.right,
     )
