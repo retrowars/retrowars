@@ -4,8 +4,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
@@ -38,6 +36,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             TempestSoftController.Buttons.MOVE_CLOCKWISE,
             { state.moveClockwise = if (state.moveClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveClockwise = ButtonState.Unpressed })
+
+        controller!!.listen(
+            TempestSoftController.Buttons.FIRE,
+            { state.fire = if (state.fire == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
+            { state.fire = ButtonState.Unpressed })
     }
 
     private val state = TempestGameState(viewport.worldWidth, viewport.worldHeight)
@@ -49,6 +52,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     override fun updateGame(delta: Float) {
         recordInput()
         movePlayer()
+        moveBullets(delta)
+        fire()
         resetInput()
     }
 
@@ -61,11 +66,22 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
             state.moveClockwise = ButtonState.JustPressed
         }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            state.fire = ButtonState.JustPressed
+        }
     }
 
     private fun resetInput() {
         state.moveCounterClockwise = ButtonState.Unpressed
         state.moveClockwise = ButtonState.Unpressed
+        state.fire = ButtonState.Unpressed
+    }
+
+    private fun moveBullets(delta: Float) {
+        state.bullets
+            .onEach { it.depth += TempestGameState.BULLET_SPEED * delta }
+            .removeAll { it.depth > TempestGameState.LEVEL_DEPTH }
     }
 
     private fun movePlayer() {
@@ -75,6 +91,12 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.playerSegment = state.level.segments[(currentIndex + 1) % state.level.segments.size]
         } else if (state.moveCounterClockwise == ButtonState.JustPressed) {
             state.playerSegment = state.level.segments[(state.level.segments.size + currentIndex - 1) % state.level.segments.size]
+        }
+    }
+
+    private fun fire() {
+        if (state.fire == ButtonState.JustPressed) {
+            state.bullets.add(Bullet(state.playerSegment, 0f))
         }
     }
 
@@ -104,13 +126,20 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         r.color = Color.YELLOW
         renderSegment(r, state.playerSegment)
 
+        state.bullets.onEach {
+            renderBullet(r, it)
+        }
         r.end()
     }
 
+    private fun renderBullet(shapeRenderer: ShapeRenderer, bullet: Bullet) {
+        shapeRenderer.box(bullet.segment.centre.x, bullet.segment.centre.y, -bullet.depth, 1f, 1f, 1f)
+    }
+
     private fun renderSegment(shapeRenderer: ShapeRenderer, segment: Segment) {
-        shapeRenderer.line(segment.start.x, segment.start.y, -100f, segment.end.x, segment.end.y, -100f)
-        shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -100f)
-        shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -100f)
+        shapeRenderer.line(segment.start.x, segment.start.y, -TempestGameState.LEVEL_DEPTH, segment.end.x, segment.end.y, -TempestGameState.LEVEL_DEPTH)
+        shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -TempestGameState.LEVEL_DEPTH)
+        shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.start, segment.end)
     }
 

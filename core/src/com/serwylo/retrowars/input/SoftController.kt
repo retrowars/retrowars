@@ -245,17 +245,19 @@ class TempestSoftController: SoftControllerLayout() {
     override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
         Buttons.MOVE_CLOCKWISE to sprites.buttonIcons.rotate_clockwise,
         Buttons.MOVE_COUNTER_CLOCKWISE to sprites.buttonIcons.rotate_counter_clockwise,
+        Buttons.FIRE to sprites.buttonIcons.button_x,
     )
 
     override fun getLayouts() = listOf(
-        "[ move_counter_clockwise ][<---->][ move_clockwise ]",
-        "[ move_counter_clockwise ][ move_clockwise ][<---->]",
-        "[<---->][ move_counter_clockwise ][ move_clockwise ]",
+        "[ move_counter_clockwise ][ move_clockwise ][<---->][ fire ]",
+        "[ fire ][<---->][ move_counter_clockwise ][ move_clockwise ]",
+        "[ move_counter_clockwise ][<---->][ move_clockwise ][ fire ]",
     )
 
     object Buttons {
         const val MOVE_CLOCKWISE = "move_clockwise"
         const val MOVE_COUNTER_CLOCKWISE = "move_counter_clockwise"
+        const val FIRE = "fire"
     }
 
 }

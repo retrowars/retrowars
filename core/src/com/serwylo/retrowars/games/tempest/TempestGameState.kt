@@ -2,15 +2,28 @@ package com.serwylo.retrowars.games.tempest
 
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.games.tetris.ButtonState
+import java.util.*
 
 class TempestGameState(private val worldWidth: Float, private val worldHeight: Float) {
+
+    companion object {
+        const val LEVEL_DEPTH = 150f
+        const val BULLET_SPEED = LEVEL_DEPTH / 0.5f // Take 0.5 seconds to traverse the whole screen.
+    }
+    val bullets = LinkedList<Bullet>()
     val level: Level = makeThirdLevel(worldWidth, worldHeight)
 
     var moveCounterClockwise = ButtonState.Unpressed
     var moveClockwise = ButtonState.Unpressed
+    var fire = ButtonState.Unpressed
 
     var playerSegment = level.segments[0]
 }
+
+data class Bullet(
+    val segment: Segment,
+    var depth: Float,
+)
 
 data class Level(
     val segments: List<Segment>,
@@ -33,7 +46,7 @@ private fun makeFirstLevel(worldWidth: Float, worldHeight: Float): Level {
         val start = Vector2(0f, length).rotateDeg(startingAngle + i * approxDegreesBetween)
         val end = Vector2(0f, length).rotateDeg(startingAngle + (i + 1) * approxDegreesBetween)
 
-        Segment(start.add(center), end.add(center))
+        Segment(start, end).apply { offsetBy(center) }
 
     }
 
@@ -73,8 +86,7 @@ private fun makeSecondLevel(worldWidth: Float, worldHeight: Float): Level {
     )
 
     segments.forEach {
-        it.start.add(center)
-        it.end.add(center)
+        it.offsetBy(center)
     }
 
     return Level(segments)
@@ -112,8 +124,7 @@ private fun makeThirdLevel(worldWidth: Float, worldHeight: Float): Level {
     )
 
     segments.forEach {
-        it.start.add(center)
-        it.end.add(center)
+        it.offsetBy(center)
     }
 
     return Level(segments)
@@ -122,7 +133,15 @@ private fun makeThirdLevel(worldWidth: Float, worldHeight: Float): Level {
 data class Segment(
     val start: Vector2,
     val end: Vector2,
-)
+) {
+    val centre: Vector2 = start.cpy().mulAdd(end.cpy().sub(start), 0.5f)
+
+    fun offsetBy(amount: Vector2) {
+        start.add(amount)
+        end.add(amount)
+        centre.set(start.cpy().mulAdd(end.cpy().sub(start), 0.5f))
+    }
+}
 
 enum class ButtonState {
     Unpressed,
