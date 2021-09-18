@@ -9,15 +9,63 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     companion object {
         const val LEVEL_DEPTH = 150f
         const val BULLET_SPEED = LEVEL_DEPTH / 0.5f // Take 0.5 seconds to traverse the whole screen.
+
+        const val MIN_TIME_BETWEEN_ENEMIES = 0.5f
+        const val MAX_TIME_BETWEEN_ENEMIES = 2f
     }
+
     val bullets = LinkedList<Bullet>()
+    val enemies = LinkedList<Enemy>()
     val level: Level = makeThirdLevel(worldWidth, worldHeight)
+
+    var timer: Float = 0f
+    var nextEnemyTime: Float = 0f
+    var numEnemiesRemaining: Int = 10
 
     var moveCounterClockwise = ButtonState.Unpressed
     var moveClockwise = ButtonState.Unpressed
     var fire = ButtonState.Unpressed
 
     var playerSegment = level.segments[0]
+
+    fun shouldSpawnEnemy() = timer > nextEnemyTime
+}
+
+fun makeEnemy(segment: Segment) = Enemy(
+    segment,
+    depth = TempestGameState.LEVEL_DEPTH,
+    timeUntilMove = Enemy.STEP_DURATION,
+)
+
+data class Enemy(
+    var segment: Segment,
+    var depth: Float,
+
+    /**
+     * Number of seconds before the enemy steps forwars.
+     */
+    var timeUntilMove: Float = STEP_DURATION,
+
+    var state: State = State.Walking,
+    var crawlsRemaining: Int = NUM_CRAWLS,
+    var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
+
+    ) {
+
+    companion object {
+        const val STEP_DURATION = 0.5f
+        const val NUM_CRAWLS = 3
+    }
+
+    enum class State {
+        Walking,
+        Crawling,
+    }
+
+    enum class Direction {
+        Clockwise,
+        CounterClockwise,
+    }
 }
 
 data class Bullet(

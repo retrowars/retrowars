@@ -245,7 +245,7 @@ class TempestSoftController: SoftControllerLayout() {
     override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
         Buttons.MOVE_CLOCKWISE to sprites.buttonIcons.rotate_clockwise,
         Buttons.MOVE_COUNTER_CLOCKWISE to sprites.buttonIcons.rotate_counter_clockwise,
-        Buttons.FIRE to sprites.buttonIcons.button_x,
+        Buttons.FIRE to sprites.buttonIcons.fire,
     )
 
     override fun getLayouts() = listOf(

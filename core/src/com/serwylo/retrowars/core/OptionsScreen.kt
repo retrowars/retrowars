@@ -2,10 +2,7 @@ package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Actor
-import com.badlogic.gdx.scenes.scene2d.ui.CheckBox
-import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
@@ -64,19 +61,19 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
             row()
             add(
                 HorizontalGroup().apply {
-
-                Games.allSupported
-                    .filter { it.controllerLayout != null }
-                    .forEach { gameDetails ->
-                        addActor(
-                            IconButton(skin, gameDetails.icon(sprites)) {
-                                Gdx.app.postRunnable {
-                                    game.screen = ControllerSelectScreen(game, gameDetails)
+                    Games.allSupported
+                        .filter { it.controllerLayout != null }
+                        .forEach { gameDetails ->
+                            addActor(
+                                IconButton(skin, gameDetails.icon(sprites)) {
+                                    Gdx.app.postRunnable {
+                                        game.screen = ControllerSelectScreen(game, gameDetails)
+                                    }
                                 }
-                            }
-                        )
+                            )
 
 
+                    }
                 }
             )
 
@@ -170,6 +167,7 @@ class AvatarSelectScreen(
                         })
 
                     }
+                )
 
                 row()
                 add(Label("To change, choose from one of these:", game.uiAssets.getStyles().label.medium))
