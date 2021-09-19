@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 
 class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: Vector2, private val rotationSpeedInDegPerSec: Float): WrapsWorld {
 
@@ -70,9 +71,13 @@ class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: V
 
         }
 
-        fun renderBulk(camera: Camera, r: ShapeRenderer, asteroids: List<Asteroid>) {
+        fun renderBulk(
+            camera: Camera,
+            r: ShapeRenderer,
+            asteroids: List<Asteroid>,
+            toHighlight: Set<Asteroid>
+        ) {
             r.projectionMatrix = camera.combined
-            r.color = Color.WHITE
             r.begin(ShapeRenderer.ShapeType.Line)
 
             // Use an iterator to avoid ConcurrentModificationExceptions when a network request
@@ -80,6 +85,8 @@ class Asteroid(initialPosition: Vector2, val size: Size, private val velocity: V
             val iterator = asteroids.iterator()
             while (iterator.hasNext()) {
                 val it = iterator.next()
+
+                r.color = if (toHighlight.contains(it)) ENEMY_ATTACK_COLOUR else Color.WHITE
 
                 renderInBatch(r, it, it.position)
 

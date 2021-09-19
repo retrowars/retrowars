@@ -29,6 +29,7 @@ class AsteroidsGameState(worldWidth: Float, worldHeight: Float) {
 
     val bullets = LinkedList<Bullet>()
     val asteroids = mutableListOf<Asteroid>()
+    val networkAsteroids = mutableSetOf<Asteroid>()
     var currentNumAsteroids = 3
 
     /**
