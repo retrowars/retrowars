@@ -2,10 +2,11 @@ package com.serwylo.retrowars.games.snake
 
 import java.util.*
 
-class SnakeGameState() {
+class SnakeGameState {
 
     companion object {
         // Based on my count from a screenshot of the old Nokia 6110 version.
+        // Also fits well with the forced landscape orientation on Android devices for this game.
         const val CELLS_WIDE = 29
         const val CELLS_HIGH = 19
     }
@@ -27,18 +28,18 @@ class SnakeGameState() {
     }
 
     val snake = LinkedList<Cell>().apply {
-        add(cells[0][CELLS_WIDE/2])
+        add(cells[CELLS_HIGH / 2][1])
     }
 
-    var food = cells[CELLS_HIGH * 2 / 3][CELLS_WIDE / 2]
+    var food = cells[CELLS_HIGH / 2][CELLS_WIDE * 5 / 6]
 
     var left = false
     var right = false
     var up = false
     var down = false
 
-    var currentDirection = Direction.UP
-    var nextDirection = Direction.UP
+    var currentDirection = Direction.RIGHT
+    var nextDirection = Direction.RIGHT
 
     class Cell(val x: Int, val y: Int) {
         override fun toString() = "($x, $y)"
