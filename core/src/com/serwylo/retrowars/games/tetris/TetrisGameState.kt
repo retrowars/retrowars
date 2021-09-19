@@ -63,7 +63,12 @@ class TetrisGameState() {
     var nextTimeStep = timeStep()
     var timer = 0f
 
-    var cells: List<MutableList<Boolean>>
+    var cells: List<MutableList<CellState>> = (0 until CELLS_HIGH).map {
+        (0 until CELLS_WIDE).map {
+            CellState.Empty
+        }.toMutableList()
+    }
+
     var lines: Int = 0
 
     var currentPieceRotations: TetronimoOrientations = Tetronimos.random()
@@ -79,14 +84,12 @@ class TetrisGameState() {
     var rotateRight = ButtonState.Unpressed
     var drop = ButtonState.Unpressed
 
-    init {
-        cells = (0 until CELLS_HIGH).map { _ ->
-            (0 until CELLS_WIDE).map { _ ->
-                false
-            }.toMutableList()
-        }
-    }
+}
 
+enum class CellState {
+    Empty,
+    Full,
+    FullFromEnemy,
 }
 
 enum class ButtonState {
