@@ -9,6 +9,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.input.SnakeSoftController
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
 class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f, 400f) {
@@ -102,6 +103,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
             // Move the head forward, but leave the tail where it was. Do this as many time
             // steps as necessary.
             state.queuedGrowth --
+            state.enemyCellIndices.add(state.snake.size - 1)
 
         } else {
 
@@ -160,16 +162,13 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         r.end()
         r.begin(ShapeRenderer.ShapeType.Filled)
 
-        r.color = Color.WHITE
-        state.snake.forEach { cell ->
+        state.snake.forEachIndexed { i, cell ->
+            r.color = if (state.enemyCellIndices.contains(i)) ENEMY_ATTACK_COLOUR else Color.WHITE
             r.rect(cell.x * cellWidth + 1, cell.y * cellHeight + 1, cellWidth - 2, cellHeight - 2)
         }
 
-        val food = state.food
         r.color = Color.GREEN
-        if (food != null) {
-            r.rect(food.x * cellWidth + 1, food.y * cellHeight + 1, cellWidth - 2, cellHeight - 2)
-        }
+        r.rect(state.food.x * cellWidth + 1, state.food.y * cellHeight + 1, cellWidth - 2, cellHeight - 2)
 
         r.end()
     }

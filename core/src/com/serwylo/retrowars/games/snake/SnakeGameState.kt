@@ -31,7 +31,9 @@ class SnakeGameState {
         add(cells[CELLS_HIGH / 2][1])
     }
 
-    var food = cells[CELLS_HIGH / 2][CELLS_WIDE * 5 / 6]
+    val enemyCellIndices = mutableSetOf<Int>()
+
+    var food: Cell = cells[CELLS_HIGH / 2][CELLS_WIDE * 5 / 6]
 
     var left = false
     var right = false
