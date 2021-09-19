@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 
 class FriendlyMissile(startTurret: Turret, target: Vector2): Missile(
     startTurret.missileSpeed,
@@ -14,10 +15,10 @@ class FriendlyMissile(startTurret: Turret, target: Vector2): Missile(
     target
 )
 
-class EnemyMissile(speed: Float, start: Vector2, public val targetCity: City): Missile(
+class EnemyMissile(speed: Float, start: Vector2, val targetCity: City): Missile(
     speed,
-    Color(1f, 0.2f, 0.2f, 1f),
-    Color(1f, 0.2f, 0.2f, 0.5f),
+    Color.WHITE,
+    Color.WHITE,
     start,
     targetCity.position.cpy().add(0f, City.HEIGHT)
 )
@@ -29,15 +30,14 @@ abstract class Missile(speed: Float, val missileColour: Color, val trailColour: 
         private const val SIZE = 2f
         const val POINTS = 6000
 
-        fun renderBulk(camera: Camera, r: ShapeRenderer, missiles: List<Missile>) {
+        fun renderBulk(camera: Camera, r: ShapeRenderer, missiles: List<Missile>, toHighlight: Set<Missile> = emptySet()) {
             r.projectionMatrix = camera.combined
-            r.color = Color.WHITE
             r.begin(ShapeRenderer.ShapeType.Line)
             missiles.forEach {
-                r.color = it.trailColour
+                r.color = if (toHighlight.contains(it)) { ENEMY_ATTACK_COLOUR } else { it.trailColour }
                 r.line(it.start, it.position)
 
-                r.color = it.missileColour
+                r.color = if (toHighlight.contains(it)) { ENEMY_ATTACK_COLOUR } else { it.missileColour }
                 r.rect(it.position.x - SIZE / 2, it.position.y - SIZE / 2, SIZE, SIZE)
             }
             r.end()

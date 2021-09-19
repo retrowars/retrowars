@@ -73,7 +73,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         state.cities.forEach { it.render(camera, r) }
         state.turrets.forEach { it.render(camera, r) }
         Missile.renderBulk(camera, r, state.friendlyMissiles)
-        Missile.renderBulk(camera, r, state.enemyMissiles)
+        Missile.renderBulk(camera, r, state.enemyMissiles, state.networkMissiles)
         Explosion.renderBulk(camera, r, state.explosions)
 
     }
@@ -93,6 +93,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
                     val missile = enemyMissiles.next()
                     if (missile.isColliding(explosion)) {
                         enemyMissiles.remove()
+                        state.networkMissiles.remove(missile)
                         increaseScore(Missile.POINTS)
                     }
                 }
@@ -117,6 +118,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
             if (missile.hasReachedDestination()) {
                 enemyMissiles.remove()
+                state.networkMissiles.remove(missile)
 
                 missile.targetCity.health --
             }
@@ -135,7 +137,8 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     override fun onReceiveDamage(strength: Int) {
         for (i in 0..strength * 2) {
-            fireEnemyMissile()
+            val missile = fireEnemyMissile()
+            state.networkMissiles.add(missile)
 
             // These are not counted as normal missiles from this level, so extend the length of
             // the level in response.
@@ -162,23 +165,25 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         }
     }
 
-    private fun fireEnemyMissile() {
+    private fun fireEnemyMissile(): EnemyMissile {
         val aliveCities = state.cities.filter { it.health > 0 }
 
-        if (aliveCities.isEmpty()) {
+        val targetCity = if (aliveCities.isEmpty()) {
             // Don't really expect to get here, this is more defensive.
             // Elsewhere, we should be ending the game when the last city is dead. At this point,
-            // we wont be able to target any cities anymore.
-            return
+            // we just fire missiles at random dead cities.
+            state.cities.random()
+        } else {
+            aliveCities.random()
         }
-
-        val targetCity = aliveCities.random()
 
         val startX = (Math.random() * viewport.worldWidth).toFloat()
         val missile = EnemyMissile(state.missileSpeed, Vector2(startX, viewport.worldHeight), targetCity)
 
         state.enemyMissiles.add(missile)
         state.numMissilesRemaining --
+
+        return missile
     }
 
     private fun queueEnemyMissile() {
