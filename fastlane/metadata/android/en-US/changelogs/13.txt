@@ -1,0 +1,9 @@
+Improvement:
+ - Colourise attacks from other players to make it very obvious where other players have slowed your path to glory.
+
+Bugfix:
+ - Ensure attacks are sent even after multiple consecutive online games.
+
+Able to help by running a server? Join us on GitHub to find out how to contribute.
+
+Please donate to support further development.
