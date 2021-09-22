@@ -175,6 +175,7 @@ class RetrowarsClient(host: String, port: Int) {
         // start a new one. Therefore we need to forget all we know about peoples scores before
         // continuing with a new game.
         scores.clear()
+        scoreBreakpoints.clear()
         players.forEach {
             it.status = Player.Status.playing
             scores[it] = 0L
