@@ -42,6 +42,7 @@ class MissileCommandGameState(worldWidth: Float, worldHeight: Float) {
 
     val friendlyMissiles = LinkedList<FriendlyMissile>()
     val enemyMissiles = LinkedList<EnemyMissile>()
+    val networkMissiles = mutableSetOf<EnemyMissile>()
     val explosions = LinkedList<Explosion>()
 
     init {

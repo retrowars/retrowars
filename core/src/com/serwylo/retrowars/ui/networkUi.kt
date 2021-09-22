@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
@@ -21,6 +22,7 @@ fun filterActivePlayers(players: Collection<Player>) =
 fun filterAlivePlayers(players: Collection<Player>) =
     players.filter { it.status == Player.Status.playing }
 
+val ENEMY_ATTACK_COLOUR: Color = Color.RED
 /**
  * @param showDeaths If true, will display a red cross over dead players.
  */

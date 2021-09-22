@@ -12,6 +12,7 @@ import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.tetris.entities.Tetronimo
 import com.serwylo.retrowars.games.tetris.entities.Tetronimos
 import com.serwylo.retrowars.input.TetrisSoftController
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
 class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
@@ -185,7 +186,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
                     }
 
                     // Would constitute moving on top of an existing piece placed in the grid, not okay.
-                    if (state.cells[y][x]) {
+                    if (state.cells[y][x] != CellState.Empty) {
                         return false
                     }
                 }
@@ -234,14 +235,14 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         for (y in 0 until TetrisGameState.CELLS_HIGH) {
 
             // If all values in a row are true then we need to clear the row, otherwise continue.
-            if (!state.cells[y].all { it }) {
+            if (!state.cells[y].all { it != CellState.Empty }) {
                 continue
             }
 
             numLines ++
 
             // Make space for the new row to be copied down
-            state.cells[y].fill(false)
+            state.cells[y].fill(CellState.Empty)
 
             // Now copy every cell from this line and above down one row at a time
             for (yToReplace in y downTo 1) {
@@ -251,7 +252,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             }
 
             // And ensure the top row which was moved down is now empty
-            state.cells[0].fill(false)
+            state.cells[0].fill(CellState.Empty)
 
         }
 
@@ -266,7 +267,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
     private fun addLine(): Boolean {
 
         // If the last row has any pieces, it is game over...
-        if (state.cells.first().any { it }) {
+        if (state.cells.first().any { it != CellState.Empty }) {
             endGame()
             return false
         }
@@ -281,14 +282,14 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
 
         // Fill the row, but leave one cell free so this line can be cleared...
-        state.cells.last().fill(true)
+        state.cells.last().fill(CellState.FullFromEnemy)
 
         // Second last row will have a hole somewhere (or else it would have been a full line and
         // thus cleared earlier on...
-        val indexOfGap = state.cells[TetrisGameState.CELLS_HIGH - 2].indexOf(false)
+        val indexOfGap = state.cells[TetrisGameState.CELLS_HIGH - 2].indexOf(CellState.Empty)
 
         // ... so we can align the gap in the new row with this
-        state.cells.last()[indexOfGap] = false
+        state.cells.last()[indexOfGap] = CellState.Empty
 
         return true
 
@@ -298,7 +299,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         currentPiece.forEachIndexed { y, row ->
             row.forEachIndexed { x, present ->
                 if (present) {
-                    state.cells[translateY + y][translateX + x] = true
+                    state.cells[translateY + y][translateX + x] = CellState.Full
                 }
             }
         }
@@ -335,12 +336,12 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         r.projectionMatrix = camera.combined
 
         r.begin(ShapeRenderer.ShapeType.Filled)
-        r.color = Color.WHITE
 
         // Draw all full cells first, so they can be overlayed with the grid afterwards.
         state.cells.forEachIndexed { y, row ->
-            row.forEachIndexed { x, isFull ->
-                if (isFull) {
+            row.forEachIndexed { x, cellState ->
+                if (cellState != CellState.Empty) {
+                    r.color = if (cellState == CellState.FullFromEnemy) ENEMY_ATTACK_COLOUR else Color.WHITE
                     r.rect(
                         startX + (x * cellWidth),
                         viewport.worldHeight - startY - ((y + 1) * cellHeight),
@@ -352,6 +353,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
 
         // Then draw the current tetronimo (again, so it can be overlayed with the grid afterwards).
+        r.color = Color.WHITE
         state.currentPiece.forEachIndexed { y, row ->
             row.forEachIndexed { x, present ->
                 if (present) {

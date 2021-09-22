@@ -164,6 +164,11 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
             state.asteroids.remove(toBreak)
             state.asteroids.addAll(newAsteroids)
 
+            if (state.networkAsteroids.contains(toBreak)) {
+                state.networkAsteroids.remove(toBreak)
+                state.networkAsteroids.addAll(newAsteroids)
+            }
+
         }
     }
 
@@ -187,7 +192,9 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     }
 
     override fun onReceiveDamage(strength: Int) {
-        state.asteroids.addAll(Asteroid.spawn(strength, viewport.worldWidth, viewport.worldHeight))
+        val asteroids = Asteroid.spawn(strength, viewport.worldWidth, viewport.worldHeight)
+        state.asteroids.addAll(asteroids)
+        state.networkAsteroids.addAll(asteroids)
     }
 
     override fun renderGame(camera: OrthographicCamera) {
@@ -200,7 +207,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         }
 
         Bullet.renderBulk(camera, r, state.bullets)
-        Asteroid.renderBulk(camera, r, state.asteroids)
+        Asteroid.renderBulk(camera, r, state.asteroids, state.networkAsteroids)
 
         if (lifeContainer.children.size != state.numLives) {
             redrawLives()
