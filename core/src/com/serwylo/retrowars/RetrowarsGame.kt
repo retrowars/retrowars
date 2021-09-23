@@ -3,13 +3,8 @@ package com.serwylo.retrowars
 import com.badlogic.gdx.Application
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Screen
 import com.serwylo.retrowars.core.*
 import com.serwylo.retrowars.games.GameDetails
-import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
-import com.serwylo.retrowars.net.Player
-import com.serwylo.retrowars.net.RetrowarsClient
-import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.utils.Platform
 import java.util.*
 

@@ -25,11 +25,13 @@ import kotlin.system.measureTimeMillis
 
 
 class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
+    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
     close()
     game.showMainMenu()
 }) {
 
     companion object {
+
         const val TAG = "MultiplayerLobby"
         const val STATE_TAG = "MultiplayerLobby - State"
 
@@ -88,6 +90,20 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
+    private fun onBack() {
+        GlobalScope.launch {
+            if (currentState is Splash) {
+                Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
+                close()
+                game.showMainMenu()
+            } else {
+                Gdx.app.log(TAG, "Returning from misc multiplayer lobby screen to the main multiplaye rlobby screen. Will close off any server and/or client connection.")
+                close()
+                game.showMultiplayerLobby()
+            }
+        }
+    }
+
     override fun pause() {
         super.pause()
 
@@ -106,11 +122,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             pad(UI_SPACE)
 
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
-                GlobalScope.launch {
-                    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
-                    close()
-                    game.showMainMenu()
-                }
+                onBack()
             }
 
             add(heading).center()

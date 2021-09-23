@@ -420,7 +420,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
         room.players.remove(player)
 
-        logger.info("Player removed: ${player.id}")
+        logger.info("Player removed: [player id: ${player.id}, room id: ${room.id}]")
 
         if (room.isEmpty()) {
             rooms.remove(room)
@@ -456,7 +456,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
         connection.player = player
 
-        logger.info("Player added: ${player.id}")
+        logger.info("Player added: [player id: ${player.id}, room id: ${room.id}]")
 
         connection.room = room
 
