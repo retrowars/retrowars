@@ -796,6 +796,15 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                         Actions.run {
                             countdown.setText((count).toString())
                             count--
+
+                            // Due to this not being the most popular game in the world, there is
+                            // sometimes quite a bit fo waiting in the lobby before being able to
+                            // play a game. During this time, one may duck out for a coffee or cake,
+                            // in which case it is good to be notified that a game is about to start.
+                            // Later on when we implement sounds in the game properly, we can probably
+                            // get rid of this in preference of audio feedback, but with the complete
+                            // absence of audio now, it would sound a bit strange to add it here.
+                            Gdx.input.vibrate(100)
                         },
                         sequence(
                             alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
