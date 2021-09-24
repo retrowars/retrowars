@@ -735,7 +735,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         row().space(UI_SPACE)
 
-        val myAvatar = Avatar(players[0], uiAssets)
+        val myAvatar = Avatar(players[0].id, uiAssets)
 
         if (!previousPlayers.any { it.id == players[0].id }) {
             myAvatar.addAction(CustomActions.bounce())
@@ -751,7 +751,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 row().space(UI_SPACE)
 
-                val avatar = Avatar(player, uiAssets)
+                val avatar = Avatar(player.id, uiAssets)
 
                 if (!previousPlayers.any { it.id == player.id }) {
                     avatar.addAction(CustomActions.bounce())

@@ -262,7 +262,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
                 )
 
                 when (obj) {
-                    is Network.Server.RegisterPlayer -> newPlayer(connection, obj.roomId)
+                    is Network.Server.RegisterPlayer -> newPlayer(connection, obj.roomId, obj.playerId)
                     is Network.Server.StartGame -> startGame(connection.room)
                     is Network.Server.UnregisterPlayer -> removePlayer(connection)
                     is Network.Server.UpdateScore -> updateScore(connection, obj.score)
@@ -437,7 +437,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         logger.info("Stats: numPlayers=${rooms.getPlayerCount()} numRooms=${rooms.getRoomCount()}")
     }
 
-    private fun newPlayer(connection: NetworkServer.Connection, roomId: Long = 0) {
+    private fun newPlayer(connection: NetworkServer.Connection, roomId: Long = 0, preferredPlayerId: Long = 0) {
         // Ignore if already logged in.
         if (connection.player != null) {
             return
@@ -452,7 +452,29 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         }
 
         // TODO: Ensure this ID doesn't already exist on the server.
-        val player = Player(Random.nextLong(), Games.allSupported.random().id, room.statusForNewPlayer())
+        if (preferredPlayerId > 0 && room.players.any { it.id == preferredPlayerId }) {
+            logger.warn("Request to join room denied. Player with requested ID of $preferredPlayerId already exists in the room.")
+            logStats()
+            connection.sendMessage(
+                Network.Client.OnFatalError(
+                    Network.ErrorCodes.PLAYER_ID_IN_USE,
+                    "Sorry, the avatar you are trying to use is already in use in this room."
+                )
+            )
+            return
+        }
+
+        val playerId = if (preferredPlayerId != 0L) {
+            preferredPlayerId
+        } else {
+            var id: Long
+            do {
+                id = Random.nextLong()
+            } while (room.players.any { it.id == id })
+            id
+        }
+
+        val player = Player(playerId, Games.allSupported.random().id, room.statusForNewPlayer())
 
         connection.player = player
 

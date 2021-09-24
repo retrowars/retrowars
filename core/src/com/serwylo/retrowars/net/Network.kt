@@ -56,6 +56,15 @@ object Network {
           */
         const val CLIENT_CLOSED_APP = 3
 
+        /**
+         * Exceptionally unlikely, but this means that the player ID provided by a client (essentially
+         * the avatar they want to use) is already in use in the current room. I say it is unlikely,
+         * because the game itself only supports randomly choosing [Long] values, so it is probably
+         * only going to happen if someone edits their shared preferences to a specific value that
+         * clashes with someone else.
+         */
+        const val PLAYER_ID_IN_USE = 4
+
     }
 
     /**
@@ -82,9 +91,20 @@ object Network {
 
             @Since(9.0)
             @SerializedName("r")
-            var roomId: Long = 0
+            var roomId: Long = 0,
+
+            /**
+             * Servers may choose to ignore this, and players need not provide this (e.g. if they
+             * wish to remain anonymous to the server by having a new player ID each time). However,
+             * by specifying a playerId, those players are able to ensure they have the same
+             * Avatar each time they rejoin any server, thus making themselves more recognisable
+             * to their friends and themselves.
+             */
+            @Since(14.0)
+            @SerializedName("p")
+            var playerId: Long = 0
         ) {
-            override fun toString() = "RegisterPlayer [app version: $appVersionCode, room id; $roomId]"
+            override fun toString() = "RegisterPlayer [app version: $appVersionCode, room id: $roomId, player id: $playerId]"
         }
 
         class StartGame {

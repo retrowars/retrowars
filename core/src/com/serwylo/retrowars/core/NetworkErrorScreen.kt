@@ -55,6 +55,7 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
     private fun makeErrorInfo(code: Int, message: String, styles: UiAssets.Styles): Actor = when (code) {
         Network.ErrorCodes.NO_ROOMS_AVAILABLE -> showNoRoomsAvailable(styles)
         Network.ErrorCodes.CLIENT_CLOSED_APP -> showClientClosedApp(styles)
+        Network.ErrorCodes.PLAYER_ID_IN_USE -> showPlayerIdInUse(styles)
         Network.ErrorCodes.SERVER_SHUTDOWN -> showServerShutdown(styles)
         else -> makeTitle(message, styles)
     }
@@ -68,6 +69,12 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
     private fun showClientClosedApp(styles: UiAssets.Styles) = VerticalGroup().apply {
         space(UI_SPACE * 2)
         addActor(makeTitle("Game must remain open while connected to the server.\nPlease rejoin to continue playing.", styles))
+    }
+
+    private fun showPlayerIdInUse(styles: UiAssets.Styles) = VerticalGroup().apply {
+        space(UI_SPACE * 2)
+        addActor(makeTitle("Your avatar is already in use", styles))
+        addActor(makeDetails("What are the odds?\nSomeone with the exact same avatar as you is already here!\n(Well actually, the odds are 1 in 18446744073709551614)\n\nPlease either change your avatar, or wait until they leave.", styles))
     }
 
     private fun showServerShutdown(styles: UiAssets.Styles) = VerticalGroup().apply {

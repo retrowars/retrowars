@@ -96,7 +96,7 @@ val UI_WIDTH = 800f
 val UI_HEIGHT = 600f
 const val UI_SPACE = 10f
 
-class Avatar(player: Player, uiAssets: UiAssets): Actor() {
+class Avatar(playerId: Long, uiAssets: UiAssets): Actor() {
 
     companion object {
         const val ICON_SIZE = 64f
@@ -116,7 +116,7 @@ class Avatar(player: Player, uiAssets: UiAssets): Actor() {
     var isDead = false
 
     init {
-        val random = Random(player.id)
+        val random = Random(playerId)
 
         beard = sprites.characters.beards.random(random)
         body = sprites.characters.bodies.random(random)
