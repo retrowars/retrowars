@@ -308,7 +308,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     private fun startCameraShake() {
         shakeAnimation.shake()
-        Gdx.input.vibrate(200)
+        Gdx.input.vibrate(300)
     }
 
     private fun shakeCamera(delta: Float) {

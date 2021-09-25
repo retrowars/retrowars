@@ -1,0 +1,5 @@
+Improvement:
+ - Allow you to choose an avatar in the options screen, so that each time you connect, you look the same (can opt out by clearing your avatar in options).
+ - Vibrate during countdown to a multiplayer game. For those lonely times where you're waiting in the lobby for others to join, and want to be notified when others are present.
+
+Please donate to support further development.

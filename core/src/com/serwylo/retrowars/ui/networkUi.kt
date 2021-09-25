@@ -39,7 +39,7 @@ fun createPlayerSummaries(me: Player, scores: Map<Player, Long>, showDeaths: Boo
             table.row().space(UI_SPACE).pad(UI_SPACE)
 
             table.add(
-                Avatar(player, assets).apply {
+                Avatar(player.id, assets).apply {
                     isDead = showDeaths && player.status == Player.Status.dead
                 }
             ).right()

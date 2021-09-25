@@ -2,6 +2,7 @@ package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.utils.AppProperties
+import com.serwylo.retrowars.utils.Options
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.gson.*
@@ -155,7 +156,7 @@ class RetrowarsClient(host: String, port: Int) {
 
         try {
             client.connect(host, port)
-            client.sendMessage(Network.Server.RegisterPlayer(AppProperties.appVersionCode))
+            client.sendMessage(Network.Server.RegisterPlayer(AppProperties.appVersionCode, playerId = Options.getPlayerId()))
         } catch (e: IOException) {
             client.disconnect()
             throw IOException(e)

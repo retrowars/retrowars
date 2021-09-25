@@ -25,11 +25,13 @@ import kotlin.system.measureTimeMillis
 
 
 class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
+    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
     close()
     game.showMainMenu()
 }) {
 
     companion object {
+
         const val TAG = "MultiplayerLobby"
         const val STATE_TAG = "MultiplayerLobby - State"
 
@@ -88,6 +90,20 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
         }
     }
 
+    private fun onBack() {
+        GlobalScope.launch {
+            if (currentState is Splash) {
+                Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
+                close()
+                game.showMainMenu()
+            } else {
+                Gdx.app.log(TAG, "Returning from misc multiplayer lobby screen to the main multiplaye rlobby screen. Will close off any server and/or client connection.")
+                close()
+                game.showMultiplayerLobby()
+            }
+        }
+    }
+
     override fun pause() {
         super.pause()
 
@@ -106,11 +122,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             pad(UI_SPACE)
 
             val heading = makeHeading(strings["multiplayer-lobby.title"], styles, strings) {
-                GlobalScope.launch {
-                    Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
-                    close()
-                    game.showMainMenu()
-                }
+                onBack()
             }
 
             add(heading).center()
@@ -723,7 +735,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
         row().space(UI_SPACE)
 
-        val myAvatar = Avatar(players[0], uiAssets)
+        val myAvatar = Avatar(players[0].id, uiAssets)
 
         if (!previousPlayers.any { it.id == players[0].id }) {
             myAvatar.addAction(CustomActions.bounce())
@@ -739,7 +751,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
 
                 row().space(UI_SPACE)
 
-                val avatar = Avatar(player, uiAssets)
+                val avatar = Avatar(player.id, uiAssets)
 
                 if (!previousPlayers.any { it.id == player.id }) {
                     avatar.addAction(CustomActions.bounce())
@@ -796,6 +808,15 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
                         Actions.run {
                             countdown.setText((count).toString())
                             count--
+
+                            // Due to this not being the most popular game in the world, there is
+                            // sometimes quite a bit fo waiting in the lobby before being able to
+                            // play a game. During this time, one may duck out for a coffee or cake,
+                            // in which case it is good to be notified that a game is about to start.
+                            // Later on when we implement sounds in the game properly, we can probably
+                            // get rid of this in preference of audio feedback, but with the complete
+                            // absence of audio now, it would sound a bit strange to add it here.
+                            Gdx.input.vibrate(100)
                         },
                         sequence(
                             alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...

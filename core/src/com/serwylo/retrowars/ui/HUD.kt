@@ -87,7 +87,7 @@ class HUD(private val assets: UiAssets) {
             )
         ).expand().fill()
 
-        avatars = client?.players?.associateWith { Avatar(it, assets) } ?: emptyMap()
+        avatars = client?.players?.associateWith { Avatar(it.id, assets) } ?: emptyMap()
 
         val infoWindow = Table().apply {
             background = assets.getSkin().getDrawable("window")
