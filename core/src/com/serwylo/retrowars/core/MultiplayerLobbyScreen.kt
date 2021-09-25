@@ -996,7 +996,13 @@ class ShowEmptyServerList: UiState {
 class ReadyToStart(val players: List<Player>, val previousPlayers: List<Player>) : UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.PlayersChanged -> ReadyToStart(action.players, this.players)
+            is Action.PlayersChanged ->
+                if (action.players.size == 1) {
+                    WaitingForOtherPlayers(action.players[0])
+                } else {
+                    ReadyToStart(action.players, this.players)
+                }
+
             is Action.BeginGame -> CountdownToGame()
 
             // In practice, we shouldn't receive this. However during testing, there were sometimes
