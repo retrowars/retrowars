@@ -1,0 +1,4 @@
+Bug fix:
+ - When in the lobby and the second last person leaves, return to the waiting screen (instead of incorrectly showing "Ready to start" and a "Start game" button).
+
+Please donate to support further development.
