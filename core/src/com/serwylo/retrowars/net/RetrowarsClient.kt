@@ -21,6 +21,21 @@ class RetrowarsClient(host: String, port: Int) {
 
         private var client: RetrowarsClient? = null
 
+        private var lastServerHost: String? = null
+        private var lastServerPort: Int? = null
+
+        fun getLastServer(): Pair<String, Int>? {
+            val host = lastServerHost
+            val port = lastServerPort
+            if (host != null && port != null) {
+                return Pair(host, port)
+            } else {
+                lastServerPort = null
+                lastServerPort = null
+                return null
+            }
+        }
+
         /**
          * @param connectToSelf Use this flag when you are also the server. Will result in connecting
          * directly to localhost, rather than trying to discover a server on the network.
@@ -33,6 +48,10 @@ class RetrowarsClient(host: String, port: Int) {
 
             val newClient = RetrowarsClient(host, port)
             client = newClient
+
+            lastServerHost = host
+            lastServerPort = port
+
             return newClient
         }
 
