@@ -1047,8 +1047,13 @@ class ObservingGameInProgress(val me: Player, val scores: Map<Player, Long>) : U
 class FinalScores(val me: Player, val scores: Map<Player, Long>) : UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            // Make all players appear anew when we go from an end game screen to a ready-to-start screen.
-            is Action.ReturnToLobby -> ReadyToStart(action.players, listOf())
+            is Action.ReturnToLobby ->
+                if (action.players.size == 1) {
+                    WaitingForOtherPlayers(action.players[0])
+                } else {
+                    // Make all players appear anew when we go from an end game screen to a ready-to-start screen.
+                    ReadyToStart(action.players, listOf())
+                }
 
             // If a player was removed, filter that player out and then display the same screen again.
             // If a player was added, just ignore it and display the same list of scores we already had - the new
