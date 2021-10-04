@@ -24,7 +24,7 @@ import javax.jmdns.ServiceListener
 import kotlin.system.measureTimeMillis
 
 
-class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
+class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostAndPort? = null): Scene2dScreen(game, {
     Gdx.app.log(TAG, "Returning from lobby to main screen. Will close off any server and/or client connection.")
     close()
     game.showMainMenu()
@@ -82,6 +82,11 @@ class MultiplayerLobbyScreen(game: RetrowarsGame): Scene2dScreen(game, {
             listenToClient(client)
 
             state
+
+        } else if (serverToConnectTo != null) {
+
+            createClient(serverToConnectTo.host, serverToConnectTo.port)
+            ConnectingToServer()
 
         } else {
 

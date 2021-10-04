@@ -138,6 +138,33 @@ class HUD(private val assets: UiAssets) {
         gameScore.setActor(overlay)
     }
 
+    private var persistentMessage: Label? = null
+
+    /**
+     * Post a permanent message in the top right of the screen. Only one message can be shown
+     * at once.
+     * Note: Prefer to use [logMessage], because otherwise the screen will quickly fill up with
+     *       messages that never leave.
+     */
+    fun setPersistentMessage(message: String) {
+        persistentMessage.let { existingMessage ->
+            if (existingMessage == null) {
+                val newMessage = Label(message, styles.label.medium).apply {
+                    addAction(
+                        sequence(
+                            delay(5f),
+                            Actions.run { style = styles.label.small },
+                        )
+                    )
+                }
+                persistentMessage = newMessage
+                messages.addActor(newMessage)
+            } else {
+                existingMessage.setText(message)
+            }
+        }
+    }
+
     /**
      * Post a transient message to the top right of the screen. Starts large, then goes smaller
      * and then eventually fades away.

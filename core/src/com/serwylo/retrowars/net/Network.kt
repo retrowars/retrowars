@@ -307,3 +307,7 @@ object WebSocketMessage {
     }
 
 }
+
+data class ServerHostAndPort(val host: String, val port: Int) {
+    override fun toString() = "$host:$port"
+}

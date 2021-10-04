@@ -22,6 +22,11 @@ fun filterActivePlayers(players: Collection<Player>) =
 fun filterAlivePlayers(players: Collection<Player>) =
     players.filter { it.status == Player.Status.playing }
 
+fun isLastPlayerStanding(player: Player?, allPlayers: Collection<Player>): Boolean {
+    val alive = filterAlivePlayers(allPlayers)
+    return alive.size == 1 && alive[0].id == player?.id
+}
+
 val ENEMY_ATTACK_COLOUR: Color = Color.RED
 /**
  * @param showDeaths If true, will display a red cross over dead players.

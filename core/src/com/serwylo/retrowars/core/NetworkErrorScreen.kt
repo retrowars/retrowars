@@ -64,8 +64,7 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
     private fun makeReconnectButton(styles: UiAssets.Styles, label: String): Button? {
         val lastServer = RetrowarsClient.getLastServer() ?: return null
         return makeButton(label, styles) {
-            RetrowarsClient.connect(lastServer.first, lastServer.second)
-            game.showMultiplayerLobby()
+            game.showMultiplayerLobbyAndConnect(lastServer)
         }
     }
 
@@ -90,8 +89,8 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
 
     private fun showPlayerIdInUse(styles: UiAssets.Styles) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle("Your avatar is already in use", styles))
-        addActor(makeDetails("What are the odds?\nSomeone with the exact same avatar as you is already here!\n(Well actually, the odds are 1 in 18446744073709551614)\n\nPlease either change your avatar, or wait until they leave.", styles))
+        addActor(makeTitle("Someone is already using your avatar... What are the odds?\nPlease either change your avatar, or wait until they leave.", styles))
+        addActor(makeDetails("By the way: the odds of this happening randomly are 1 in 18446744073709551614...", styles))
         val reconnect = makeReconnectButton(styles, "Try again")
         if (reconnect != null) {
             addActor(reconnect)

@@ -12,6 +12,6 @@ public class AndroidLauncher extends AndroidApplication {
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 		config.useImmersiveMode = true;
 		config.useWakelock = true;
-		initialize(new RetrowarsGame(new AndroidPlatform(this), true), config);
+		initialize(new RetrowarsGame(new AndroidPlatform(this), true, false), config);
 	}
 }

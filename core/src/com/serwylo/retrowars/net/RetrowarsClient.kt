@@ -21,20 +21,9 @@ class RetrowarsClient(host: String, port: Int) {
 
         private var client: RetrowarsClient? = null
 
-        private var lastServerHost: String? = null
-        private var lastServerPort: Int? = null
+        private var lastServer: ServerHostAndPort? = null
 
-        fun getLastServer(): Pair<String, Int>? {
-            val host = lastServerHost
-            val port = lastServerPort
-            if (host != null && port != null) {
-                return Pair(host, port)
-            } else {
-                lastServerPort = null
-                lastServerPort = null
-                return null
-            }
-        }
+        fun getLastServer() = lastServer
 
         /**
          * @param connectToSelf Use this flag when you are also the server. Will result in connecting
@@ -49,8 +38,7 @@ class RetrowarsClient(host: String, port: Int) {
             val newClient = RetrowarsClient(host, port)
             client = newClient
 
-            lastServerHost = host
-            lastServerPort = port
+            lastServer = ServerHostAndPort(host, port)
 
             return newClient
         }
