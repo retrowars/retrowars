@@ -18,8 +18,6 @@ Any feedback is very welcome at <a href="https://github.com/retrowars/retrowars/
 
 **Known limitations:**
 
-* Networking is quite buggy.
-* Only local network play supported.
 * Thorough play testing required to balance the games.
 * Untested on multiple screen sizes.
 
