@@ -103,6 +103,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun moveEnemies(delta: Float) {
+        val enemiesToKill = mutableListOf<Enemy>()
+        val bulletsToRemove = mutableListOf<Bullet>()
+
         val enemiesToMove = state.enemies
             .onEach { it.timeUntilMove -= delta }
             .filter { it.timeUntilMove < 0 }
@@ -128,8 +131,24 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         // March enemies forward toward the screen...
         enemiesToMove
             .filter { it.state == Enemy.State.Walking }
-            .onEach {
-                it.depth -= TempestGameState.LEVEL_DEPTH / 10
+            .onEach { enemy ->
+
+                // A bit hackey, but we do this check here before advancing the player forward, and
+                // then we'll do the same when advancing the bullet forward later.
+                val closestBullet = state.bullets
+                    .filter { bullet -> bullet.segment === enemy.segment && bullet.depth < enemy.depth }
+                    .maxByOrNull { it.depth }
+
+                val newDepth = enemy.depth - TempestGameState.LEVEL_DEPTH / 10
+                if (closestBullet != null) {
+                    if (closestBullet.depth > newDepth) {
+                        enemiesToKill.add(enemy)
+                        bulletsToRemove.add(closestBullet)
+                    }
+                }
+
+                enemy.depth = newDepth
+
             }
             // ... when they have walked to the end of the screen, tell them they are now crawling.
             .filter { it.depth <= 0 }
@@ -137,12 +156,39 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 it.state = Enemy.State.Crawling
                 it.depth = 0f
             }
+
+        state.bullets.removeAll(bulletsToRemove)
+        state.enemies.removeAll(enemiesToKill)
     }
 
     private fun moveBullets(delta: Float) {
+        val enemiesToKill = mutableListOf<Enemy>()
+        val bulletsToRemove = mutableListOf<Bullet>()
+
         state.bullets
-            .onEach { it.depth += TempestGameState.BULLET_SPEED * delta }
+            .onEach { bullet ->
+
+                // A bit hackey, but we do this check here before advancing the player forward, and
+                // then we'll do the same when advancing the bullet forward later.
+                val closestEnemy = state.enemies
+                    .filter { enemy -> enemy.segment === bullet.segment && enemy.depth > bullet.depth }
+                    .minByOrNull { it.depth }
+
+                val newDepth = bullet.depth + TempestGameState.BULLET_SPEED * delta
+
+                if (closestEnemy != null) {
+                    if (closestEnemy.depth < newDepth) {
+                        enemiesToKill.add(closestEnemy)
+                        bulletsToRemove.add(bullet)
+                    }
+                }
+
+                bullet.depth = newDepth
+            }
             .removeAll { it.depth > TempestGameState.LEVEL_DEPTH }
+
+        state.bullets.removeAll(bulletsToRemove)
+        state.enemies.removeAll(enemiesToKill)
     }
 
     private fun movePlayer() {
