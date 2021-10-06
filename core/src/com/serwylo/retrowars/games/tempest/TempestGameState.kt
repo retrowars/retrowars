@@ -10,8 +10,16 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         const val LEVEL_DEPTH = 150f
         const val BULLET_SPEED = LEVEL_DEPTH / 0.5f // Take 0.5 seconds to traverse the whole screen.
 
+        /*
+         * Take 6 seconds to traverse the whole screen, based on a crude measure
+         * of https://www.youtube.com/watch?v=jfaCrdBABUY from 0:22 until 0:28 in the top right.
+         */
+        const val ENEMY_SPEED = LEVEL_DEPTH / 6f
+
         const val MIN_TIME_BETWEEN_ENEMIES = 0.5f
         const val MAX_TIME_BETWEEN_ENEMIES = 2f
+
+        const val SCORE_PER_ENEMY: Int = 4000
     }
 
     val bullets = LinkedList<Bullet>()
@@ -34,7 +42,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 fun makeEnemy(segment: Segment) = Enemy(
     segment,
     depth = TempestGameState.LEVEL_DEPTH,
-    timeUntilMove = Enemy.STEP_DURATION,
+    timeUntilCrawl = Enemy.STEP_DURATION,
 )
 
 data class Enemy(
@@ -42,9 +50,9 @@ data class Enemy(
     var depth: Float,
 
     /**
-     * Number of seconds before the enemy steps forwars.
+     * Number of seconds before the enemy crawls around the end of the level.
      */
-    var timeUntilMove: Float = STEP_DURATION,
+    var timeUntilCrawl: Float = STEP_DURATION,
 
     var state: State = State.Walking,
     var crawlsRemaining: Int = NUM_CRAWLS,

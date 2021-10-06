@@ -106,17 +106,16 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val enemiesToKill = mutableListOf<Enemy>()
         val bulletsToRemove = mutableListOf<Bullet>()
 
-        val enemiesToMove = state.enemies
-            .onEach { it.timeUntilMove -= delta }
-            .filter { it.timeUntilMove < 0 }
-            .onEach { it.timeUntilMove = Enemy.STEP_DURATION }
-
         // Enemies at the end of the screen are crawling. In this mode, they move around clockwise
         // or counterclockwise towards the player. After a certain number of moves in this mode
         // they will disappear.
-        val toRemove = enemiesToMove
+        val toRemove = state.enemies
             .filter { it.state == Enemy.State.Crawling }
+            .onEach { it.timeUntilCrawl -= delta }
+            .filter { it.timeUntilCrawl < 0 }
             .onEach {
+                it.timeUntilCrawl = Enemy.STEP_DURATION
+
                 val currentEnemyIndex = state.level.segments.indexOf(it.segment)
                 it.segment = when(it.direction) {
                     Enemy.Direction.Clockwise -> state.level.segments[(state.level.segments.size + currentEnemyIndex - 1) % state.level.segments.size]
@@ -129,7 +128,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.enemies.removeAll(toRemove)
 
         // March enemies forward toward the screen...
-        enemiesToMove
+        state.enemies
             .filter { it.state == Enemy.State.Walking }
             .onEach { enemy ->
 
@@ -139,7 +138,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     .filter { bullet -> bullet.segment === enemy.segment && bullet.depth < enemy.depth }
                     .maxByOrNull { it.depth }
 
-                val newDepth = enemy.depth - TempestGameState.LEVEL_DEPTH / 10
+                val newDepth = enemy.depth - TempestGameState.ENEMY_SPEED * delta
                 if (closestBullet != null) {
                     if (closestBullet.depth > newDepth) {
                         enemiesToKill.add(enemy)
@@ -158,7 +157,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
 
         state.bullets.removeAll(bulletsToRemove)
-        state.enemies.removeAll(enemiesToKill)
+        killEnemiesAndScore(enemiesToKill)
     }
 
     private fun moveBullets(delta: Float) {
@@ -188,6 +187,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             .removeAll { it.depth > TempestGameState.LEVEL_DEPTH }
 
         state.bullets.removeAll(bulletsToRemove)
+        killEnemiesAndScore(enemiesToKill)
+    }
+
+    private fun killEnemiesAndScore(enemiesToKill: Collection<Enemy>) {
+        increaseScore(enemiesToKill.size * TempestGameState.SCORE_PER_ENEMY)
         state.enemies.removeAll(enemiesToKill)
     }
 
