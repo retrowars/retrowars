@@ -16,9 +16,10 @@ object DesktopLauncher {
         } else {
 
             val verbose = arg.contains("--verbose")
+            val randomAvatar = arg.contains("--force-random-avatar")
 
             val config = LwjglApplicationConfiguration()
-            LwjglApplication(RetrowarsGame(DesktopPlatform(), verbose), config)
+            LwjglApplication(RetrowarsGame(DesktopPlatform(), verbose, randomAvatar), config)
 
         }
     }

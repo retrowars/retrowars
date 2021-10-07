@@ -44,4 +44,8 @@ object Options {
 
     private fun prefs() = Gdx.app.getPreferences("com.serwylo.retrowars.options")
 
+    fun forceRandomPlayerId() {
+        playerId = Random.nextLong()
+    }
+
 }

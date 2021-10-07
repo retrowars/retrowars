@@ -5,10 +5,12 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.core.*
 import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.net.ServerHostAndPort
+import com.serwylo.retrowars.utils.Options
 import com.serwylo.retrowars.utils.Platform
 import java.util.*
 
-class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game() {
+class RetrowarsGame(val platform: Platform, private val verbose: Boolean, private val forceRandomAvatars: Boolean = false) : Game() {
 
     companion object {
         const val TAG = "RetrowarsGame"
@@ -19,6 +21,10 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game
     override fun create() {
         if (verbose) {
             Gdx.app.logLevel = Application.LOG_DEBUG
+        }
+
+        if (forceRandomAvatars) {
+            Options.forceRandomPlayerId()
         }
 
         uiAssets = UiAssets(Locale.getDefault())
@@ -38,6 +44,13 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean) : Game
         Gdx.app.log(TAG, "Showing multiplayer lobby screen")
         Gdx.app.postRunnable {
             setScreen(MultiplayerLobbyScreen(this))
+        }
+    }
+
+    fun showMultiplayerLobbyAndConnect(server: ServerHostAndPort) {
+        Gdx.app.log(TAG, "Showing multiplayer lobby screen (in order to connect to $server)")
+        Gdx.app.postRunnable {
+            setScreen(MultiplayerLobbyScreen(this, server))
         }
     }
 

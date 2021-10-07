@@ -17,10 +17,7 @@ import com.serwylo.retrowars.net.RetrowarsClient
 import com.serwylo.retrowars.scoring.Stats
 import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
-import com.serwylo.retrowars.ui.GameViewport
-import com.serwylo.retrowars.ui.HUD
-import com.serwylo.retrowars.ui.ShakeAnimation
-import com.serwylo.retrowars.ui.filterActivePlayers
+import com.serwylo.retrowars.ui.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -133,9 +130,12 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     private fun handleScoreChange() {
         hud.refreshScores()
 
-        val client = this.client
-        val me = client?.me()
-        if (client != null && me != null) {
+        val client = this.client ?: return
+        val me = client.me() ?: return
+
+        if (isLastPlayerStanding(me, client.players)) {
+            showLastSurvivorMessage()
+        } else {
             val newPositions = calculatePlayerPositions(client)
             val myNewPosition = newPositions.indexOfFirst { playersAtPosition ->
                 playersAtPosition.find { player ->
@@ -155,8 +155,12 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
         if (player.id == client?.me()?.id) {
             Gdx.app.log(TAG, "Ignoring damage from player ${player.id} of strength $strength as this is the current player.")
-            hud.logMessage(strings["game-message.attacking-other-players"])
-            Gdx.input.vibrate(100) // Shorter vibrate then when being attacked to differentiate.
+            if (isLastPlayerStanding(client.me(), client.players)) {
+                Gdx.app.log(TAG, "Also foregoing the 'attacking other players' message because there are none to attack - we are the last people remaining.")
+            } else {
+                hud.logMessage(strings["game-message.attacking-other-players"])
+                Gdx.input.vibrate(100) // Shorter vibrate then when being attacked to differentiate.
+            }
             return
         }
 
@@ -169,13 +173,30 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
 
     }
 
+    private fun showLastSurvivorMessage() {
+        val client = this.client ?: return
+        val me = client.me() ?: return
+
+        val highScore = client.scores.values.maxOrNull() ?: 0L
+        val myScore = client.getScoreFor(me)
+        hud.setPersistentMessage(strings.format("game-message.last-player-standing", highScore - myScore + 1))
+    }
+
     private fun handlePlayerStatusChange(player: Player, status: String) {
         val client = this.client ?: return
+        val me = client.me() ?: return
 
         if (status == Player.Status.dead) {
-            if (player.id != client.me()?.id) {
+            if (player.id != me.id) {
+
                 hud.handleDeadPlayer(player)
-                hud.logMessage(strings["game-message.player-died"])
+
+                if (isLastPlayerStanding(me, client.players)) {
+                    showLastSurvivorMessage()
+                } else {
+                    hud.logMessage(strings["game-message.player-died"])
+                }
+
             } else {
                 Gdx.app.log(TAG, "Server has instructed us that we are in fact dead. We will honour this request and go to the end game screen.")
                 endGame()

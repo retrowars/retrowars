@@ -1,0 +1,10 @@
+Improvements:
+ - Better messaging when you are the last person standing.
+ - Reconnect to the last server with a single tap after pausing.
+
+Bug fix:
+ - Another fix for returning to the waiting screen (last one was incomplete).
+
+Feedback welcome via GitHub.
+
+Please donate via Liberapay or GitHub Sponsors to support further development.
