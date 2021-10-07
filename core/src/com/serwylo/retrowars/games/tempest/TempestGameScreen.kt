@@ -111,17 +111,17 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         // they will disappear.
         val toRemove = state.enemies
             .filter { it.state == Enemy.State.Crawling }
-            .onEach { it.timeUntilCrawl -= delta }
-            .filter { it.timeUntilCrawl < 0 }
             .onEach {
-                it.timeUntilCrawl = Enemy.STEP_DURATION
+                it.timeUntilNextCrawl -= delta
+            }
+            .filter { it.timeUntilNextCrawl < 0 }
+            .onEach {
+                it.timeUntilNextCrawl = TempestGameState.ENEMY_CRAWL_WAIT_TIME
 
-                val currentEnemyIndex = state.level.segments.indexOf(it.segment)
-                it.segment = when(it.direction) {
-                    Enemy.Direction.Clockwise -> state.level.segments[(state.level.segments.size + currentEnemyIndex - 1) % state.level.segments.size]
-                    Enemy.Direction.CounterClockwise -> state.level.segments[(currentEnemyIndex + 1) % state.level.segments.size]
-                }
+                it.segment = getNextSegment(it)
+
                 it.crawlsRemaining --
+
             }
             .filter { it.crawlsRemaining < 0 }
 
@@ -255,7 +255,16 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) {
-        shapeRenderer.box(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth, 2f, 2f, 1f)
+        if (enemy.state == Enemy.State.Walking || enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME /* Not yet moving to the next segment */) {
+            shapeRenderer.box(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth, 2f, 2f, 1f)
+        } else {
+
+            val crawlPercent = 1f - enemy.timeUntilNextCrawl / TempestGameState.ENEMY_CRAWL_TRANSITION_TIME
+            val nextSegment = getNextSegment(enemy)
+
+            val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
+            shapeRenderer.box(pos.x, pos.y, 0f, 2f, 2f, 1f)
+        }
     }
 
     private fun renderBullet(shapeRenderer: ShapeRenderer, bullet: Bullet) {
@@ -267,6 +276,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.start, segment.end)
+    }
+
+    private fun getNextSegment(enemy: Enemy): Segment {
+        val currentEnemyIndex = state.level.segments.indexOf(enemy.segment)
+        return when(enemy.direction) {
+            Enemy.Direction.Clockwise -> state.level.segments[(state.level.segments.size + currentEnemyIndex - 1) % state.level.segments.size]
+            Enemy.Direction.CounterClockwise -> state.level.segments[(currentEnemyIndex + 1) % state.level.segments.size]
+        }
     }
 
 }

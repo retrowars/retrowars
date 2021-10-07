@@ -16,6 +16,14 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
          */
         const val ENEMY_SPEED = LEVEL_DEPTH / 6f
 
+        /**
+         * The time it takes to move from one segment to the next when crawling.
+          */
+        const val ENEMY_CRAWL_TRANSITION_TIME = 0.5f
+
+
+        const val ENEMY_CRAWL_WAIT_TIME = 0.75f
+
         const val MIN_TIME_BETWEEN_ENEMIES = 0.5f
         const val MAX_TIME_BETWEEN_ENEMIES = 2f
 
@@ -24,7 +32,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
     val bullets = LinkedList<Bullet>()
     val enemies = LinkedList<Enemy>()
-    val level: Level = makeThirdLevel(worldWidth, worldHeight)
+    val level: Level = makeFirstLevel(worldWidth, worldHeight)
 
     var timer: Float = 0f
     var nextEnemyTime: Float = 0f
@@ -42,7 +50,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 fun makeEnemy(segment: Segment) = Enemy(
     segment,
     depth = TempestGameState.LEVEL_DEPTH,
-    timeUntilCrawl = Enemy.STEP_DURATION,
+    timeUntilNextCrawl = TempestGameState.ENEMY_CRAWL_WAIT_TIME,
 )
 
 data class Enemy(
@@ -52,16 +60,16 @@ data class Enemy(
     /**
      * Number of seconds before the enemy crawls around the end of the level.
      */
-    var timeUntilCrawl: Float = STEP_DURATION,
+    var timeUntilNextCrawl: Float = TempestGameState.ENEMY_CRAWL_WAIT_TIME,
 
     var state: State = State.Walking,
     var crawlsRemaining: Int = NUM_CRAWLS,
+    var crawlFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
 
     ) {
 
     companion object {
-        const val STEP_DURATION = 0.5f
         const val NUM_CRAWLS = 3
     }
 
