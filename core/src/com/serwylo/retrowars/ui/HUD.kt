@@ -82,8 +82,8 @@ class HUD(private val assets: UiAssets) {
         gameWindow.add(
             Stack(
                 description,
-                gameOverlay,
                 messages,
+                gameOverlay,
             )
         ).expand().fill()
 
