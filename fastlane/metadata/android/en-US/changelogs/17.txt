@@ -1,0 +1,4 @@
+Bug fix:
+ - Don't accidentally hide Tetris (and other game) on screen buttons behind messages during multiplayer.
+
+Please donate to support further development.
