@@ -56,6 +56,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     override fun updateGame(delta: Float) {
         state.timer += delta
 
+        checkEndLevel()
+
         recordInput()
         movePlayer()
         moveBullets(delta)
@@ -65,12 +67,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         resetInput()
     }
 
+    private fun checkEndLevel() {
+        if (getState() == State.Playing && state.numEnemiesRemaining == 0 && state.enemies.isEmpty()) {
+            state.bullets.clear()
+            state.level = state.allLevels.filter { it != state.level }.random()
+            state.playerSegment = state.level.segments[0]
+            state.levelCount ++
+            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
+        }
+    }
+
     private fun maybeSpawnEnemies() {
-        if (getState() == State.Playing && state.numEnemiesRemaining <= 0) {
-            if (state.enemies.size == 0) {
-                // completeLevel()
-            }
-        } else if (state.shouldSpawnEnemy()) {
+        if (state.numEnemiesRemaining > 0 && state.shouldSpawnEnemy()) {
             spawnEnemy()
             queueEnemy()
         }
@@ -206,7 +214,23 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun fire() {
-        if (state.fire == ButtonState.JustPressed) {
+        if (state.fire != ButtonState.JustPressed) {
+            return
+        }
+
+        val enemyMovingHere = state.enemies
+            .asSequence()
+            .filter { it.state == Enemy.State.Crawling }
+            .filter { it.timeUntilNextCrawl < TempestGameState.ENEMY_CRAWL_TRANSITION_TIME } // Is transitioning from one segment to the next
+            .filter { getNextSegment(it) == state.playerSegment }
+            .sortedBy { it.timeUntilNextCrawl } // Shoot the closest ones first...
+            .firstOrNull()
+
+        if (enemyMovingHere != null) {
+            // Just kill it directly without even showing the bullet. We are right on top of this enemy.
+            state.enemies.remove(enemyMovingHere)
+            // TODO: Queue up some sort of dying feedback so we know we at least hit it (doesn't need to be glamourous for now).
+        } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
         }
     }

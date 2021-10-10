@@ -28,15 +28,26 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         const val MAX_TIME_BETWEEN_ENEMIES = 2f
 
         const val SCORE_PER_ENEMY: Int = 4000
+
+        const val BASE_ENEMIES_PER_LEVEL = 10
     }
 
     val bullets = LinkedList<Bullet>()
     val enemies = LinkedList<Enemy>()
-    val level: Level = makeFirstLevel(worldWidth, worldHeight)
+
+    val allLevels = listOf(
+        makeFirstLevel(worldWidth, worldHeight),
+        makeSecondLevel(worldWidth, worldHeight),
+        makeThirdLevel(worldWidth, worldHeight),
+    )
+
+    var level = allLevels[0]
 
     var timer: Float = 0f
     var nextEnemyTime: Float = 0f
-    var numEnemiesRemaining: Int = 10
+    var numEnemiesRemaining: Int = BASE_ENEMIES_PER_LEVEL
+
+    var levelCount = 0
 
     var moveCounterClockwise = ButtonState.Unpressed
     var moveClockwise = ButtonState.Unpressed
