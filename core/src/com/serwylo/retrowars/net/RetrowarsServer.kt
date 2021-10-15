@@ -163,7 +163,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500))
+            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 9000))
             server = newServer
             return newServer
         }

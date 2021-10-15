@@ -28,32 +28,35 @@ fun isLastPlayerStanding(player: Player?, allPlayers: Collection<Player>): Boole
 }
 
 val ENEMY_ATTACK_COLOUR: Color = Color.RED
+
 /**
  * @param showDeaths If true, will display a red cross over dead players.
+ * @param playersToShow Defaults to active players.
  */
-fun createPlayerSummaries(me: Player, scores: Map<Player, Long>, showDeaths: Boolean, assets: UiAssets): Table {
+fun createPlayerSummaries(assets: UiAssets, me: Player, scores: Map<Player, Long>, showDeaths: Boolean, playersToShow: List<Player>? = null): Table {
 
     val table = Table()
 
-    val alivePlayers = filterAlivePlayers(scores.keys)
+    val players = playersToShow ?: filterActivePlayers(scores.keys)
+    val alivePlayers = filterAlivePlayers(players)
 
-    filterActivePlayers(scores.keys).sortedByDescending { scores[it] ?: 0 }
+    players.sortedByDescending { scores[it] ?: 0 }
         .forEach { player ->
 
-            table.pad(UI_SPACE)
-            table.row().space(UI_SPACE).pad(UI_SPACE)
+            table.row().pad(UI_SPACE / 2)
 
-            table.add(
-                Avatar(player.id, assets).apply {
-                    isDead = showDeaths && player.status == Player.Status.dead
-                }
-            ).right()
+            val isDead = showDeaths && player.status == Player.Status.dead
 
             val gameDetails = Games.all.find { it.id == player.game }
             if (gameDetails != null) {
-                table.add(makeGameIcon(gameDetails, assets))
+                table.add(
+                    makeAvatarAndGameIcon(player.id, isDead, gameDetails, assets)
+                )
             } else {
                 Gdx.app.error(TAG, "Unsupported game for player ${player.id}: ${player.game}")
+                table.add(
+                    Avatar(player.id, assets, isDead)
+                )
             }
 
             table.add(

@@ -19,6 +19,7 @@ object DesktopLauncher {
             val randomAvatar = arg.contains("--force-random-avatar")
 
             val config = LwjglApplicationConfiguration()
+            config.title = "Super Retro Mega Wars ${arg.joinToString(" ")}"
             LwjglApplication(RetrowarsGame(DesktopPlatform(), verbose, randomAvatar), config)
 
         }
