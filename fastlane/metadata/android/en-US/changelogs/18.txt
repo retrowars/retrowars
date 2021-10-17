@@ -1,0 +1,7 @@
+Improved final score screen in multiplayer.
+
+If the second last player dies leaving you as sole survivor, the game will now
+articulate very clearly who won, and why they were moved from their fun game to
+the end game screen.
+
+Please donate to support further development.

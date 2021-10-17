@@ -13,6 +13,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.*
 import com.serwylo.retrowars.ui.createPlayerSummaries
+import com.serwylo.retrowars.ui.filterActivePlayers
 import com.serwylo.retrowars.ui.makeContributeServerInfo
 import com.serwylo.retrowars.ui.roughTimeAgo
 import com.serwylo.retrowars.utils.AppProperties
@@ -719,17 +720,74 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row()
         wrapper.add(Label("You will join the next game...", styles.label.small))
         wrapper.row()
-        wrapper.add(createPlayerSummaries(me, scores, showDeaths = true, game.uiAssets))
+        wrapper.add(createPlayerSummaries(game.uiAssets, me, scores, showDeaths = true))
     }
 
     private fun showFinalScores(me: Player, scores: Map<Player, Long>) {
         wrapper.clear()
 
-        wrapper.add(Label("Final scores", styles.label.medium))
-        wrapper.row()
-        wrapper.add(Label("The next game will begin soon...", styles.label.small))
-        wrapper.row()
-        wrapper.add(createPlayerSummaries(me, scores, showDeaths = false, game.uiAssets))
+        val winner = scores.maxByOrNull { it.value }?.key ?: return
+        val client = RetrowarsClient.get() ?: return
+
+        // TODO: Deal with draws.
+        wrapper.add(
+            VerticalGroup().apply {
+                align(Align.center)
+                addActor(Label("Winner!", styles.label.large))
+                addActor(
+                    createPlayerSummaries(game.uiAssets, me, scores, showDeaths = false, playersToShow = listOf(winner)).apply {
+                        findActor<Actor>("avatar")?.addAction(
+                            CustomActions.bounce(RepeatAction.FOREVER)
+                        )
+                    }
+                )
+            }
+        ).top()
+
+        wrapper.add(
+            VerticalGroup().apply {
+                addActor(Label("Others", styles.label.large))
+                addActor(
+                    createPlayerSummaries(
+                        game.uiAssets,
+                        me,
+                        scores,
+                        showDeaths = false,
+                        playersToShow = filterActivePlayers(scores.keys).filterNot { it == winner },
+                    )
+                )
+            }
+        ).top()
+
+        val message = if (winner == me) {
+            if (client.lastSurvivor == me) {
+                listOf(
+                    "You win. You are the sole survivor.\nYou have the highest score. Nobody can catch you.",
+                    "You win. You outlasted your challengers.\nYour score is the best. You win.",
+                    "You win. Your survival skills are superior.\nTheir scores are inferior.",
+                ).random()
+            } else {
+                listOf(
+                    "You win. You may not have survived as long,\nbut you scored more.",
+                    "You win.\nNo need to survive when you score as well as you do.",
+                    "You win.\nYou didn't survive, but you won.",
+                ).random()
+            }
+        } else {
+            listOf(
+                "You lost.\nBetter luck next time.",
+                "You lost.\nThere is always next time.",
+                "You lost.\nPractice more, then win next time.",
+            ).random()
+        }
+
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(Label(message, styles.label.medium).apply {
+            setAlignment(Align.center)
+        }).colspan(2)
+
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(Label("The next game will begin soon...", styles.label.small)).colspan(2)
     }
 
     private fun makeAvatarTiles(players: List<Player>, previousPlayers: List<Player>) = Table().apply {
@@ -740,14 +798,12 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
         row().space(UI_SPACE)
 
-        val myAvatar = Avatar(players[0].id, uiAssets)
-
+        val myAvatarAndGame = makeAvatarAndGameIcon(players[0].id, false, players[0].getGameDetails(), uiAssets)
         if (!previousPlayers.any { it.id == players[0].id }) {
-            myAvatar.addAction(CustomActions.bounce())
+            myAvatarAndGame.findActor<Actor>("avatar")?.addAction(CustomActions.bounce())
         }
 
-        add(myAvatar)
-        add(makeGameIcon(players[0].getGameDetails(), uiAssets))
+        add(myAvatarAndGame)
         add(Label("You", uiAssets.getStyles().label.large))
 
         if (players.size > 1) {
@@ -756,28 +812,11 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
                 row().space(UI_SPACE)
 
-                val avatar = Avatar(player.id, uiAssets)
-
+                val avatarAndGame = makeAvatarAndGameIcon(player.id, false, player.getGameDetails(), uiAssets)
                 if (!previousPlayers.any { it.id == player.id }) {
-                    avatar.addAction(CustomActions.bounce())
+                    avatarAndGame.findActor<Actor>("avatar")?.addAction(CustomActions.bounce())
                 }
-
-                add(avatar)
-                add(makeGameIcon(player.getGameDetails(), uiAssets))
-
-                add(
-                    Label(
-                        when(player.status) {
-                            Player.Status.playing -> "Playing"
-                            Player.Status.dead -> "Dead"
-                            Player.Status.lobby -> "Ready"
-                            Player.Status.pending -> "Ready"
-                            else -> "?"
-                        },
-                        uiAssets.getStyles().label.medium
-                    )
-                )
-
+                add(avatarAndGame)
             }
         }
 
@@ -1060,10 +1099,11 @@ class FinalScores(val me: Player, val scores: Map<Player, Long>) : UiState {
                     ReadyToStart(action.players, listOf())
                 }
 
-            // If a player was removed, filter that player out and then display the same screen again.
             // If a player was added, just ignore it and display the same list of scores we already had - the new
             // player obviously wasn't part of the last game, so no need to display their scores here.
-            is Action.PlayersChanged -> FinalScores(me, scores.filter { score -> action.players.any { player -> score.key.id == player.id } })
+            // In fact, even if a player was removed, leave them there. It looks weird if, while viewing
+            // the final scores screen, a player just randomly disappears.
+            is Action.PlayersChanged -> FinalScores(me, scores)
 
             // Sometimes this event will come through when the final scores are already being shown.
             // Perhaps a race condition?

@@ -96,7 +96,7 @@ val UI_WIDTH = 800f
 val UI_HEIGHT = 600f
 const val UI_SPACE = 10f
 
-class Avatar(playerId: Long, uiAssets: UiAssets): Actor() {
+class Avatar(playerId: Long, uiAssets: UiAssets, var isDead: Boolean = false): Actor() {
 
     companion object {
         const val ICON_SIZE = 64f
@@ -112,8 +112,6 @@ class Avatar(playerId: Long, uiAssets: UiAssets): Actor() {
     private val leg: TextureRegion
     private val torso: TextureRegion
     private var hasBeard: Boolean
-
-    var isDead = false
 
     init {
         val random = Random(playerId)
@@ -151,6 +149,22 @@ class Avatar(playerId: Long, uiAssets: UiAssets): Actor() {
             batch.draw(sprites.characters.overlay_dead, x + PADDING, y + PADDING, ICON_SIZE, ICON_SIZE)
         }
     }
+}
+
+fun makeAvatarAndGameIcon(playerId: Long, isDead: Boolean, gameDetails: GameDetails, uiAssets: UiAssets) = Stack().also { stack ->
+    stack.add(HorizontalGroup().also { wrapper ->
+        wrapper.padLeft(UI_SPACE * 6)
+        wrapper.addActor(makeGameIcon(gameDetails, uiAssets).apply {
+            name = "game"
+        })
+    })
+
+    stack.add(HorizontalGroup().also { wrapper ->
+        wrapper.padRight(UI_SPACE * 5)
+        wrapper.addActor(Avatar(playerId, uiAssets, isDead).apply {
+            name = "avatar"
+        })
+    })
 }
 
 fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {

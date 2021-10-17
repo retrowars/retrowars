@@ -1,15 +1,17 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
+import com.serwylo.retrowars.ui.filterAlivePlayers
 import com.serwylo.retrowars.utils.AppProperties
 import com.serwylo.retrowars.utils.Options
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
-import io.ktor.gson.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
 import java.io.IOException
 
 class RetrowarsClient(host: String, port: Int) {
@@ -25,10 +27,6 @@ class RetrowarsClient(host: String, port: Int) {
 
         fun getLastServer() = lastServer
 
-        /**
-         * @param connectToSelf Use this flag when you are also the server. Will result in connecting
-         * directly to localhost, rather than trying to discover a server on the network.
-         */
         fun connect(host: String, port: Int): RetrowarsClient {
             Gdx.app.log(TAG, "Establishing connection from client to server.")
             if (client != null) {
@@ -54,6 +52,25 @@ class RetrowarsClient(host: String, port: Int) {
 
     val players = mutableListOf<Player>()
     val scores = mutableMapOf<Player, Long>()
+
+    /**
+     * It makes it much easier to explain to players in the final scoring screen what actually
+     * happened if we know who the last survivor was.
+     *
+     * Specifically: When you have the highest score, and the second last player dies leaving
+     * you as sole survivor - then one of three things will happen:
+     *
+     *  1. You die before reaching the best score. This is fine and normal, and doesn't feel weird.
+     *  2. You already had the highest score before the second last person died.
+     *  3. You keep scoring after everyone else is dead until you become the highest scorer.
+     *
+     *  The final two force you to be kicked to the final score screen so that the game doesn't
+     *  drag on pointlessly when we know who the winner is. This is good for all other players
+     *  waiting for the next game to start, but feels weird for the sole survivor because they
+     *  don't really know why they went from happily playing to randomly thrown to the final score
+     *  screen.
+     */
+    var lastSurvivor: Player? = null
 
     /**
      * For each player, record the next score for which we will send an event to other players.
@@ -182,6 +199,7 @@ class RetrowarsClient(host: String, port: Int) {
         // We reuse the same servers/clients many time over if you finish a game and immediately
         // start a new one. Therefore we need to forget all we know about peoples scores before
         // continuing with a new game.
+        lastSurvivor = null
         scores.clear()
         scoreBreakpoints.clear()
         players.forEach {
@@ -237,6 +255,14 @@ class RetrowarsClient(host: String, port: Int) {
         }
 
         Gdx.app.log(TAG, "Received status change for player $playerId: $status")
+        if (status == Player.Status.dead) {
+            val alivePlayers = filterAlivePlayers(players)
+            if (alivePlayers.size == 1) {
+                Gdx.app.log(TAG, "Last survivor was $playerId. About to mark them as dead (either they died or the server told them to die as they had won).")
+                lastSurvivor = alivePlayers[0]
+            }
+        }
+
         player.status = status
 
         Gdx.app.debug(TAG, "Status changed. Invoking RetrowarsClient.playerStatusChangedListener (player $playerId, status: $status)")
