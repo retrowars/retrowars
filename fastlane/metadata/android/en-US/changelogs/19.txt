@@ -1,0 +1,5 @@
+When waiting in the multiplayer lobby, add a button to share retrowars with others.
+
+Currently there is not a huge player base, so the multiplayer lobby involves a lot of waiting for those of us who are patient :)
+
+Please donate to support further development.
