@@ -1,5 +1,6 @@
 package com.serwylo.retrowars.utils
 
+import com.badlogic.gdx.Gdx
 import java.net.InetAddress
 import java.net.NetworkInterface
 
@@ -7,6 +8,7 @@ import java.net.NetworkInterface
  * Platform specific code, so that libgdx can run both on Desktop and Android.
  */
 interface Platform {
+    fun shareRetrowars()
     fun getMulticastControl(): MulticastControl
     fun getInetAddress(): InetAddress
 }
@@ -25,6 +27,11 @@ interface MulticastControl {
  * to the common project to accommodate this.
  */
 class DesktopPlatform: Platform {
+
+    override fun shareRetrowars() {
+        Gdx.net.openURI("https://play.google.com/store/apps/details?id=com.serwylo.retrowars")
+    }
+
     override fun getMulticastControl() = DesktopMulticastControl()
 
     /**

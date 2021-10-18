@@ -710,6 +710,33 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row()
 
         wrapper.add(makeAvatarTiles(listOf(me), listOf()))
+
+        // After a short break, fade in some additional messaging asking patience.
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(
+            VerticalGroup().apply {
+                space(UI_SPACE)
+                addActor(
+                    Label("Looking for others to play with?\nInvite a friend to download Super Retro Mega Wars.", styles.label.small).apply {
+                        setAlignment(Align.center)
+                    }
+                )
+                addActor(
+                    makeSmallButton("Share", styles) {
+                        game.platform.shareRetrowars()
+                    }
+                )
+
+                addAction(
+                    sequence(
+                        alpha(0f),
+                        delay(5f),
+                        fadeIn(2f)
+                    )
+                )
+            }
+        )
+
     }
 
 
