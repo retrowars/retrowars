@@ -10,6 +10,7 @@ import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.tetris.ButtonState
 import com.serwylo.retrowars.input.TempestSoftController
+import kotlin.random.Random
 
 class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     game,
@@ -114,30 +115,35 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val enemiesToKill = mutableListOf<Enemy>()
         val bulletsToRemove = mutableListOf<Bullet>()
 
-        // Enemies at the end of the screen are crawling. In this mode, they move around clockwise
-        // or counterclockwise towards the player. After a certain number of moves in this mode
-        // they will disappear.
-        val toRemove = state.enemies
-            .filter { it.state == Enemy.State.Crawling }
-            .onEach {
-                it.timeUntilNextCrawl -= delta
-            }
+        state.enemies
+            .onEach { it.timeUntilNextCrawl -= delta }
             .filter { it.timeUntilNextCrawl < 0 }
             .onEach {
+                it.segment = getNextSegment(it)
                 it.timeUntilNextCrawl = TempestGameState.ENEMY_CRAWL_WAIT_TIME
 
-                it.segment = getNextSegment(it)
+                if (it.depth > 0) {
+                    // Before getting to the end of the screen, enemies sometimes crawl, and
+                    // sometimes don't. If they do, they seem to for an arbitrary period before
+                    // stopping and then beginning crawling again in the future.
+                    val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
+                    if (waitBeforeCrawlingAgain) {
+                        it.timeUntilNextCrawl += Random.nextInt(0, 2000) / 1000f
+                    }
 
-                it.crawlsRemaining --
-
+                    val changeDirection = Random.nextFloat() > 0.8f
+                    if (changeDirection) {
+                        it.direction = when (it.direction) {
+                            Enemy.Direction.Clockwise -> Enemy.Direction.CounterClockwise
+                            Enemy.Direction.CounterClockwise -> Enemy.Direction.Clockwise
+                        }
+                    }
+                }
             }
-            .filter { it.crawlsRemaining < 0 }
-
-        state.enemies.removeAll(toRemove)
 
         // March enemies forward toward the screen...
         state.enemies
-            .filter { it.state == Enemy.State.Walking }
+            .filter { it.depth > 0 }
             .onEach { enemy ->
 
                 // A bit hackey, but we do this check here before advancing the player forward, and
@@ -160,8 +166,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             // ... when they have walked to the end of the screen, tell them they are now crawling.
             .filter { it.depth <= 0 }
             .onEach {
-                it.state = Enemy.State.Crawling
                 it.depth = 0f
+
+                // If we were in the middle of waitign some time before crawling, ignore that and
+                // queue up the next crawl at the approved interval.
+                it.timeUntilNextCrawl = it.timeUntilNextCrawl.coerceAtMost(TempestGameState.ENEMY_CRAWL_WAIT_TIME)
             }
 
         state.bullets.removeAll(bulletsToRemove)
@@ -220,7 +229,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         val enemyMovingHere = state.enemies
             .asSequence()
-            .filter { it.state == Enemy.State.Crawling }
+            .filter { it.depth <= 0 }
             .filter { it.timeUntilNextCrawl < TempestGameState.ENEMY_CRAWL_TRANSITION_TIME } // Is transitioning from one segment to the next
             .filter { getNextSegment(it) == state.playerSegment }
             .sortedBy { it.timeUntilNextCrawl } // Shoot the closest ones first...
@@ -279,15 +288,22 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) {
-        if (enemy.state == Enemy.State.Walking || enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME /* Not yet moving to the next segment */) {
-            shapeRenderer.box(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth, 2f, 2f, 1f)
+        if (enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME /* Not yet moving to the next segment */) {
+            shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth)
+            shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
+            shapeRenderer.box(-1f, -0.25f, -1f, 2f, 0.5f, 1f)
+            shapeRenderer.identity()
         } else {
 
             val crawlPercent = 1f - enemy.timeUntilNextCrawl / TempestGameState.ENEMY_CRAWL_TRANSITION_TIME
             val nextSegment = getNextSegment(enemy)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            shapeRenderer.box(pos.x, pos.y, 0f, 2f, 2f, 1f)
+            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Enemy.Direction.Clockwise) 360f else -360f)
+            shapeRenderer.translate(pos.x, pos.y, -enemy.depth)
+            shapeRenderer.rotate(0f, 0f, 1f, angle)
+            shapeRenderer.box(-1f, -0.25f, -1f, 2f, 0.5f, 1f)
+            shapeRenderer.identity()
         }
     }
 

@@ -73,21 +73,10 @@ data class Enemy(
      */
     var timeUntilNextCrawl: Float = TempestGameState.ENEMY_CRAWL_WAIT_TIME,
 
-    var state: State = State.Walking,
-    var crawlsRemaining: Int = NUM_CRAWLS,
     var crawlFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
 
-    ) {
-
-    companion object {
-        const val NUM_CRAWLS = 3
-    }
-
-    enum class State {
-        Walking,
-        Crawling,
-    }
+) {
 
     enum class Direction {
         Clockwise,
@@ -210,6 +199,7 @@ data class Segment(
     val end: Vector2,
 ) {
     val centre: Vector2 = start.cpy().mulAdd(end.cpy().sub(start), 0.5f)
+    val angle: Float = start.cpy().sub(end).angleDeg()
 
     fun offsetBy(amount: Vector2) {
         start.add(amount)
