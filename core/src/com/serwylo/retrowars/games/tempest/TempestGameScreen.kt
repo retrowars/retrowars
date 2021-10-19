@@ -5,6 +5,9 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
@@ -29,6 +32,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private val state = TempestGameState(viewport.worldWidth, viewport.worldHeight)
 
+    private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
     init {
         queueEnemy()
 
@@ -48,6 +53,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             { state.fire = ButtonState.Unpressed })
 
         state.enemies.add(makeEnemy(state.level.segments[0]))
+
+        addGameScoreToHUD(lifeContainer)
     }
 
     override fun show() {
@@ -65,7 +72,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         moveEnemies(delta)
         maybeSpawnEnemies()
         fire()
+
+        checkIfPlayerHit()
+
         resetInput()
+
+        if (getState() == State.Playing && state.numLives <= 0) {
+            endGame()
+        }
     }
 
     private fun checkEndLevel() {
@@ -177,6 +191,26 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         killEnemiesAndScore(enemiesToKill)
     }
 
+    private fun checkIfPlayerHit() {
+        val enemies = state.enemies.filter {
+            it.depth <= 0 && it.segment == state.playerSegment
+        }
+
+        if (enemies.isNotEmpty()) {
+            state.numLives --
+
+            if (state.numLives == 0) {
+                endGame()
+            } else {
+                state.bullets.clear()
+                state.enemies.clear()
+                state.playerSegment = state.level.segments[0]
+                state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
+                state.nextEnemyTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
+            }
+        }
+    }
+
     private fun moveBullets(delta: Float) {
         val enemiesToKill = mutableListOf<Enemy>()
         val bulletsToRemove = mutableListOf<Bullet>()
@@ -187,7 +221,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 // A bit hackey, but we do this check here before advancing the player forward, and
                 // then we'll do the same when advancing the bullet forward later.
                 val closestEnemy = state.enemies
-                    .filter { enemy -> enemy.segment === bullet.segment && enemy.depth > bullet.depth }
+                    .filter { enemy -> enemy.depth > bullet.depth }
+                    .filter { enemy ->
+                        // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
+                        enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME / 2 && enemy.segment === bullet.segment
+                        ||
+                        // Started crawling and past half way, so consider it in its adjacent segment.
+                        enemy.timeUntilNextCrawl <= TempestGameState.ENEMY_CRAWL_TRANSITION_TIME / 2 && getNextSegment(enemy) === bullet.segment
+                    }
                     .minByOrNull { it.depth }
 
                 val newDepth = bullet.depth + TempestGameState.BULLET_SPEED * delta
@@ -216,9 +257,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val currentIndex = state.level.segments.indexOf(state.playerSegment)
 
         if (state.moveClockwise == ButtonState.JustPressed) {
-            state.playerSegment = state.level.segments[(currentIndex + 1) % state.level.segments.size]
-        } else if (state.moveCounterClockwise == ButtonState.JustPressed) {
             state.playerSegment = state.level.segments[(state.level.segments.size + currentIndex - 1) % state.level.segments.size]
+        } else if (state.moveCounterClockwise == ButtonState.JustPressed) {
+            state.playerSegment = state.level.segments[(currentIndex + 1) % state.level.segments.size]
         }
     }
 
@@ -238,6 +279,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         if (enemyMovingHere != null) {
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
             state.enemies.remove(enemyMovingHere)
+            increaseScore(TempestGameState.SCORE_PER_ENEMY)
             // TODO: Queue up some sort of dying feedback so we know we at least hit it (doesn't need to be glamourous for now).
         } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
@@ -254,6 +296,17 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             update()
         }
         renderLevel(camera)
+
+        if (lifeContainer.children.size != state.numLives) {
+            redrawLives()
+        }
+    }
+
+    private fun redrawLives() {
+        lifeContainer.clear()
+        for (i in 0 until state.numLives) {
+            lifeContainer.addActor(Label("x", game.uiAssets.getStyles().label.large))
+        }
     }
 
     private fun renderLevel(camera: Camera) {
@@ -291,7 +344,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         if (enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME /* Not yet moving to the next segment */) {
             shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth)
             shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 2f, 0.5f, 1f)
+            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
             shapeRenderer.identity()
         } else {
 
@@ -299,10 +352,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             val nextSegment = getNextSegment(enemy)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Enemy.Direction.Clockwise) 360f else -360f)
+            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Enemy.Direction.Clockwise) 180f else -180f)
             shapeRenderer.translate(pos.x, pos.y, -enemy.depth)
             shapeRenderer.rotate(0f, 0f, 1f, angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 2f, 0.5f, 1f)
+            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
             shapeRenderer.identity()
         }
     }

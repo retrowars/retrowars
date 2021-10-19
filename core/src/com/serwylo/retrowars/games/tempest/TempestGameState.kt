@@ -30,10 +30,18 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         const val SCORE_PER_ENEMY: Int = 4000
 
         const val BASE_ENEMIES_PER_LEVEL = 10
+
+        /**
+         * Wait for this many seconds after dying before spawning the next enemy at the start of
+         * the level again.
+         */
+        const val PAUSE_AFTER_DEATH = 2f
     }
 
     val bullets = LinkedList<Bullet>()
     val enemies = LinkedList<Enemy>()
+
+    var numLives = 3
 
     val allLevels = listOf(
         makeFirstLevel(worldWidth, worldHeight),
