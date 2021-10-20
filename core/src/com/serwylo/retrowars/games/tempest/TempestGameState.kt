@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.games.tempest
 
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
 import com.serwylo.retrowars.games.tetris.ButtonState
 import java.util.*
 
@@ -36,10 +37,16 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
          * the level again.
          */
         const val PAUSE_AFTER_DEATH = 2f
+
+        const val EXPLOSION_TIME = 0.35f
+
+        const val TIME_BETWEEN_LEVELS = 2f
+
     }
 
     val bullets = LinkedList<Bullet>()
     val enemies = LinkedList<Enemy>()
+    val explosions = LinkedList<Explosion>()
 
     var numLives = 3
 
@@ -52,6 +59,8 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     var level = allLevels[0]
 
     var timer: Float = 0f
+    var nextLevelTime: Float = 0f
+    var nextPlayerRespawnTime: Float = 0f
     var nextEnemyTime: Float = 0f
     var numEnemiesRemaining: Int = BASE_ENEMIES_PER_LEVEL
 
@@ -65,6 +74,11 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
     fun shouldSpawnEnemy() = timer > nextEnemyTime
 }
+
+data class Explosion(
+    var position: Vector3,
+    var startTime: Float,
+)
 
 fun makeEnemy(segment: Segment) = Enemy(
     segment,

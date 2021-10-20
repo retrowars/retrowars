@@ -5,6 +5,8 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -64,31 +66,64 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     override fun updateGame(delta: Float) {
         state.timer += delta
 
-        checkEndLevel()
+        if (getState() == State.Playing) {
+            if (state.nextPlayerRespawnTime > 0) {
+                maybeRespawnPlayer()
+            } else {
 
-        recordInput()
-        movePlayer()
+                recordInput()
+                movePlayer()
+
+                if (state.nextLevelTime > 0) {
+                    maybeAdvanceLevel()
+                } else {
+                    fire()
+                    checkIfPlayerHit()
+                    checkEndLevel()
+                    if (state.numLives <= 0) {
+                        endGame()
+                    }
+                }
+
+                resetInput()
+            }
+        }
+
         moveBullets(delta)
         moveEnemies(delta)
         maybeSpawnEnemies()
-        fire()
+        updateExplosions()
+    }
 
-        checkIfPlayerHit()
-
-        resetInput()
-
-        if (getState() == State.Playing && state.numLives <= 0) {
-            endGame()
-        }
+    private fun updateExplosions() {
+        state.explosions.removeAll { state.timer > it.startTime + TempestGameState.EXPLOSION_TIME }
     }
 
     private fun checkEndLevel() {
         if (getState() == State.Playing && state.numEnemiesRemaining == 0 && state.enemies.isEmpty()) {
+            state.nextLevelTime = state.timer + TempestGameState.TIME_BETWEEN_LEVELS
+        }
+    }
+
+    private fun maybeAdvanceLevel() {
+        if (state.timer > state.nextLevelTime) {
             state.bullets.clear()
             state.level = state.allLevels.filter { it != state.level }.random()
             state.playerSegment = state.level.segments[0]
             state.levelCount ++
             state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
+            state.nextLevelTime = 0f
+        }
+    }
+
+    private fun maybeRespawnPlayer() {
+        if (state.timer > state.nextPlayerRespawnTime) {
+            state.bullets.clear()
+            state.enemies.clear()
+            state.playerSegment = state.level.segments[0]
+            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
+            state.nextEnemyTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
+            state.nextPlayerRespawnTime = 0f
         }
     }
 
@@ -191,6 +226,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         killEnemiesAndScore(enemiesToKill)
     }
 
+    private fun queueExplosion(position: Vector2, depth: Float) {
+        state.explosions.add(Explosion(Vector3(position.x, position.y, depth), state.timer))
+    }
+
     private fun checkIfPlayerHit() {
         val enemies = state.enemies.filter {
             it.depth <= 0 && it.segment == state.playerSegment
@@ -198,16 +237,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         if (enemies.isNotEmpty()) {
             state.numLives --
+            queueExplosion(state.playerSegment.centre, enemies[0].depth)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemies[0].depth)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemies[0].depth)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemies[0].depth)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemies[0].depth)
 
-            if (state.numLives == 0) {
-                endGame()
-            } else {
-                state.bullets.clear()
-                state.enemies.clear()
-                state.playerSegment = state.level.segments[0]
-                state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
-                state.nextEnemyTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
-            }
+            state.nextPlayerRespawnTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
         }
     }
 
@@ -251,6 +287,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     private fun killEnemiesAndScore(enemiesToKill: Collection<Enemy>) {
         increaseScore(enemiesToKill.size * TempestGameState.SCORE_PER_ENEMY)
         state.enemies.removeAll(enemiesToKill)
+        enemiesToKill.onEach {
+            queueExplosion(it.segment.centre, it.depth)
+        }
     }
 
     private fun movePlayer() {
@@ -280,7 +319,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
             state.enemies.remove(enemyMovingHere)
             increaseScore(TempestGameState.SCORE_PER_ENEMY)
-            // TODO: Queue up some sort of dying feedback so we know we at least hit it (doesn't need to be glamourous for now).
+            queueExplosion(state.playerSegment.centre, 0f)
         } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
         }
@@ -295,6 +334,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, 0f)
             update()
         }
+
         renderLevel(camera)
 
         if (lifeContainer.children.size != state.numLives) {
@@ -331,7 +371,27 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.enemies.onEach {
             renderEnemy(r, it)
         }
+
+        r.color = Color.YELLOW
+        state.explosions.onEach {
+            renderExplosion(r, it)
+        }
+
         r.end()
+    }
+
+    private fun renderExplosion(shapeRenderer: ShapeRenderer, explosion: Explosion) {
+        shapeRenderer.translate(explosion.position.x, explosion.position.y, -explosion.position.z)
+
+        val progress = (state.timer - explosion.startTime) / TempestGameState.EXPLOSION_TIME
+
+        val random = Random(explosion.hashCode())
+        for (i in 0..10) {
+            val point = Vector3(random.nextFloat() * 5 - 2.5f, random.nextFloat() * 5 - 2.5f, random.nextFloat() * 5 - 2.5f)
+            shapeRenderer.line(Vector3(), Vector3(point.scl(progress)))
+        }
+
+        shapeRenderer.identity()
     }
 
     private fun queueEnemy() {
