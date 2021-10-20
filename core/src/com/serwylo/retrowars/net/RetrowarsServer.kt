@@ -32,6 +32,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         val rooms: Rooms,
         val port: Int,
         val finalScoreDelay: Int,
+        val includeBetaGames: Boolean = false,
     )
 
     sealed interface Rooms {
@@ -368,6 +369,9 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         scheduleReturnToLobby(room)
     }
 
+    private fun randomGame() =
+        Games.allSupported.filter { config.includeBetaGames || !it.isBeta }.random().id
+
     private fun scheduleReturnToLobby(room: Room) {
         if (returnToLobbyTask != null) {
             Gdx.app.error(TAG, "Should not try to schedule a return to the lobby if we have already scheduled one. Ignoring request.")
@@ -378,9 +382,9 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelay}ms seconds before telling each player to return to the main lobby for this room.")
             delay(config.finalScoreDelay.toLong())
 
-            room.players.onEach {
-                it.game = Games.allSupported.random().id
-                it.status = Player.Status.lobby
+            room.players.onEach { player ->
+                player.game = randomGame()
+                player.status = Player.Status.lobby
             }
 
             val newGames = room.players.associate { it.id to it.game }
@@ -474,7 +478,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             id
         }
 
-        val player = Player(playerId, Games.allSupported.random().id, room.statusForNewPlayer())
+        val player = Player(playerId, randomGame(), room.statusForNewPlayer())
 
         connection.player = player
 

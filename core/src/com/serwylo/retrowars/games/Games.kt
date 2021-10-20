@@ -16,7 +16,8 @@ object Games {
 
     val asteroids = GameDetails(
         "asteroids",
-        true,
+        isAvailable = true,
+        isBeta = false,
         AsteroidsSoftController(),
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
@@ -24,7 +25,8 @@ object Games {
 
     val missileCommand = GameDetails(
         "missile-command",
-        true,
+        isAvailable = true,
+        isBeta = false,
         controllerLayout = null,
         { s -> s.icons.missileCommand },
         { app -> MissileCommandGameScreen(app) }
@@ -32,7 +34,8 @@ object Games {
 
     val snake = GameDetails(
         "snake",
-        true,
+        isAvailable = true,
+        isBeta = false,
         SnakeSoftController(),
         { s -> s.icons.snake },
         { app -> SnakeGameScreen(app) }
@@ -40,7 +43,8 @@ object Games {
 
     val tempest = GameDetails(
         "tempest",
-        true,
+        isAvailable = true,
+        isBeta = true,
         TempestSoftController(),
         { s -> s.icons.tempest },
         { app -> TempestGameScreen(app) }
@@ -48,7 +52,8 @@ object Games {
 
     val tetris = GameDetails(
         "tetris",
-        true,
+        isAvailable = true,
+        isBeta = false,
         TetrisSoftController(),
         { s -> s.icons.tetris },
         { app -> TetrisGameScreen(app) }
@@ -71,8 +76,9 @@ object Games {
 
 class UnavailableGameDetails(name: String): GameDetails(
     name,
-    false,
-    null,
+    isAvailable = false,
+    isBeta = false,
+    controllerLayout = null,
     { s -> s.icons.unknown },
     { game -> UnimplementedGameScreen(game) }
 )
@@ -80,6 +86,7 @@ class UnavailableGameDetails(name: String): GameDetails(
 open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
+    val isBeta: Boolean,
     val controllerLayout: SoftControllerLayout?,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame) -> Screen

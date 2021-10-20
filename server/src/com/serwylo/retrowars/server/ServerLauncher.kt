@@ -15,17 +15,23 @@ object ServerLauncher {
         val maxRooms = getIntArg("MAX_ROOMS", "max-rooms", args) ?: 20
         val roomSize = getIntArg("ROOM_SIZE", "room-size", args) ?: 4
         val finalScoreDuration = getIntArg("FINAL_SCORE_DURATION", "final-score-duration", args) ?: 7500
+        val betaGames = getBoolArg("BETA_GAMES", "--beta-games", args)
 
         val serverConfig = RetrowarsServer.Config(
             rooms = RetrowarsServer.Rooms.PublicRandomRooms(roomSize, maxRooms),
             port,
             finalScoreDuration,
+            includeBetaGames = betaGames,
         )
 
         val gdxAppConfig = HeadlessApplicationConfiguration()
 
         HeadlessApplication(ServerApp(serverConfig, DesktopPlatform()), gdxAppConfig)
 
+    }
+
+    private fun getBoolArg(envName: String, argName: String, args: Array<String>): Boolean {
+        return System.getenv(envName) == "1" || args.contains(argName)
     }
 
     private fun getIntArg(envName: String, argName: String, args: Array<String>) =

@@ -166,9 +166,21 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             Label(subText, styles.label.small).apply {
                 setAlignment(Align.center)
             }
-        )
+        ).expandX()
 
-        return WidgetGroup(button, table)
+        return Stack().also { stack ->
+            stack.addActor(button)
+            stack.addActor(table)
+            if (game.isBeta) {
+                stack.addActor(
+                    Table().also { betaTable ->
+                        betaTable.setFillParent(true)
+                        betaTable.pad(UI_SPACE * 1.5f)
+                        betaTable.add(Label("Beta", styles.label.small)).top().expandY()
+                    }
+                )
+            }
+        }
 
     }
 
