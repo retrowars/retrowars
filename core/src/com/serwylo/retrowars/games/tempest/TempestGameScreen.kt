@@ -360,8 +360,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             renderSegment(r, segment)
         }
 
-        r.color = Color.YELLOW
-        renderSegment(r, state.playerSegment)
+        if (state.nextPlayerRespawnTime <= 0f) {
+            r.color = Color.YELLOW
+            renderSegment(r, state.playerSegment)
+            renderPlayer(r)
+        }
 
         state.bullets.onEach {
             renderBullet(r, it)
@@ -378,6 +381,28 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         r.end()
+    }
+
+    private val playerShape = arrayOf(
+        0f, -1.2f,
+        2f, 0f,
+        0.5f, 4f,
+        1.2f, 0.7f,
+
+        0f, 0.2f,
+
+        -1.2f, 0.7f,
+        -0.5f, 4f,
+        -2f, 0f,
+    ).toFloatArray()
+
+    private fun renderPlayer(shapeRenderer: ShapeRenderer) {
+        shapeRenderer.translate(state.playerSegment.centre.x, state.playerSegment.centre.y, 0f)
+        shapeRenderer.rotate(0f, 0f, 1f, state.playerSegment.angle)
+        shapeRenderer.rotate(0f, 1f, 0f, 180f)
+        shapeRenderer.rotate(1f, 0f, 0f, 90f)
+        shapeRenderer.polygon(playerShape)
+        shapeRenderer.identity()
     }
 
     private fun renderExplosion(shapeRenderer: ShapeRenderer, explosion: Explosion) {
