@@ -1,6 +1,7 @@
 package com.serwylo.retrowars
 
 import android.content.Context
+import android.content.Intent
 import android.net.wifi.WifiManager
 import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.utils.MulticastControl
@@ -16,6 +17,22 @@ class AndroidPlatform(private val context: Context): Platform {
     }
 
     private val multicastControl = AndroidMulticastControl(context)
+
+    override fun shareRetrowars() {
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+
+            val text = """
+                Come join me for an online game of Super Retro Mega Wars:
+                
+                https://play.google.com/store/apps/details?id=com.serwylo.retrowars
+            """.trimIndent()
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+
+        context.startActivity(Intent.createChooser(sendIntent, "Invite a friend"))
+    }
 
     override fun getMulticastControl() = multicastControl
 
