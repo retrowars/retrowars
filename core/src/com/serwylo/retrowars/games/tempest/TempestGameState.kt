@@ -15,22 +15,37 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
          * Take 6 seconds to traverse the whole screen, based on a crude measure
          * of https://www.youtube.com/watch?v=jfaCrdBABUY from 0:22 until 0:28 in the top right.
          */
-        const val ENEMY_SPEED = LEVEL_DEPTH / 6f
+        private const val ENEMY_SPEED_INITIAL = LEVEL_DEPTH / 6f
+        private const val ENEMY_SPEED_MAX = LEVEL_DEPTH / 4f
+
+        /**
+         * At which level will the players reach [ENEMY_SPEED_MAX].
+         */
+        private const val ENEMY_SPEED_MAX_LEVEL = 10
 
         /**
          * The time it takes to move from one segment to the next when crawling.
           */
-        const val ENEMY_CRAWL_TRANSITION_TIME = 0.5f
+        private const val ENEMY_CRAWL_TRANSITION_TIME_INITIAL = 0.70f
+        private const val ENEMY_CRAWL_TRANSITION_TIME_MIN = 0.3f
 
+        /**
+         * Normally crawl wait times are random (see [TIME_BETWEEN_ENEMIES_INITIAL], etc).
+         * The exception is when the enemies have made it to the end of the level and are chasing
+         * the player around the rim. At this time, they have consistent crawl times defined below.
+         */
+        private const val ENEMY_CRAWL_WAIT_TIME_INITIAL = 0.4f
+        private const val ENEMY_CRAWL_WAIT_TIME_MIN = 0.2f
+        const val ENEMY_CRAWL_WAIT_TIME_VARIATION = 0.2f
 
-        const val ENEMY_CRAWL_WAIT_TIME = 0.75f
-
-        const val MIN_TIME_BETWEEN_ENEMIES = 0.5f
-        const val MAX_TIME_BETWEEN_ENEMIES = 2f
+        private const val TIME_BETWEEN_ENEMIES_INITIAL = 1f
+        private const val TIME_BETWEEN_ENEMIES_MIN = 0.5f
+        const val TIME_BETWEEN_ENEMIES_VARIATION = 1f
 
         const val SCORE_PER_ENEMY: Int = 4000
 
-        const val BASE_ENEMIES_PER_LEVEL = 10
+        const val BASE_ENEMIES_PER_LEVEL = 5
+        const val ADDITIONAL_ENEMIES_PER_LEVEL = 2
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
@@ -42,6 +57,15 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
         const val TIME_BETWEEN_LEVELS = 2f
 
+    }
+
+    fun increaseSpeed() {
+        val progressionTowardMax = (levelCount.toFloat() / ENEMY_SPEED_MAX_LEVEL).coerceAtMost(1f)
+
+        enemySpeed = ENEMY_SPEED_INITIAL + (ENEMY_SPEED_MAX - ENEMY_SPEED_INITIAL) * progressionTowardMax
+        enemyCrawlWaitTime = ENEMY_CRAWL_WAIT_TIME_INITIAL - (ENEMY_CRAWL_WAIT_TIME_INITIAL - ENEMY_CRAWL_WAIT_TIME_MIN) * progressionTowardMax
+        enemyCrawlTransitionTime = ENEMY_CRAWL_TRANSITION_TIME_INITIAL - (ENEMY_CRAWL_TRANSITION_TIME_INITIAL - ENEMY_CRAWL_TRANSITION_TIME_MIN) * progressionTowardMax
+        timeBetweenEnemies = TIME_BETWEEN_ENEMIES_INITIAL - (TIME_BETWEEN_ENEMIES_INITIAL - TIME_BETWEEN_ENEMIES_MIN) * progressionTowardMax
     }
 
     val bullets = LinkedList<Bullet>()
@@ -57,6 +81,11 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     )
 
     var level = allLevels[0]
+
+    var enemySpeed = ENEMY_SPEED_INITIAL
+    var enemyCrawlWaitTime = ENEMY_CRAWL_WAIT_TIME_INITIAL
+    var enemyCrawlTransitionTime = ENEMY_CRAWL_TRANSITION_TIME_INITIAL
+    var timeBetweenEnemies = TIME_BETWEEN_ENEMIES_INITIAL
 
     var timer: Float = 0f
     var nextLevelTime: Float = 0f
@@ -80,10 +109,10 @@ data class Explosion(
     var startTime: Float,
 )
 
-fun makeEnemy(segment: Segment) = Enemy(
+fun makeEnemy(segment: Segment, timeUntilFirstCrawl: Float) = Enemy(
     segment,
     depth = TempestGameState.LEVEL_DEPTH,
-    timeUntilNextCrawl = TempestGameState.ENEMY_CRAWL_WAIT_TIME,
+    timeUntilNextCrawl = timeUntilFirstCrawl,
 )
 
 data class Enemy(
@@ -91,9 +120,9 @@ data class Enemy(
     var depth: Float,
 
     /**
-     * Number of seconds before the enemy crawls around the end of the level.
+     * Number of seconds before the enemy crawls to an adjacent segment in [direction].
      */
-    var timeUntilNextCrawl: Float = TempestGameState.ENEMY_CRAWL_WAIT_TIME,
+    var timeUntilNextCrawl: Float,
 
     var crawlFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),

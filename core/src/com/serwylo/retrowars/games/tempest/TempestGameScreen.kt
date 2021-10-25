@@ -38,6 +38,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     init {
         queueEnemy()
+        spawnEnemy()
 
         controller!!.listen(
             TempestSoftController.Buttons.MOVE_COUNTER_CLOCKWISE,
@@ -53,8 +54,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             TempestSoftController.Buttons.FIRE,
             { state.fire = if (state.fire == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.fire = ButtonState.Unpressed })
-
-        state.enemies.add(makeEnemy(state.level.segments[0]))
 
         addGameScoreToHUD(lifeContainer)
     }
@@ -111,8 +110,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.level = state.allLevels.filter { it != state.level }.random()
             state.playerSegment = state.level.segments[0]
             state.levelCount ++
-            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
+            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + (state.levelCount * TempestGameState.ADDITIONAL_ENEMIES_PER_LEVEL)
             state.nextLevelTime = 0f
+            state.increaseSpeed()
         }
     }
 
@@ -135,7 +135,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun spawnEnemy() {
-        state.enemies.add(makeEnemy(state.level.segments.random()))
+        val nextCrawlTime = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION + Random.nextFloat() * TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
+        state.enemies.add(makeEnemy(state.level.segments.random(), nextCrawlTime))
         state.numEnemiesRemaining --
     }
 
@@ -169,7 +170,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             .filter { it.timeUntilNextCrawl < 0 }
             .onEach {
                 it.segment = getNextSegment(it)
-                it.timeUntilNextCrawl = TempestGameState.ENEMY_CRAWL_WAIT_TIME
+                it.timeUntilNextCrawl = state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime
 
                 if (it.depth > 0) {
                     // Before getting to the end of the screen, enemies sometimes crawl, and
@@ -177,7 +178,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     // stopping and then beginning crawling again in the future.
                     val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
                     if (waitBeforeCrawlingAgain) {
-                        it.timeUntilNextCrawl += Random.nextInt(0, 2000) / 1000f
+                        it.timeUntilNextCrawl = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION
                     }
 
                     val changeDirection = Random.nextFloat() > 0.8f
@@ -201,7 +202,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     .filter { bullet -> bullet.segment === enemy.segment && bullet.depth < enemy.depth }
                     .maxByOrNull { it.depth }
 
-                val newDepth = enemy.depth - TempestGameState.ENEMY_SPEED * delta
+                val newDepth = enemy.depth - state.enemySpeed * delta
                 if (closestBullet != null) {
                     if (closestBullet.depth > newDepth) {
                         enemiesToKill.add(enemy)
@@ -217,9 +218,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             .onEach {
                 it.depth = 0f
 
-                // If we were in the middle of waitign some time before crawling, ignore that and
+                // If we were in the middle of waiting some time before crawling, ignore that and
                 // queue up the next crawl at the approved interval.
-                it.timeUntilNextCrawl = it.timeUntilNextCrawl.coerceAtMost(TempestGameState.ENEMY_CRAWL_WAIT_TIME)
+                it.timeUntilNextCrawl = it.timeUntilNextCrawl.coerceAtMost(state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime)
             }
 
         state.bullets.removeAll(bulletsToRemove)
@@ -260,10 +261,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     .filter { enemy -> enemy.depth > bullet.depth }
                     .filter { enemy ->
                         // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
-                        enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME / 2 && enemy.segment === bullet.segment
+                        enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime / 2 && enemy.segment === bullet.segment
                         ||
                         // Started crawling and past half way, so consider it in its adjacent segment.
-                        enemy.timeUntilNextCrawl <= TempestGameState.ENEMY_CRAWL_TRANSITION_TIME / 2 && getNextSegment(enemy) === bullet.segment
+                        enemy.timeUntilNextCrawl <= state.enemyCrawlTransitionTime / 2 && getNextSegment(enemy) === bullet.segment
                     }
                     .minByOrNull { it.depth }
 
@@ -310,7 +311,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val enemyMovingHere = state.enemies
             .asSequence()
             .filter { it.depth <= 0 }
-            .filter { it.timeUntilNextCrawl < TempestGameState.ENEMY_CRAWL_TRANSITION_TIME } // Is transitioning from one segment to the next
+            .filter { it.timeUntilNextCrawl < state.enemyCrawlTransitionTime / 2 } // Is transitioning from one segment to the next, and is past half way.
             .filter { getNextSegment(it) == state.playerSegment }
             .sortedBy { it.timeUntilNextCrawl } // Shoot the closest ones first...
             .firstOrNull()
@@ -370,7 +371,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             renderBullet(r, it)
         }
 
-        r.color = Color.RED
+        r.color = Color.WHITE
         state.enemies.onEach {
             renderEnemy(r, it)
         }
@@ -420,20 +421,20 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun queueEnemy() {
-        val max = TempestGameState.MAX_TIME_BETWEEN_ENEMIES
-        val min = TempestGameState.MIN_TIME_BETWEEN_ENEMIES
+        val max = state.timeBetweenEnemies + TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION / 2f
+        val min = max - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
         state.nextEnemyTime = state.timer + ((Math.random() * (max - min)) + min).toFloat()
     }
 
     private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) {
-        if (enemy.timeUntilNextCrawl > TempestGameState.ENEMY_CRAWL_TRANSITION_TIME /* Not yet moving to the next segment */) {
+        if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
             shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth)
             shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
             shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
             shapeRenderer.identity()
         } else {
 
-            val crawlPercent = 1f - enemy.timeUntilNextCrawl / TempestGameState.ENEMY_CRAWL_TRANSITION_TIME
+            val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
             val nextSegment = getNextSegment(enemy)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
