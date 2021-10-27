@@ -2,9 +2,7 @@ package com.serwylo.retrowars.scoring
 
 import com.badlogic.gdx.Gdx
 import com.google.gson.Gson
-import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
-import kotlin.math.max
 
 /**
  * Stats are collected and stored offline (never sent over the network - we value your privacy!).
@@ -39,7 +37,7 @@ fun dumpStats() {
 
     val stats = loadAllStats()
 
-    Games.allSupported.forEach { game ->
+    Games.allAvailable.forEach { game ->
 
         val gameStats = stats.filter { it.gameType == game.id }
 

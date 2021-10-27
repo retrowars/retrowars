@@ -4,6 +4,7 @@ import com.badlogic.gdx.Application
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.serwylo.retrowars.core.*
+import com.serwylo.retrowars.games.BetaInfo
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.ServerHostAndPort
 import com.serwylo.retrowars.utils.Options
@@ -90,6 +91,13 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
         Gdx.app.log(TAG, "Showing game screen for ${gameDetails.id}")
         Gdx.app.postRunnable {
             setScreen(gameDetails.createScreen(this))
+        }
+    }
+
+    fun showBetaDetails(gameDetails: GameDetails, betaInfo: BetaInfo) {
+        Gdx.app.log(TAG, "Showing beta info screen for ${gameDetails.id}")
+        Gdx.app.postRunnable {
+            setScreen(BetaGameScreen(this, gameDetails, betaInfo))
         }
     }
 

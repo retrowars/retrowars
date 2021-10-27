@@ -17,7 +17,6 @@ object Games {
     val asteroids = GameDetails(
         "asteroids",
         isAvailable = true,
-        isBeta = false,
         AsteroidsSoftController(),
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
@@ -26,7 +25,6 @@ object Games {
     val missileCommand = GameDetails(
         "missile-command",
         isAvailable = true,
-        isBeta = false,
         controllerLayout = null,
         { s -> s.icons.missileCommand },
         { app -> MissileCommandGameScreen(app) }
@@ -35,7 +33,6 @@ object Games {
     val snake = GameDetails(
         "snake",
         isAvailable = true,
-        isBeta = false,
         SnakeSoftController(),
         { s -> s.icons.snake },
         { app -> SnakeGameScreen(app) }
@@ -44,7 +41,6 @@ object Games {
     val tempest = GameDetails(
         "tempest",
         isAvailable = true,
-        isBeta = true,
         TempestSoftController(),
         { s -> s.icons.tempest },
         { app -> TempestGameScreen(app) }
@@ -53,7 +49,6 @@ object Games {
     val tetris = GameDetails(
         "tetris",
         isAvailable = true,
-        isBeta = false,
         TetrisSoftController(),
         { s -> s.icons.tetris },
         { app -> TetrisGameScreen(app) }
@@ -70,14 +65,34 @@ object Games {
         other,
     )
 
-    val allSupported = all.filter { it !is UnavailableGameDetails }
+    val betaInfo = listOf(
+        BetaInfo(
+            tempest,
+            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Tempest,Beta%20Feedback&template=&title=",
+            """
+                Known issues:
+                 * Only "flipper" enemies supported - missing flipper tankers, fuseballs,
+                   fuseball tankers, spikers, pulsars, and pulsar tankers
+                 * Only three different levels
+                 * No multiplayer support
+            """.trimIndent()
+        ),
+    )
+
+    val allAvailable = all
+        .filter { it !is UnavailableGameDetails }
+
+    val allReleased = allAvailable
+        .filter { game -> betaInfo.none { it.game === game } }
+
+    val allBeta = allAvailable
+        .filter { game -> betaInfo.any { it.game === game } }
 
 }
 
 class UnavailableGameDetails(name: String): GameDetails(
     name,
     isAvailable = false,
-    isBeta = false,
     controllerLayout = null,
     { s -> s.icons.unknown },
     { game -> UnimplementedGameScreen(game) }
@@ -86,8 +101,21 @@ class UnavailableGameDetails(name: String): GameDetails(
 open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
-    val isBeta: Boolean,
     val controllerLayout: SoftControllerLayout?,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame) -> Screen
+)
+
+class BetaInfo(
+
+    val game: GameDetails,
+
+    val feedbackUrl: String,
+
+    /**
+     * Any known issues, plans for the future, things the player may wish to know prior to playing
+     * and prior to providing feedback.
+     */
+    val description: String?,
+
 )

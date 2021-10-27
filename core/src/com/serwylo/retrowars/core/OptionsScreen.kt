@@ -61,7 +61,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
             row()
             add(
                 HorizontalGroup().apply {
-                    Games.allSupported
+                    Games.allAvailable
                         .filter { it.controllerLayout != null }
                         .forEach { gameDetails ->
                             addActor(

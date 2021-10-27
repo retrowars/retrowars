@@ -11,7 +11,7 @@ object Options {
 
     private var playerId: Long = prefs().getLong("playerId", Random.nextLong())
 
-    private var softControllers: MutableMap<GameDetails, Int> = Games.allSupported.associateWith {
+    private var softControllers: MutableMap<GameDetails, Int> = Games.all.associateWith {
         prefs().getInteger("${it.id}-softController", 0)
     }.toMutableMap()
 

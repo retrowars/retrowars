@@ -369,8 +369,13 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         scheduleReturnToLobby(room)
     }
 
-    private fun randomGame() =
-        Games.allSupported.filter { config.includeBetaGames || !it.isBeta }.random().id
+    private val games = if (config.includeBetaGames) {
+        Games.allAvailable
+    } else {
+        Games.allReleased
+    }
+
+    private fun randomGame() = games.random().id
 
     private fun scheduleReturnToLobby(room: Room) {
         if (returnToLobbyTask != null) {
