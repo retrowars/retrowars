@@ -8,34 +8,48 @@ import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
+import com.serwylo.retrowars.input.*
 
 object Games {
 
     val asteroids = GameDetails(
         "asteroids",
-        true,
+        isAvailable = true,
+        AsteroidsSoftController(),
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
     )
 
     val missileCommand = GameDetails(
         "missile-command",
-        true,
+        isAvailable = true,
+        controllerLayout = null,
         { s -> s.icons.missileCommand },
         { app -> MissileCommandGameScreen(app) }
     )
 
     val snake = GameDetails(
         "snake",
-        true,
+        isAvailable = true,
+        SnakeSoftController(),
         { s -> s.icons.snake },
         { app -> SnakeGameScreen(app) }
     )
 
+    val tempest = GameDetails(
+        "tempest",
+        isAvailable = true,
+        TempestSoftController(),
+        { s -> s.icons.tempest },
+        { app -> TempestGameScreen(app) }
+    )
+
     val tetris = GameDetails(
         "tetris",
-        true,
+        isAvailable = true,
+        TetrisSoftController(),
         { s -> s.icons.tetris },
         { app -> TetrisGameScreen(app) }
     )
@@ -46,17 +60,40 @@ object Games {
         asteroids,
         missileCommand,
         snake,
+        tempest,
         tetris,
         other,
     )
 
-    val allSupported = all.filter { it !is UnavailableGameDetails }
+    val betaInfo = listOf(
+        BetaInfo(
+            tempest,
+            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Tempest,Beta%20Feedback&template=&title=",
+            """
+                Known issues:
+                 * Only "flipper" enemies supported - missing flipper tankers, fuseballs,
+                   fuseball tankers, spikers, pulsars, and pulsar tankers
+                 * Only three different levels
+                 * No multiplayer support
+            """.trimIndent()
+        ),
+    )
+
+    val allAvailable = all
+        .filter { it !is UnavailableGameDetails }
+
+    val allReleased = allAvailable
+        .filter { game -> betaInfo.none { it.game === game } }
+
+    val allBeta = allAvailable
+        .filter { game -> betaInfo.any { it.game === game } }
 
 }
 
 class UnavailableGameDetails(name: String): GameDetails(
     name,
-    false,
+    isAvailable = false,
+    controllerLayout = null,
     { s -> s.icons.unknown },
     { game -> UnimplementedGameScreen(game) }
 )
@@ -64,6 +101,21 @@ class UnavailableGameDetails(name: String): GameDetails(
 open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
+    val controllerLayout: SoftControllerLayout?,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame) -> Screen
+)
+
+class BetaInfo(
+
+    val game: GameDetails,
+
+    val feedbackUrl: String,
+
+    /**
+     * Any known issues, plans for the future, things the player may wish to know prior to playing
+     * and prior to providing feedback.
+     */
+    val description: String?,
+
 )

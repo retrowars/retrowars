@@ -2,7 +2,7 @@ package com.serwylo.retrowars.games.missilecommand
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector2
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
@@ -10,7 +10,7 @@ import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.missilecommand.entities.*
 import kotlin.math.abs
 
-class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.missileCommand, 400f, 250f) {
+class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.missileCommand, "Protect the cities", "Conserve your missiles", 400f, 250f) {
 
     companion object {
         @Suppress("unused")
@@ -21,7 +21,6 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     init {
         queueEnemyMissile()
-        showMessage("Protect the cities", "Conserve your missiles")
     }
 
     override fun show() {
@@ -66,7 +65,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         }
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val r = game.uiAssets.shapeRenderer
 

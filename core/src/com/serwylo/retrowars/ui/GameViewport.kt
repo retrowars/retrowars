@@ -2,6 +2,7 @@ package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.glutils.HdpiUtils
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 
@@ -33,6 +34,10 @@ class GameViewport(minWorldWidth: Float, minWorldHeight: Float, camera: Camera) 
     }
 
     fun renderIn(render: () -> Unit) {
+        // Note: This call to apply() will not work very well with PerspectiveCamera's, because the
+        // Z position will be forceably set to 0f which usually isn't desired. However, it is likely
+        // better for the game to manage its own camera if it needs a PerspectiveCamera anyway.
+        // See Tempest for an example of how this is done in the render method.
         apply()
         render()
         HdpiUtils.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)

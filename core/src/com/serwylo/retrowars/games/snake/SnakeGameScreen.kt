@@ -2,8 +2,8 @@ package com.serwylo.retrowars.games.snake
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
@@ -12,7 +12,7 @@ import com.serwylo.retrowars.input.SnakeSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f, 400f) {
+class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat the fruit", "Avoid your tail", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -20,13 +20,6 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private val state = SnakeGameState()
-
-    private val controller = SnakeSoftController(Options.getSoftController(Games.snake), game.uiAssets)
-
-    init {
-        addGameOverlayToHUD(controller.getActor())
-        showMessage("Eat the fruit", "Avoid your tail")
-    }
 
     override fun show() {
         Gdx.input.inputProcessor = getInputProcessor()
@@ -47,10 +40,10 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private fun recordInput() {
-        state.left = controller.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        state.right = controller.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        state.up = controller.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
-        state.down = controller.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+        state.left = controller!!.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+        state.right = controller!!.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        state.up = controller!!.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
+        state.down = controller!!.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
     }
 
     /**
@@ -138,7 +131,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         state.queuedGrowth += strength
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val numCellsHigh = state.cells.size
         val numCellsWide = state.cells[0].size

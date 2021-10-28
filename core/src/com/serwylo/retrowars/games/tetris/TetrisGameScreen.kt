@@ -2,8 +2,8 @@ package com.serwylo.retrowars.games.tetris
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.retrowars.RetrowarsGame
@@ -15,7 +15,7 @@ import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
+class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fill complete rows", "Stay below the top", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -24,35 +24,31 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
     private val state = TetrisGameState()
 
-    private val controller = TetrisSoftController(Options.getSoftController(Games.tetris), game.uiAssets)
-
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
     init {
 
-        controller.listen(TetrisSoftController.Buttons.LEFT,
+        controller!!.listen(TetrisSoftController.Buttons.LEFT,
             { state.moveLeft = if (state.moveLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveLeft = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.RIGHT,
+        controller!!.listen(TetrisSoftController.Buttons.RIGHT,
             { state.moveRight = if (state.moveRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveRight = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.ROTATE_CCW,
+        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CCW,
             { state.rotateLeft = if (state.rotateLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.rotateLeft = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.ROTATE_CW,
+        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CW,
             { state.rotateRight = if (state.rotateRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.rotateRight = ButtonState.Unpressed })
 
-        controller.listen(TetrisSoftController.Buttons.DROP,
+        controller!!.listen(TetrisSoftController.Buttons.DROP,
             { state.drop = if (state.drop == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.drop = ButtonState.Unpressed })
 
-        addGameOverlayToHUD(controller.getActor())
         addGameScoreToHUD(linesLabel)
-        showMessage("Fill complete rows", "Stay below the top")
 
     }
 
@@ -320,7 +316,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
 
         val numCellsHigh = state.cells.size
         val numCellsWide = state.cells[0].size

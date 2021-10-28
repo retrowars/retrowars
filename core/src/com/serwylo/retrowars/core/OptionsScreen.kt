@@ -6,14 +6,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
+import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.makeButton
+import com.serwylo.beatgame.ui.makeHeading
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
-import com.serwylo.retrowars.input.AsteroidsSoftController
-import com.serwylo.retrowars.input.SnakeSoftController
 import com.serwylo.retrowars.input.SoftController
-import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.IconButton
 import com.serwylo.retrowars.utils.Options
 import kotlin.random.Random
@@ -61,43 +61,19 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
             row()
             add(
                 HorizontalGroup().apply {
+                    Games.allAvailable
+                        .filter { it.controllerLayout != null }
+                        .forEach { gameDetails ->
+                            addActor(
+                                IconButton(skin, gameDetails.icon(sprites)) {
+                                    Gdx.app.postRunnable {
+                                        game.screen = ControllerSelectScreen(game, gameDetails)
+                                    }
+                                }
+                            )
 
-                    addActor(
-                        IconButton(skin, Games.asteroids.icon(sprites)) {
-                            Gdx.app.postRunnable {
-                                game.screen = ControllerSelectScreen(
-                                    game,
-                                    Games.asteroids,
-                                    AsteroidsSoftController.layouts,
-                                ) { index -> AsteroidsSoftController(index, game.uiAssets) }
-                            }
-                        }
-                    )
 
-                    addActor(
-                        IconButton(skin, Games.snake.icon(sprites)) {
-                            Gdx.app.postRunnable {
-                                game.screen = ControllerSelectScreen(
-                                    game,
-                                    Games.snake,
-                                    SnakeSoftController.layouts,
-                                ) { index -> SnakeSoftController(index, game.uiAssets) }
-                            }
-                        }
-                    )
-
-                    addActor(
-                        IconButton(skin, Games.tetris.icon(sprites)) {
-                            Gdx.app.postRunnable {
-                                game.screen = ControllerSelectScreen(
-                                    game,
-                                    Games.tetris,
-                                    TetrisSoftController.layouts,
-                                ) { index -> TetrisSoftController(index, game.uiAssets) }
-                            }
-                        }
-                    )
-
+                    }
                 }
             )
 
@@ -112,7 +88,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                 Label("?", game.uiAssets.getStyles().label.medium)
             } else {
                 Avatar(playerId, game.uiAssets)
-            }
+                }
 
             add(
                 Button(avatar, game.uiAssets.getSkin()).apply {
@@ -243,12 +219,11 @@ class AvatarSelectScreen(
 class ControllerSelectScreen(
     game: RetrowarsGame,
     private val gameDetails: GameDetails,
-    private val keyboards: List<String>,
-    private val makeController: (index: Int) -> SoftController,
 ): Scene2dScreen(game, { game.showOptions() }) {
 
     private val wrapper = Table()
     private val heading = Label("", game.uiAssets.getStyles().label.large)
+    private val controller = gameDetails.controllerLayout!!
     private var currentIndex = Options.getSoftController(gameDetails)
 
     init {
@@ -277,7 +252,7 @@ class ControllerSelectScreen(
 
         container.add(
             makeButton("<", game.uiAssets.getStyles()) {
-                setSelection((currentIndex + keyboards.size - 1) % keyboards.size)
+                setSelection((currentIndex + controller.getLayouts().size - 1) % controller.getLayouts().size)
             }
         ).fillY()
 
@@ -287,7 +262,7 @@ class ControllerSelectScreen(
 
         container.add(
             makeButton(">", game.uiAssets.getStyles()) {
-                setSelection((currentIndex + 1) % keyboards.size)
+                setSelection((currentIndex + 1) % controller.getLayouts().size)
             }
         ).fillY()
 
@@ -301,7 +276,7 @@ class ControllerSelectScreen(
         currentIndex = index
         Options.setSoftController(gameDetails, index)
         wrapper.clear()
-        wrapper.add(makeController(index).getActor()).expand().fill()
+        wrapper.add(SoftController(game.uiAssets, controller, index).getActor()).expand().fill()
     }
 
 }

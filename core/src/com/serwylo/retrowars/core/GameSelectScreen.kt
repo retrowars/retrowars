@@ -66,7 +66,8 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         var x = 0
         var y = 0
 
-        Games.all.forEachIndexed { i, game ->
+        val games = Games.allReleased + Games.allBeta + Games.other
+        games.forEachIndexed { i, game ->
 
             if (i % gamesPerRow == 0) {
                 table.row()
@@ -166,14 +167,31 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
             Label(subText, styles.label.small).apply {
                 setAlignment(Align.center)
             }
-        )
+        ).expandX()
 
-        return WidgetGroup(button, table)
+        return Stack().also { stack ->
+            stack.addActor(button)
+            stack.addActor(table)
+            if (Games.allBeta.contains(game)) {
+                stack.addActor(
+                    Table().also { betaTable ->
+                        betaTable.setFillParent(true)
+                        betaTable.pad(UI_SPACE * 1.5f)
+                        betaTable.add(Label("Beta", styles.label.small)).top().expandY()
+                    }
+                )
+            }
+        }
 
     }
 
     fun onGameSelected(gameDetails: GameDetails) {
-        this.game.launchGame(gameDetails)
+        val betaInfo = Games.betaInfo.find { it.game === gameDetails }
+        if (betaInfo == null) {
+            this.game.launchGame(gameDetails)
+        } else {
+            this.game.showBetaDetails(gameDetails, betaInfo)
+        }
     }
 
 }

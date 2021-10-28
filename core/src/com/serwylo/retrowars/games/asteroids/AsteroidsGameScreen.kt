@@ -2,7 +2,7 @@ package com.serwylo.retrowars.games.asteroids
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
-import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -15,9 +15,8 @@ import com.serwylo.retrowars.games.asteroids.entities.Bullet
 import com.serwylo.retrowars.games.asteroids.entities.HasBoundingSphere
 import com.serwylo.retrowars.games.asteroids.entities.Ship
 import com.serwylo.retrowars.input.AsteroidsSoftController
-import com.serwylo.retrowars.utils.Options
 
-class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, 400f, 400f) {
+class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroids, "Destroy the asteroids", "Protect your ship", 400f, 400f) {
 
     companion object {
         @Suppress("unused")
@@ -25,8 +24,6 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     }
 
     private val state = AsteroidsGameState(viewport.worldWidth, viewport.worldHeight)
-
-    private val controller = AsteroidsSoftController(Options.getSoftController(Games.asteroids), game.uiAssets)
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
@@ -37,9 +34,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
             state.bullets.add(it)
         }
 
-        addGameOverlayToHUD(controller.getActor())
         addGameScoreToHUD(lifeContainer)
-        showMessage("Destroy the asteroids", "Protect your ship")
 
     }
 
@@ -51,10 +46,10 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         state.timer += delta
 
         if (getState() == State.Playing) {
-            state.ship.left = controller.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-            state.ship.right = controller.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-            state.ship.shooting = controller.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
-            state.ship.thrust = controller.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
+            state.ship.left = controller!!.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+            state.ship.right = controller!!.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+            state.ship.shooting = controller!!.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
+            state.ship.thrust = controller!!.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
         }
 
         updateEntities(delta)
@@ -197,7 +192,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
         state.networkAsteroids.addAll(asteroids)
     }
 
-    override fun renderGame(camera: OrthographicCamera) {
+    override fun renderGame(camera: Camera) {
         val r = game.uiAssets.shapeRenderer
 
         // Make the ship disappear when respawning. It will then reappear in the future when ready to

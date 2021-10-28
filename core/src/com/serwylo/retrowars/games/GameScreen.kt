@@ -3,7 +3,9 @@ package com.serwylo.retrowars.games
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
@@ -11,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.input.SoftController
 import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
@@ -18,10 +21,23 @@ import com.serwylo.retrowars.scoring.Stats
 import com.serwylo.retrowars.scoring.recordStats
 import com.serwylo.retrowars.scoring.saveHighScore
 import com.serwylo.retrowars.ui.*
+import com.serwylo.retrowars.utils.Options
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-abstract class GameScreen(protected val game: RetrowarsGame, private val gameDetails: GameDetails, minWorldWidth: Float, maxWorldWidth: Float) : Screen {
+/**
+ * @param positiveDescription One line message to explain how to get points in as few words as possible. Shown in large text when the game starts.
+ * @param negativeDescription One line message to explain how to avoid losing the game. Shown in smaller text when the game starts.
+ */
+abstract class GameScreen(
+    protected val game: RetrowarsGame,
+    private val gameDetails: GameDetails,
+    positiveDescription: String,
+    negativeDescription: String,
+    minWorldWidth: Float,
+    maxWorldWidth: Float,
+    isOrthographic: Boolean = true,
+) : Screen {
 
     companion object {
         const val TAG = "GameScreen"
@@ -32,11 +48,19 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
         Finished,
     }
 
-    private val camera = OrthographicCamera()
+    private val camera = if (isOrthographic) { OrthographicCamera() } else {
+        PerspectiveCamera(67f, 1f, 1f)
+    }
     protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
     protected val strings = game.uiAssets.getStrings()
 
     private val hud: HUD
+
+    protected val controller: SoftController? = if (gameDetails.controllerLayout != null) {
+        SoftController(game.uiAssets, gameDetails.controllerLayout, Options.getSoftController(gameDetails))
+    } else {
+        null
+    }
 
     private val startTime = System.currentTimeMillis()
 
@@ -63,7 +87,22 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
+        if (!isOrthographic) {
+            camera.apply {
+                position.set(0f, 0f, -10f)
+                lookAt(0f, 0f, 0f)
+                near = 0f
+                far = 1000f
+                update()
+            }
+        }
         hud = HUD(game.uiAssets)
+
+        if (controller != null) {
+            addGameOverlayToHUD(controller.getActor())
+        }
+
+        hud.showMessage(positiveDescription, negativeDescription)
 
         client?.listen(
             networkCloseListener = { code, message -> game.showNetworkError(code, message) },
@@ -276,7 +315,7 @@ abstract class GameScreen(protected val game: RetrowarsGame, private val gameDet
     }
 
     protected abstract fun updateGame(delta: Float)
-    protected abstract fun renderGame(camera: OrthographicCamera)
+    protected abstract fun renderGame(camera: Camera)
 
     /**
      * When another player performs well, we will receive a message to tell us to get handicaped in some way.
