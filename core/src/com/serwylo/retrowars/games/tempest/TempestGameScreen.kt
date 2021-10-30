@@ -184,8 +184,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     val changeDirection = Random.nextFloat() > 0.8f
                     if (changeDirection) {
                         it.direction = when (it.direction) {
-                            Enemy.Direction.Clockwise -> Enemy.Direction.CounterClockwise
-                            Enemy.Direction.CounterClockwise -> Enemy.Direction.Clockwise
+                            Direction.Clockwise -> Direction.CounterClockwise
+                            Direction.CounterClockwise -> Direction.Clockwise
                         }
                     }
                 }
@@ -438,7 +438,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             val nextSegment = getNextSegment(enemy)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Enemy.Direction.Clockwise) 180f else -180f)
+            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Direction.Clockwise) 180f else -180f)
             shapeRenderer.translate(pos.x, pos.y, -enemy.depth)
             shapeRenderer.rotate(0f, 0f, 1f, angle)
             shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
@@ -458,11 +458,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun getNextSegment(enemy: Enemy): Segment {
-        val currentEnemyIndex = state.level.segments.indexOf(enemy.segment)
-        return when(enemy.direction) {
-            Enemy.Direction.Clockwise -> state.level.segments[(state.level.segments.size + currentEnemyIndex - 1) % state.level.segments.size]
-            Enemy.Direction.CounterClockwise -> state.level.segments[(currentEnemyIndex + 1) % state.level.segments.size]
-        }
+        return enemy.segment.next(enemy.direction)
     }
 
 }

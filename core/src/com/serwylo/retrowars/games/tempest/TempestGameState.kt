@@ -126,13 +126,11 @@ data class Enemy(
 
     var crawlFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
+)
 
-) {
-
-    enum class Direction {
-        Clockwise,
-        CounterClockwise,
-    }
+enum class Direction {
+    Clockwise,
+    CounterClockwise,
 }
 
 data class Bullet(
@@ -165,7 +163,7 @@ private fun makeFirstLevel(worldWidth: Float, worldHeight: Float): Level {
 
     }
 
-    return Level(segments)
+    return Level(connectSegments(segments))
 
 }
 
@@ -204,7 +202,7 @@ private fun makeSecondLevel(worldWidth: Float, worldHeight: Float): Level {
         it.offsetBy(center)
     }
 
-    return Level(segments)
+    return Level(connectSegments(segments))
 }
 
 /**
@@ -242,12 +240,25 @@ private fun makeThirdLevel(worldWidth: Float, worldHeight: Float): Level {
         it.offsetBy(center)
     }
 
-    return Level(segments)
+    return Level(connectSegments(segments))
+}
+
+private fun connectSegments(segments: List<Segment>): List<Segment> {
+    segments.forEachIndexed { i, segment ->
+        segment.connect(
+            segments[(i + 1) % segments.size],
+            segments[(i + segments.size - 1) % segments.size]
+        )
+    }
+
+    return segments
 }
 
 data class Segment(
     val start: Vector2,
     val end: Vector2,
+    private var siblingClockwise: Segment? = null,
+    private var siblingCounterClockwise: Segment? = null,
 ) {
     val centre: Vector2 = start.cpy().mulAdd(end.cpy().sub(start), 0.5f)
     val angle: Float = start.cpy().sub(end).angleDeg()
@@ -256,6 +267,16 @@ data class Segment(
         start.add(amount)
         end.add(amount)
         centre.set(start.cpy().mulAdd(end.cpy().sub(start), 0.5f))
+    }
+
+    fun next(direction: Direction) = when(direction) {
+        Direction.Clockwise -> siblingClockwise!!
+        Direction.CounterClockwise -> siblingCounterClockwise!!
+    }
+
+    fun connect(siblingClockwise: Segment, siblingCounterClockwise: Segment) {
+        this.siblingClockwise = siblingClockwise
+        this.siblingCounterClockwise = siblingCounterClockwise
     }
 }
 
