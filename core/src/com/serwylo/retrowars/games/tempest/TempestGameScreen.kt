@@ -412,13 +412,29 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         -2f, 0f,
     ).toFloatArray()
 
-    private fun renderPlayer(shapeRenderer: ShapeRenderer) {
-        shapeRenderer.translate(state.playerSegment.centre.x, state.playerSegment.centre.y, 0f)
-        shapeRenderer.rotate(0f, 0f, 1f, state.playerSegment.angle)
+    private val crawlerShape = arrayOf(
+        2.2f, 0f,
+        1.7f, 1.3f,
+        2.2f, 2.6f,
+
+        -2.2f, 0f,
+        -1.7f, 1.3f,
+        -2.2f, 2.6f,
+    ).toFloatArray()
+
+    private fun renderOnAngle(shapeRenderer: ShapeRenderer, pos: Vector2, depth: Float, angleInDegrees: Float, block: (shapeRenderer: ShapeRenderer) -> Unit) {
+        shapeRenderer.translate(pos.x, pos.y, depth)
+        shapeRenderer.rotate(0f, 0f, 1f, angleInDegrees)
         shapeRenderer.rotate(0f, 1f, 0f, 180f)
         shapeRenderer.rotate(1f, 0f, 0f, 90f)
-        shapeRenderer.polygon(playerShape)
+        block(shapeRenderer)
         shapeRenderer.identity()
+    }
+
+    private fun renderPlayer(shapeRenderer: ShapeRenderer) {
+        renderOnAngle(shapeRenderer, state.playerSegment.centre, 0f, state.playerSegment.angle) {
+            it.polygon(playerShape)
+        }
     }
 
     private fun renderExplosion(shapeRenderer: ShapeRenderer, explosion: Explosion) {
@@ -447,21 +463,19 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun renderCrawler(shapeRenderer: ShapeRenderer, enemy: Crawler) {
         if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
-            shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.zPosition)
-            shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
-            shapeRenderer.identity()
+            renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
+                it.polygon(crawlerShape)
+            }
         } else {
-
             val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
             val nextSegment = enemy.segment.next(enemy.direction)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Direction.Clockwise) 180f else -180f)
-            shapeRenderer.translate(pos.x, pos.y, -enemy.zPosition)
-            shapeRenderer.rotate(0f, 0f, 1f, angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
-            shapeRenderer.identity()
+            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
+
+            renderOnAngle(shapeRenderer, pos, -enemy.zPosition, angle) {
+                it.polygon(crawlerShape)
+            }
         }
     }
 
