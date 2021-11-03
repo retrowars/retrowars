@@ -90,8 +90,57 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         moveBullets(delta)
         moveEnemies(delta)
+        checkCollisions(delta)
         maybeSpawnEnemies()
         updateExplosions()
+    }
+
+    private fun checkCollisions(delta: Float) {
+
+        val enemyIt = state.enemies.iterator()
+        while (enemyIt.hasNext()) {
+            val enemy = enemyIt.next()
+            val apparentSegment = apparentSegment(enemy)
+
+            val bulletIt = state.bullets.iterator()
+            while (bulletIt.hasNext()) {
+                val bullet = bulletIt.next()
+
+                /* Continuous collision detection, as our fast moving bullets will often pass through
+                 * enemies for any given frame:
+                 *
+                 *   t1: [B] ->   <- [E]
+                 *   t2:     <- [E] [B] ->
+                 *
+                 * For each bullet-enemy pair (on the same segment), simulate the movement of each
+                 * without actually moving them, then check if the bullet passed through.
+                 */
+                if (apparentSegment === bullet.segment &&
+
+                    // Only include bullets yet to pass beyond the deepest part of the enemy, no
+                    // need to even simulate any movement for these, they will not hit.
+                    bullet.zPosition < enemy.zPosition + enemy.depth
+
+                    && (
+                        // Either they are overlapping right now, before any simulated movement...
+                        bullet.zPosition > enemy.zPosition
+                        ||
+                        // ... or once we advance the bullet and the enemy toward each other, the
+                        // bullet is now either overlapping or beyond the enemy.
+                        bullet.zPosition + TempestGameState.BULLET_SPEED * delta > enemy.zPosition + state.enemySpeed * delta
+                    )
+
+                ) {
+                    // Current frame collision check:
+                    increaseScore(TempestGameState.SCORE_PER_ENEMY)
+                    queueExplosion(exactEnemyPosition(enemy), enemy.zPosition)
+                    bulletIt.remove()
+                    enemyIt.remove()
+                }
+
+            }
+        }
+
     }
 
     private fun updateExplosions() {
@@ -162,69 +211,69 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun moveEnemies(delta: Float) {
-        val enemiesToKill = mutableListOf<Enemy>()
-        val bulletsToRemove = mutableListOf<Bullet>()
-
-        state.enemies
-            .onEach { it.timeUntilNextCrawl -= delta }
-            .filter { it.timeUntilNextCrawl < 0 }
-            .onEach {
-                it.segment = getNextSegment(it)
-                it.timeUntilNextCrawl = state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime
-
-                if (it.depth > 0) {
-                    // Before getting to the end of the screen, enemies sometimes crawl, and
-                    // sometimes don't. If they do, they seem to for an arbitrary period before
-                    // stopping and then beginning crawling again in the future.
-                    val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
-                    if (waitBeforeCrawlingAgain) {
-                        it.timeUntilNextCrawl = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION
-                    }
-
-                    val changeDirection = Random.nextFloat() > 0.8f
-                    if (changeDirection) {
-                        it.direction = when (it.direction) {
-                            Direction.Clockwise -> Direction.CounterClockwise
-                            Direction.CounterClockwise -> Direction.Clockwise
-                        }
-                    }
-                }
+        for (enemy in state.enemies) {
+            when (enemy) {
+                is Crawler -> moveCrawler(delta, enemy)
             }
+        }
+    }
 
-        // March enemies forward toward the screen...
-        state.enemies
-            .filter { it.depth > 0 }
-            .onEach { enemy ->
+    /**
+     * Enemies that crawl from one segment to another (e.g. [Crawler]s) will store their current
+     * [Segment] up until the very last frame of a particular crawl sequence. This allows for proper
+     * animation from the source to destination segment.
+     *
+     * HOWEVER, for the purposes of collision detection with bullets and the player, we have this
+     * notion that once they are past half way crawling from one to another, we should consider their
+     * location to be in the next segment instead.
+     */
+    private fun apparentSegment(enemy: Enemy): Segment = when(enemy) {
+        is Crawler ->
+            // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
+            if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime / 2) enemy.segment
 
-                // A bit hackey, but we do this check here before advancing the player forward, and
-                // then we'll do the same when advancing the bullet forward later.
-                val closestBullet = state.bullets
-                    .filter { bullet -> bullet.segment === enemy.segment && bullet.depth < enemy.depth }
-                    .maxByOrNull { it.depth }
+            // Started crawling and past half way, so consider it in its adjacent segment.
+            else enemy.segment.next(enemy.direction)
 
-                val newDepth = enemy.depth - state.enemySpeed * delta
-                if (closestBullet != null) {
-                    if (closestBullet.depth > newDepth) {
-                        enemiesToKill.add(enemy)
-                        bulletsToRemove.add(closestBullet)
-                    }
+        else -> enemy.segment
+    }
+
+    private fun moveCrawler(delta: Float, enemy: Crawler) {
+        enemy.timeUntilNextCrawl -= delta
+
+        if (enemy.timeUntilNextCrawl < 0) {
+            enemy.segment = enemy.segment.next(enemy.direction)
+            enemy.timeUntilNextCrawl = state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime
+
+            if (enemy.zPosition > 0) {
+                // Before getting to the end of the screen, enemies sometimes crawl, and
+                // sometimes don't. If they do, they seem to for an arbitrary period before
+                // stopping and then beginning crawling again in the future.
+                val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
+                if (waitBeforeCrawlingAgain) {
+                    enemy.timeUntilNextCrawl = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION
                 }
 
-                enemy.depth = newDepth
-
+                val changeDirection = Random.nextFloat() > 0.8f
+                if (changeDirection) {
+                    enemy.direction = oppositeDirection(enemy.direction)
+                }
             }
+        }
+
+        if (enemy.zPosition > 0) {
+            // March enemies forward toward the screen...
+            enemy.zPosition -= state.enemySpeed * delta
+
             // ... when they have walked to the end of the screen, tell them they are now crawling.
-            .filter { it.depth <= 0 }
-            .onEach {
-                it.depth = 0f
+            if (enemy.zPosition <= 0) {
+                enemy.zPosition = 0f
 
                 // If we were in the middle of waiting some time before crawling, ignore that and
                 // queue up the next crawl at the approved interval.
-                it.timeUntilNextCrawl = it.timeUntilNextCrawl.coerceAtMost(state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime)
+                enemy.timeUntilNextCrawl = enemy.timeUntilNextCrawl.coerceAtMost(state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime)
             }
-
-        state.bullets.removeAll(bulletsToRemove)
-        killEnemiesAndScore(enemiesToKill)
+        }
     }
 
     private fun queueExplosion(position: Vector2, depth: Float) {
@@ -233,63 +282,29 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun checkIfPlayerHit() {
         val enemies = state.enemies.filter {
-            it.depth <= 0 && it.segment == state.playerSegment
+            it.zPosition <= 0 && it.segment == state.playerSegment
         }
 
         if (enemies.isNotEmpty()) {
             state.numLives --
-            queueExplosion(state.playerSegment.centre, enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemies[0].depth)
+            queueExplosion(state.playerSegment.centre, enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemies[0].zPosition)
 
             state.nextPlayerRespawnTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
         }
     }
 
     private fun moveBullets(delta: Float) {
-        val enemiesToKill = mutableListOf<Enemy>()
-        val bulletsToRemove = mutableListOf<Bullet>()
-
-        state.bullets
-            .onEach { bullet ->
-
-                // A bit hackey, but we do this check here before advancing the player forward, and
-                // then we'll do the same when advancing the bullet forward later.
-                val closestEnemy = state.enemies
-                    .filter { enemy -> enemy.depth > bullet.depth }
-                    .filter { enemy ->
-                        // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
-                        enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime / 2 && enemy.segment === bullet.segment
-                        ||
-                        // Started crawling and past half way, so consider it in its adjacent segment.
-                        enemy.timeUntilNextCrawl <= state.enemyCrawlTransitionTime / 2 && getNextSegment(enemy) === bullet.segment
-                    }
-                    .minByOrNull { it.depth }
-
-                val newDepth = bullet.depth + TempestGameState.BULLET_SPEED * delta
-
-                if (closestEnemy != null) {
-                    if (closestEnemy.depth < newDepth) {
-                        enemiesToKill.add(closestEnemy)
-                        bulletsToRemove.add(bullet)
-                    }
-                }
-
-                bullet.depth = newDepth
+        val bulletIt = state.bullets.iterator()
+        while (bulletIt.hasNext()) {
+            val bullet = bulletIt.next()
+            bullet.zPosition += TempestGameState.BULLET_SPEED * delta
+            if (bullet.zPosition > TempestGameState.LEVEL_DEPTH) {
+                bulletIt.remove()
             }
-            .removeAll { it.depth > TempestGameState.LEVEL_DEPTH }
-
-        state.bullets.removeAll(bulletsToRemove)
-        killEnemiesAndScore(enemiesToKill)
-    }
-
-    private fun killEnemiesAndScore(enemiesToKill: Collection<Enemy>) {
-        increaseScore(enemiesToKill.size * TempestGameState.SCORE_PER_ENEMY)
-        state.enemies.removeAll(enemiesToKill)
-        enemiesToKill.onEach {
-            queueExplosion(it.segment.centre, it.depth)
         }
     }
 
@@ -308,19 +323,19 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
-        val enemyMovingHere = state.enemies
-            .asSequence()
-            .filter { it.depth <= 0 }
-            .filter { it.timeUntilNextCrawl < state.enemyCrawlTransitionTime / 2 } // Is transitioning from one segment to the next, and is past half way.
-            .filter { getNextSegment(it) == state.playerSegment }
-            .sortedBy { it.timeUntilNextCrawl } // Shoot the closest ones first...
-            .firstOrNull()
+        val crawlersToHit = mutableListOf<Crawler>()
+        for (enemy in state.enemies) {
+            if (enemy is Crawler && enemy.zPosition <= 0 && apparentSegment(enemy) === state.playerSegment) {
+                crawlersToHit.add(enemy)
+            }
+        }
+        crawlersToHit.sortBy { it.timeUntilNextCrawl }
 
-        if (enemyMovingHere != null) {
+        if (crawlersToHit.isNotEmpty()) {
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
-            state.enemies.remove(enemyMovingHere)
+            state.enemies.remove(crawlersToHit[0])
             increaseScore(TempestGameState.SCORE_PER_ENEMY)
-            queueExplosion(state.playerSegment.centre, 0f)
+            queueExplosion(exactEnemyPosition(crawlersToHit[0]), 0f)
         } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
         }
@@ -426,28 +441,47 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.nextEnemyTime = state.timer + ((Math.random() * (max - min)) + min).toFloat()
     }
 
-    private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) {
+    private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) = when (enemy) {
+        is Crawler -> renderCrawler(shapeRenderer, enemy)
+    }
+
+    private fun renderCrawler(shapeRenderer: ShapeRenderer, enemy: Crawler) {
         if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
-            shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth)
+            shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.zPosition)
             shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
             shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
             shapeRenderer.identity()
         } else {
 
             val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
-            val nextSegment = getNextSegment(enemy)
+            val nextSegment = enemy.segment.next(enemy.direction)
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
             val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Direction.Clockwise) 180f else -180f)
-            shapeRenderer.translate(pos.x, pos.y, -enemy.depth)
+            shapeRenderer.translate(pos.x, pos.y, -enemy.zPosition)
             shapeRenderer.rotate(0f, 0f, 1f, angle)
             shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
             shapeRenderer.identity()
         }
     }
 
+    private fun exactEnemyPosition(enemy: Enemy): Vector2 = when(enemy) {
+        is Crawler -> exactCrawlerPosition(enemy)
+        else -> enemy.segment.centre
+    }
+
+    private fun exactCrawlerPosition(enemy: Crawler): Vector2 {
+        if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
+            return enemy.segment.centre
+        } else {
+            val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
+            val nextSegment = enemy.segment.next(enemy.direction)
+            return enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
+        }
+    }
+
     private fun renderBullet(shapeRenderer: ShapeRenderer, bullet: Bullet) {
-        shapeRenderer.box(bullet.segment.centre.x, bullet.segment.centre.y, -bullet.depth, 1f, 1f, 1f)
+        shapeRenderer.box(bullet.segment.centre.x, bullet.segment.centre.y, -bullet.zPosition, 1f, 1f, 1f)
     }
 
     private fun renderSegment(shapeRenderer: ShapeRenderer, segment: Segment) {
@@ -455,10 +489,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.start, segment.end)
-    }
-
-    private fun getNextSegment(enemy: Enemy): Segment {
-        return enemy.segment.next(enemy.direction)
     }
 
 }

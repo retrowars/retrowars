@@ -109,15 +109,25 @@ data class Explosion(
     var startTime: Float,
 )
 
-fun makeEnemy(segment: Segment, timeUntilFirstCrawl: Float) = Enemy(
+fun makeEnemy(segment: Segment, timeUntilFirstCrawl: Float) = Crawler(
     segment,
     depth = TempestGameState.LEVEL_DEPTH,
     timeUntilNextCrawl = timeUntilFirstCrawl,
 )
 
-data class Enemy(
+sealed class Enemy(
     var segment: Segment,
+    var zPosition: Float,
+
+    /**
+     * Used for collision detection - equivalent of a bounding box but in 1 dimension.
+     */
     var depth: Float,
+)
+
+class Crawler(
+    segment: Segment,
+    depth: Float,
 
     /**
      * Number of seconds before the enemy crawls to an adjacent segment in [direction].
@@ -126,16 +136,21 @@ data class Enemy(
 
     var crawlFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
-)
+): Enemy(segment, depth, 2f)
 
 enum class Direction {
     Clockwise,
     CounterClockwise,
 }
 
+fun oppositeDirection(direction: Direction) = when (direction) {
+    Direction.Clockwise -> Direction.CounterClockwise
+    Direction.CounterClockwise -> Direction.Clockwise
+}
+
 data class Bullet(
     val segment: Segment,
-    var depth: Float,
+    var zPosition: Float,
 )
 
 data class Level(
