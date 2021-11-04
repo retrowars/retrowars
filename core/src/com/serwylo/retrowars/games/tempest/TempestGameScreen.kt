@@ -184,8 +184,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun spawnEnemy() {
-        val nextCrawlTime = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION + Random.nextFloat() * TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
-        state.enemies.add(makeEnemy(state.level.segments.random(), nextCrawlTime))
+        val nextFlipTime = state.enemyFlipTransitionTime + state.enemyFlipWaitTime - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION + Random.nextFloat() * TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
+        state.enemies.add(makeEnemy(state.level.segments.random(), nextFlipTime))
         state.numEnemiesRemaining --
     }
 
@@ -213,45 +213,45 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     private fun moveEnemies(delta: Float) {
         for (enemy in state.enemies) {
             when (enemy) {
-                is Crawler -> moveCrawler(delta, enemy)
+                is Flipper -> moveFlipper(delta, enemy)
             }
         }
     }
 
     /**
-     * Enemies that crawl from one segment to another (e.g. [Crawler]s) will store their current
-     * [Segment] up until the very last frame of a particular crawl sequence. This allows for proper
+     * Enemies that flip from one segment to another (e.g. [Flipper]s) will store their current
+     * [Segment] up until the very last frame of a particular flip sequence. This allows for proper
      * animation from the source to destination segment.
      *
      * HOWEVER, for the purposes of collision detection with bullets and the player, we have this
-     * notion that once they are past half way crawling from one to another, we should consider their
+     * notion that once they are past half way flipping from one to another, we should consider their
      * location to be in the next segment instead.
      */
     private fun apparentSegment(enemy: Enemy): Segment = when(enemy) {
-        is Crawler ->
-            // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
-            if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime / 2) enemy.segment
+        is Flipper ->
+            // Either not flipping, or flipping but hasn't passed half way between segments yet, so just look at its normal segment.
+            if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime / 2) enemy.segment
 
-            // Started crawling and past half way, so consider it in its adjacent segment.
+            // Started flipping and past half way, so consider it in its adjacent segment.
             else enemy.segment.next(enemy.direction)
 
         else -> enemy.segment
     }
 
-    private fun moveCrawler(delta: Float, enemy: Crawler) {
-        enemy.timeUntilNextCrawl -= delta
+    private fun moveFlipper(delta: Float, enemy: Flipper) {
+        enemy.timeUntilNextFlip -= delta
 
-        if (enemy.timeUntilNextCrawl < 0) {
+        if (enemy.timeUntilNextFlip < 0) {
             enemy.segment = enemy.segment.next(enemy.direction)
-            enemy.timeUntilNextCrawl = state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime
+            enemy.timeUntilNextFlip = state.enemyFlipWaitTime + state.enemyFlipTransitionTime
 
             if (enemy.zPosition > 0) {
-                // Before getting to the end of the screen, enemies sometimes crawl, and
+                // Before getting to the end of the screen, enemies sometimes flip, and
                 // sometimes don't. If they do, they seem to for an arbitrary period before
-                // stopping and then beginning crawling again in the future.
-                val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
-                if (waitBeforeCrawlingAgain) {
-                    enemy.timeUntilNextCrawl = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION
+                // stopping and then beginning flipping again in the future.
+                val waitBeforeFlippingAgain = Random.nextFloat() > 0.3f
+                if (waitBeforeFlippingAgain) {
+                    enemy.timeUntilNextFlip = state.enemyFlipTransitionTime + state.enemyFlipWaitTime - TempestGameState.ENEMY_FLIP_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_FLIP_WAIT_TIME_VARIATION
                 }
 
                 val changeDirection = Random.nextFloat() > 0.8f
@@ -265,13 +265,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             // March enemies forward toward the screen...
             enemy.zPosition -= state.enemySpeed * delta
 
-            // ... when they have walked to the end of the screen, tell them they are now crawling.
+            // ... when they have walked to the end of the screen, tell them they are now flipping.
             if (enemy.zPosition <= 0) {
                 enemy.zPosition = 0f
 
-                // If we were in the middle of waiting some time before crawling, ignore that and
-                // queue up the next crawl at the approved interval.
-                enemy.timeUntilNextCrawl = enemy.timeUntilNextCrawl.coerceAtMost(state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime)
+                // If we were in the middle of waiting some time before flipping, ignore that and
+                // queue up the next flip at the approved interval.
+                enemy.timeUntilNextFlip = enemy.timeUntilNextFlip.coerceAtMost(state.enemyFlipWaitTime + state.enemyFlipTransitionTime)
             }
         }
     }
@@ -323,19 +323,19 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
-        val crawlersToHit = mutableListOf<Crawler>()
+        val flippersToHit = mutableListOf<Flipper>()
         for (enemy in state.enemies) {
-            if (enemy is Crawler && enemy.zPosition <= 0 && apparentSegment(enemy) === state.playerSegment) {
-                crawlersToHit.add(enemy)
+            if (enemy is Flipper && enemy.zPosition <= 0 && apparentSegment(enemy) === state.playerSegment) {
+                flippersToHit.add(enemy)
             }
         }
-        crawlersToHit.sortBy { it.timeUntilNextCrawl }
+        flippersToHit.sortBy { it.timeUntilNextFlip }
 
-        if (crawlersToHit.isNotEmpty()) {
+        if (flippersToHit.isNotEmpty()) {
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
-            state.enemies.remove(crawlersToHit[0])
+            state.enemies.remove(flippersToHit[0])
             increaseScore(TempestGameState.SCORE_PER_ENEMY)
-            queueExplosion(exactEnemyPosition(crawlersToHit[0]), 0f)
+            queueExplosion(exactEnemyPosition(flippersToHit[0]), 0f)
         } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
         }
@@ -412,7 +412,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         -2f, 0f,
     ).toFloatArray()
 
-    private val crawlerShape = arrayOf(
+    private val flipperShape = arrayOf(
         2.2f, 0f,
         1.7f, 1.3f,
         2.2f, 2.6f,
@@ -458,39 +458,39 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) = when (enemy) {
-        is Crawler -> renderCrawler(shapeRenderer, enemy)
+        is Flipper -> renderFlipper(shapeRenderer, enemy)
     }
 
-    private fun renderCrawler(shapeRenderer: ShapeRenderer, enemy: Crawler) {
-        if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
+    private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
+        if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
             renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
-                it.polygon(crawlerShape)
+                it.polygon(flipperShape)
             }
         } else {
-            val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
+            val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
             val nextSegment = enemy.segment.next(enemy.direction)
 
-            val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
+            val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
+            val angle = enemy.segment.angle + (flipPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
 
             renderOnAngle(shapeRenderer, pos, -enemy.zPosition, angle) {
-                it.polygon(crawlerShape)
+                it.polygon(flipperShape)
             }
         }
     }
 
     private fun exactEnemyPosition(enemy: Enemy): Vector2 = when(enemy) {
-        is Crawler -> exactCrawlerPosition(enemy)
+        is Flipper -> exactFlipperPosition(enemy)
         else -> enemy.segment.centre
     }
 
-    private fun exactCrawlerPosition(enemy: Crawler): Vector2 {
-        if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
+    private fun exactFlipperPosition(enemy: Flipper): Vector2 {
+        if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
             return enemy.segment.centre
         } else {
-            val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
+            val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
             val nextSegment = enemy.segment.next(enemy.direction)
-            return enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
+            return enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
         }
     }
 
