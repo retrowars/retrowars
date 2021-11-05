@@ -109,11 +109,18 @@ data class Explosion(
     var startTime: Float,
 )
 
-fun makeEnemy(segment: Segment, timeUntilFirstFlip: Float) = Flipper(
-    segment,
-    depth = TempestGameState.LEVEL_DEPTH,
-    timeUntilNextFlip = timeUntilFirstFlip,
-)
+fun makeEnemy(segment: Segment, timeUntilFirstFlip: Float) = if (Math.random() > 1.1f) {
+        Flipper(
+            segment,
+            depth = TempestGameState.LEVEL_DEPTH,
+            timeUntilNextFlip = timeUntilFirstFlip,
+        )
+    } else {
+        FlipperTanker(
+            segment,
+            depth = TempestGameState.LEVEL_DEPTH,
+        )
+    }
 
 sealed class Enemy(
     var segment: Segment,
@@ -134,8 +141,12 @@ class Flipper(
      */
     var timeUntilNextFlip: Float,
 
-    var flipFraction: Float = 0f,
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
+): Enemy(segment, depth, 2f)
+
+class FlipperTanker(
+    segment: Segment,
+    depth: Float,
 ): Enemy(segment, depth, 2f)
 
 enum class Direction {

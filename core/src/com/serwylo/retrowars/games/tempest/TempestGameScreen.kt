@@ -97,6 +97,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun checkCollisions(delta: Float) {
 
+        val hitEnemies = mutableListOf<Enemy>()
+
         val enemyIt = state.enemies.iterator()
         while (enemyIt.hasNext()) {
             val enemy = enemyIt.next()
@@ -131,16 +133,29 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     )
 
                 ) {
-                    // Current frame collision check:
                     increaseScore(TempestGameState.SCORE_PER_ENEMY)
                     queueExplosion(exactEnemyPosition(enemy), enemy.zPosition)
+
                     bulletIt.remove()
                     enemyIt.remove()
+
+                    hitEnemies.add(enemy)
                 }
 
             }
         }
 
+        for (enemy in hitEnemies) {
+            if (enemy is FlipperTanker) {
+                spawnFlippersFromTanker(enemy)
+            }
+        }
+
+    }
+
+    private fun spawnFlippersFromTanker(enemy: FlipperTanker) {
+        state.enemies.add(Flipper(enemy.segment.next(Direction.Clockwise), enemy.zPosition, state.enemyFlipWaitTime))
+        state.enemies.add(Flipper(enemy.segment.next(Direction.CounterClockwise), enemy.zPosition, state.enemyFlipWaitTime))
     }
 
     private fun updateExplosions() {
@@ -211,9 +226,24 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun moveEnemies(delta: Float) {
-        for (enemy in state.enemies) {
-            when (enemy) {
+        val enemyIt = state.enemies.iterator()
+        val toRemove = mutableListOf<Enemy>()
+        while (enemyIt.hasNext()) {
+            val enemy = enemyIt.next()
+            val remove = when (enemy) {
                 is Flipper -> moveFlipper(delta, enemy)
+                is FlipperTanker -> moveFlipperTanker(delta, enemy)
+            }
+
+            if (remove) {
+                toRemove.add(enemy)
+                enemyIt.remove()
+            }
+        }
+
+        for (enemy in toRemove) {
+            if (enemy is FlipperTanker) {
+                spawnFlippersFromTanker(enemy)
             }
         }
     }
@@ -238,7 +268,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         else -> enemy.segment
     }
 
-    private fun moveFlipper(delta: Float, enemy: Flipper) {
+    private fun moveFlipper(delta: Float, enemy: Flipper): Boolean {
         enemy.timeUntilNextFlip -= delta
 
         if (enemy.timeUntilNextFlip < 0) {
@@ -274,9 +304,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 enemy.timeUntilNextFlip = enemy.timeUntilNextFlip.coerceAtMost(state.enemyFlipWaitTime + state.enemyFlipTransitionTime)
             }
         }
+
+        return false
+    }
+
+    private fun moveFlipperTanker(delta: Float, enemy: FlipperTanker): Boolean {
+        enemy.zPosition -= state.enemySpeed * delta
+
+        return enemy.zPosition <= 0
     }
 
     private fun queueExplosion(position: Vector2, depth: Float) {
+        // March enemies forward toward the screen...
         state.explosions.add(Explosion(Vector3(position.x, position.y, depth), state.timer))
     }
 
@@ -459,6 +498,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) = when (enemy) {
         is Flipper -> renderFlipper(shapeRenderer, enemy)
+        is FlipperTanker -> renderFlipperTanker(shapeRenderer, enemy)
     }
 
     private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
@@ -476,6 +516,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             renderOnAngle(shapeRenderer, pos, -enemy.zPosition, angle) {
                 it.polygon(flipperShape)
             }
+        }
+    }
+
+    private fun renderFlipperTanker(shapeRenderer: ShapeRenderer, enemy: FlipperTanker) {
+        renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
+            it.rotate(1f, 1f, 1f, 45f)
+            it.box(-1f, -1f, -1f, 2f, 2f, 2f)
         }
     }
 
