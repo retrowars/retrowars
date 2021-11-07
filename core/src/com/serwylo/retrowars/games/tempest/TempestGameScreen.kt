@@ -37,9 +37,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
     init {
-        queueEnemy()
-        spawnEnemy()
-
         controller!!.listen(
             TempestSoftController.Buttons.MOVE_COUNTER_CLOCKWISE,
             { state.moveCounterClockwise = if (state.moveCounterClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
@@ -56,6 +53,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             { state.fire = ButtonState.Unpressed })
 
         addGameScoreToHUD(lifeContainer)
+
+        initEnemyPool()
     }
 
     override fun show() {
@@ -88,10 +87,106 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
         }
 
+        maybeSpawnEnemy(delta)
         moveBullets(delta)
         moveEnemies(delta)
-        maybeSpawnEnemies()
+        checkCollisions(delta)
         updateExplosions()
+    }
+
+    private fun maybeSpawnEnemy(delta: Float) {
+        state.nextEnemyTime -= delta
+        if (state.nextEnemyTime < 0) {
+            if (state.poolOfFlipperTankers.isNotEmpty() && state.numSpawnedFromPoolFlipperTankers < 2) {
+                state.numSpawnedFromPoolFlipperTankers ++
+                state.enemies += state.poolOfFlipperTankers.pop()
+            }
+
+            if (state.poolOfFlippers.isNotEmpty() && state.numSpawnedFromPoolFlippers < 4) {
+                state.numSpawnedFromPoolFlippers ++
+                state.enemies += state.poolOfFlippers.pop()
+            }
+
+            val max = state.timeBetweenEnemies + TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION / 2f
+            val min = max - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
+            state.nextEnemyTime = ((Math.random() * (max - min)) + min).toFloat()
+        }
+    }
+
+    private fun checkCollisions(delta: Float) {
+
+        val hitEnemies = mutableListOf<Enemy>()
+
+        val enemyIt = state.enemies.iterator()
+        while (enemyIt.hasNext()) {
+            val enemy = enemyIt.next()
+            val apparentSegment = apparentSegment(enemy)
+
+            val bulletIt = state.bullets.iterator()
+            while (bulletIt.hasNext()) {
+                val bullet = bulletIt.next()
+
+                if (apparentSegment !== bullet.segment) {
+                    continue;
+                }
+
+                /* Continuous collision detection, as our fast moving bullets will often pass through
+                 * enemies for any given frame:
+                 *
+                 *   t1: [B] ->   <- [E]
+                 *   t2:     <- [E] [B] ->
+                 *
+                 * For each bullet-enemy pair (on the same segment), simulate the movement of each
+                 * without actually moving them, then check if the bullet passed through.
+                 */
+                if (
+                    // Only include bullets yet to pass beyond the deepest part of the enemy, no
+                    // need to even simulate any movement for these, they will not hit.
+                    bullet.zPosition < enemy.zPosition + enemy.depth
+
+                    && (
+                        // Either they are overlapping right now, before any simulated movement...
+                        bullet.zPosition > enemy.zPosition
+                        ||
+                        // ... or once we advance the bullet and the enemy toward each other, the
+                        // bullet is now either overlapping or beyond the enemy.
+                        bullet.zPosition + TempestGameState.BULLET_SPEED * delta > enemy.zPosition + state.enemySpeed * delta
+                    )
+
+                ) {
+                    increaseScore(TempestGameState.SCORE_PER_ENEMY)
+                    queueExplosion(exactEnemyPosition(enemy), enemy.zPosition)
+
+                    bulletIt.remove()
+                    enemyIt.remove()
+
+                    hitEnemies.add(enemy)
+                }
+
+            }
+        }
+
+        onEnemiesRemoved(hitEnemies)
+    }
+
+    private fun onEnemiesRemoved(enemies: List<Enemy>) {
+        for (enemy in enemies) {
+            when (enemy) {
+                is FlipperTanker -> {
+                    spawnFlippersFromTanker(enemy)
+                    if (state.poolOfFlipperTankers.isNotEmpty()) state.enemies.add(state.poolOfFlipperTankers.pop())
+                }
+
+                is Flipper -> {
+                    if (state.poolOfFlippers.isNotEmpty()) state.enemies.add(state.poolOfFlippers.pop())
+                }
+            }
+        }
+    }
+
+    private fun spawnFlippersFromTanker(enemy: FlipperTanker) {
+        state.enemies.add(Flipper(enemy.segment.next(Direction.Clockwise), enemy.zPosition, state.enemyFlipWaitTime))
+        state.enemies.add(Flipper(enemy.segment.next(Direction.CounterClockwise), enemy.zPosition, state.enemyFlipWaitTime))
     }
 
     private fun updateExplosions() {
@@ -99,7 +194,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun checkEndLevel() {
-        if (getState() == State.Playing && state.numEnemiesRemaining == 0 && state.enemies.isEmpty()) {
+        if (getState() == State.Playing && state.poolOfFlippers.isEmpty() && state.poolOfFlipperTankers.isEmpty() && state.enemies.isEmpty()) {
             state.nextLevelTime = state.timer + TempestGameState.TIME_BETWEEN_LEVELS
         }
     }
@@ -110,9 +205,16 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.level = state.allLevels.filter { it != state.level }.random()
             state.playerSegment = state.level.segments[0]
             state.levelCount ++
-            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + (state.levelCount * TempestGameState.ADDITIONAL_ENEMIES_PER_LEVEL)
             state.nextLevelTime = 0f
+
+            state.poolOfFlippers.clear()
+            state.poolOfFlipperTankers.clear()
+
+            state.numSpawnedFromPoolFlippers = 0
+            state.numSpawnedFromPoolFlipperTankers = 0
+
             state.increaseSpeed()
+            initEnemyPool()
         }
     }
 
@@ -121,23 +223,20 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.bullets.clear()
             state.enemies.clear()
             state.playerSegment = state.level.segments[0]
-            state.numEnemiesRemaining = TempestGameState.BASE_ENEMIES_PER_LEVEL + state.levelCount
-            state.nextEnemyTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
+            state.nextEnemyTime = TempestGameState.PAUSE_AFTER_DEATH
             state.nextPlayerRespawnTime = 0f
-        }
-    }
 
-    private fun maybeSpawnEnemies() {
-        if (state.numEnemiesRemaining > 0 && state.shouldSpawnEnemy()) {
-            spawnEnemy()
-            queueEnemy()
-        }
-    }
+            // Don't clear the pool of enemies, because in the original tempest a death doesn't
+            // restart the level - it remembers how many you killed and kind of "resumes" from
+            // where you left off...
+            // But we do set the counter back to 0 to encourage respawning of what is left in the
+            // pool.
 
-    private fun spawnEnemy() {
-        val nextCrawlTime = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION + Random.nextFloat() * TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
-        state.enemies.add(makeEnemy(state.level.segments.random(), nextCrawlTime))
-        state.numEnemiesRemaining --
+            state.numSpawnedFromPoolFlippers = 0
+            state.numSpawnedFromPoolFlipperTankers = 0
+
+            initEnemyPool()
+        }
     }
 
     private fun recordInput() {
@@ -162,134 +261,151 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun moveEnemies(delta: Float) {
-        val enemiesToKill = mutableListOf<Enemy>()
-        val bulletsToRemove = mutableListOf<Bullet>()
+        val enemyIt = state.enemies.iterator()
+        val toRemove = mutableListOf<Enemy>()
+        while (enemyIt.hasNext()) {
+            val enemy = enemyIt.next()
+            val remove = when (enemy) {
+                is Flipper -> moveFlipper(delta, enemy)
+                is FlipperTanker -> moveFlipperTanker(delta, enemy)
+            }
 
-        state.enemies
-            .onEach { it.timeUntilNextCrawl -= delta }
-            .filter { it.timeUntilNextCrawl < 0 }
-            .onEach {
-                it.segment = getNextSegment(it)
-                it.timeUntilNextCrawl = state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime
+            if (remove) {
+                toRemove.add(enemy)
+                enemyIt.remove()
+            }
+        }
 
-                if (it.depth > 0) {
-                    // Before getting to the end of the screen, enemies sometimes crawl, and
-                    // sometimes don't. If they do, they seem to for an arbitrary period before
-                    // stopping and then beginning crawling again in the future.
-                    val waitBeforeCrawlingAgain = Random.nextFloat() > 0.3f
-                    if (waitBeforeCrawlingAgain) {
-                        it.timeUntilNextCrawl = state.enemyCrawlTransitionTime + state.enemyCrawlWaitTime - TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_CRAWL_WAIT_TIME_VARIATION
-                    }
+        onEnemiesRemoved(toRemove)
+    }
 
-                    val changeDirection = Random.nextFloat() > 0.8f
-                    if (changeDirection) {
-                        it.direction = when (it.direction) {
-                            Enemy.Direction.Clockwise -> Enemy.Direction.CounterClockwise
-                            Enemy.Direction.CounterClockwise -> Enemy.Direction.Clockwise
-                        }
-                    }
+    private fun initEnemyPool() {
+
+        val makeCounter = { startLevel: Int, startAmount: Int, amountPerLevel: Int ->
+            if (startLevel > state.levelCount) {
+                emptyList()
+            } else {
+                val max = startAmount + (state.levelCount - startLevel) * amountPerLevel
+                (0 until max)
+            }
+        }
+
+        state.poolOfFlippers += makeCounter(0, 10, 1).map {
+            Flipper(
+                state.level.segments.random(),
+                TempestGameState.LEVEL_DEPTH,
+
+                // On level 1, the flippers don't actually flip, so set a really high "time until flip"
+                // All other levels, increase the speed as levels increase.
+                if (state.levelCount == 0) { 10000f } else { state.enemyFlipWaitTime }
+            )
+        }
+
+        state.poolOfFlipperTankers += makeCounter(2, 2, 1).map {
+            FlipperTanker(
+                state.level.segments.random(),
+                TempestGameState.LEVEL_DEPTH,
+            )
+        }
+
+    }
+
+    /**
+     * Enemies that flip from one segment to another (e.g. [Flipper]s) will store their current
+     * [Segment] up until the very last frame of a particular flip sequence. This allows for proper
+     * animation from the source to destination segment.
+     *
+     * HOWEVER, for the purposes of collision detection with bullets and the player, we have this
+     * notion that once they are past half way flipping from one to another, we should consider their
+     * location to be in the next segment instead.
+     */
+    private fun apparentSegment(enemy: Enemy): Segment = when(enemy) {
+        is Flipper ->
+            // Either not flipping, or flipping but hasn't passed half way between segments yet, so just look at its normal segment.
+            if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime / 2) enemy.segment
+
+            // Started flipping and past half way, so consider it in its adjacent segment.
+            else enemy.segment.next(enemy.direction)
+
+        else -> enemy.segment
+    }
+
+    private fun moveFlipper(delta: Float, enemy: Flipper): Boolean {
+        enemy.timeUntilNextFlip -= delta
+
+        if (enemy.timeUntilNextFlip < 0) {
+            enemy.segment = enemy.segment.next(enemy.direction)
+            enemy.timeUntilNextFlip = state.enemyFlipWaitTime + state.enemyFlipTransitionTime
+
+            if (enemy.zPosition > 0) {
+                // Before getting to the end of the screen, enemies sometimes flip, and
+                // sometimes don't. If they do, they seem to for an arbitrary period before
+                // stopping and then beginning flipping again in the future.
+                val waitBeforeFlippingAgain = Random.nextFloat() > 0.3f
+                if (waitBeforeFlippingAgain) {
+                    enemy.timeUntilNextFlip = state.enemyFlipTransitionTime + state.enemyFlipWaitTime - TempestGameState.ENEMY_FLIP_WAIT_TIME_VARIATION + Random.nextFloat() * TempestGameState.ENEMY_FLIP_WAIT_TIME_VARIATION
+                }
+
+                val changeDirection = Random.nextFloat() > 0.8f
+                if (changeDirection) {
+                    enemy.direction = oppositeDirection(enemy.direction)
                 }
             }
+        }
 
-        // March enemies forward toward the screen...
-        state.enemies
-            .filter { it.depth > 0 }
-            .onEach { enemy ->
+        if (enemy.zPosition > 0) {
+            // March enemies forward toward the screen...
+            enemy.zPosition -= state.enemySpeed * delta
 
-                // A bit hackey, but we do this check here before advancing the player forward, and
-                // then we'll do the same when advancing the bullet forward later.
-                val closestBullet = state.bullets
-                    .filter { bullet -> bullet.segment === enemy.segment && bullet.depth < enemy.depth }
-                    .maxByOrNull { it.depth }
+            // ... when they have walked to the end of the screen, tell them they are now flipping.
+            if (enemy.zPosition <= 0) {
+                enemy.zPosition = 0f
 
-                val newDepth = enemy.depth - state.enemySpeed * delta
-                if (closestBullet != null) {
-                    if (closestBullet.depth > newDepth) {
-                        enemiesToKill.add(enemy)
-                        bulletsToRemove.add(closestBullet)
-                    }
-                }
-
-                enemy.depth = newDepth
-
+                // If we were in the middle of waiting some time before flipping, ignore that and
+                // queue up the next flip at the approved interval.
+                enemy.timeUntilNextFlip = enemy.timeUntilNextFlip.coerceAtMost(state.enemyFlipWaitTime + state.enemyFlipTransitionTime)
             }
-            // ... when they have walked to the end of the screen, tell them they are now crawling.
-            .filter { it.depth <= 0 }
-            .onEach {
-                it.depth = 0f
+        }
 
-                // If we were in the middle of waiting some time before crawling, ignore that and
-                // queue up the next crawl at the approved interval.
-                it.timeUntilNextCrawl = it.timeUntilNextCrawl.coerceAtMost(state.enemyCrawlWaitTime + state.enemyCrawlTransitionTime)
-            }
+        return false
+    }
 
-        state.bullets.removeAll(bulletsToRemove)
-        killEnemiesAndScore(enemiesToKill)
+    private fun moveFlipperTanker(delta: Float, enemy: FlipperTanker): Boolean {
+        enemy.zPosition -= state.enemySpeed * delta
+
+        return enemy.zPosition <= 0
     }
 
     private fun queueExplosion(position: Vector2, depth: Float) {
+        // March enemies forward toward the screen...
         state.explosions.add(Explosion(Vector3(position.x, position.y, depth), state.timer))
     }
 
     private fun checkIfPlayerHit() {
         val enemies = state.enemies.filter {
-            it.depth <= 0 && it.segment == state.playerSegment
+            it.zPosition <= 0 && it.segment == state.playerSegment
         }
 
         if (enemies.isNotEmpty()) {
             state.numLives --
-            queueExplosion(state.playerSegment.centre, enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemies[0].depth)
-            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemies[0].depth)
+            queueExplosion(state.playerSegment.centre, enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemies[0].zPosition)
+            queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemies[0].zPosition)
 
             state.nextPlayerRespawnTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
         }
     }
 
     private fun moveBullets(delta: Float) {
-        val enemiesToKill = mutableListOf<Enemy>()
-        val bulletsToRemove = mutableListOf<Bullet>()
-
-        state.bullets
-            .onEach { bullet ->
-
-                // A bit hackey, but we do this check here before advancing the player forward, and
-                // then we'll do the same when advancing the bullet forward later.
-                val closestEnemy = state.enemies
-                    .filter { enemy -> enemy.depth > bullet.depth }
-                    .filter { enemy ->
-                        // Either not crawling, or crawling but hasn't passed half way between segments yet, so just look at its normal segment.
-                        enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime / 2 && enemy.segment === bullet.segment
-                        ||
-                        // Started crawling and past half way, so consider it in its adjacent segment.
-                        enemy.timeUntilNextCrawl <= state.enemyCrawlTransitionTime / 2 && getNextSegment(enemy) === bullet.segment
-                    }
-                    .minByOrNull { it.depth }
-
-                val newDepth = bullet.depth + TempestGameState.BULLET_SPEED * delta
-
-                if (closestEnemy != null) {
-                    if (closestEnemy.depth < newDepth) {
-                        enemiesToKill.add(closestEnemy)
-                        bulletsToRemove.add(bullet)
-                    }
-                }
-
-                bullet.depth = newDepth
+        val bulletIt = state.bullets.iterator()
+        while (bulletIt.hasNext()) {
+            val bullet = bulletIt.next()
+            bullet.zPosition += TempestGameState.BULLET_SPEED * delta
+            if (bullet.zPosition > TempestGameState.LEVEL_DEPTH) {
+                bulletIt.remove()
             }
-            .removeAll { it.depth > TempestGameState.LEVEL_DEPTH }
-
-        state.bullets.removeAll(bulletsToRemove)
-        killEnemiesAndScore(enemiesToKill)
-    }
-
-    private fun killEnemiesAndScore(enemiesToKill: Collection<Enemy>) {
-        increaseScore(enemiesToKill.size * TempestGameState.SCORE_PER_ENEMY)
-        state.enemies.removeAll(enemiesToKill)
-        enemiesToKill.onEach {
-            queueExplosion(it.segment.centre, it.depth)
         }
     }
 
@@ -308,19 +424,21 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
-        val enemyMovingHere = state.enemies
-            .asSequence()
-            .filter { it.depth <= 0 }
-            .filter { it.timeUntilNextCrawl < state.enemyCrawlTransitionTime / 2 } // Is transitioning from one segment to the next, and is past half way.
-            .filter { getNextSegment(it) == state.playerSegment }
-            .sortedBy { it.timeUntilNextCrawl } // Shoot the closest ones first...
-            .firstOrNull()
+        val flippersToHit = mutableListOf<Flipper>()
+        for (enemy in state.enemies) {
+            if (enemy is Flipper && enemy.zPosition <= 0 && apparentSegment(enemy) === state.playerSegment) {
+                flippersToHit.add(enemy)
+            }
+        }
+        flippersToHit.sortBy { it.timeUntilNextFlip }
 
-        if (enemyMovingHere != null) {
+        if (flippersToHit.isNotEmpty()) {
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
-            state.enemies.remove(enemyMovingHere)
+            state.enemies.remove(flippersToHit[0])
             increaseScore(TempestGameState.SCORE_PER_ENEMY)
-            queueExplosion(state.playerSegment.centre, 0f)
+            queueExplosion(exactEnemyPosition(flippersToHit[0]), 0f)
+
+            onEnemiesRemoved(flippersToHit.subList(0, 1))
         } else {
             state.bullets.add(Bullet(state.playerSegment, 0f))
         }
@@ -397,13 +515,29 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         -2f, 0f,
     ).toFloatArray()
 
-    private fun renderPlayer(shapeRenderer: ShapeRenderer) {
-        shapeRenderer.translate(state.playerSegment.centre.x, state.playerSegment.centre.y, 0f)
-        shapeRenderer.rotate(0f, 0f, 1f, state.playerSegment.angle)
+    private val flipperShape = arrayOf(
+        2.2f, 0f,
+        1.7f, 1.3f,
+        2.2f, 2.6f,
+
+        -2.2f, 0f,
+        -1.7f, 1.3f,
+        -2.2f, 2.6f,
+    ).toFloatArray()
+
+    private fun renderOnAngle(shapeRenderer: ShapeRenderer, pos: Vector2, depth: Float, angleInDegrees: Float, block: (shapeRenderer: ShapeRenderer) -> Unit) {
+        shapeRenderer.translate(pos.x, pos.y, depth)
+        shapeRenderer.rotate(0f, 0f, 1f, angleInDegrees)
         shapeRenderer.rotate(0f, 1f, 0f, 180f)
         shapeRenderer.rotate(1f, 0f, 0f, 90f)
-        shapeRenderer.polygon(playerShape)
+        block(shapeRenderer)
         shapeRenderer.identity()
+    }
+
+    private fun renderPlayer(shapeRenderer: ShapeRenderer) {
+        renderOnAngle(shapeRenderer, state.playerSegment.centre, 0f, state.playerSegment.angle) {
+            it.polygon(playerShape)
+        }
     }
 
     private fun renderExplosion(shapeRenderer: ShapeRenderer, explosion: Explosion) {
@@ -420,34 +554,53 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         shapeRenderer.identity()
     }
 
-    private fun queueEnemy() {
-        val max = state.timeBetweenEnemies + TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION / 2f
-        val min = max - TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION
-        state.nextEnemyTime = state.timer + ((Math.random() * (max - min)) + min).toFloat()
+    private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) = when (enemy) {
+        is Flipper -> renderFlipper(shapeRenderer, enemy)
+        is FlipperTanker -> renderFlipperTanker(shapeRenderer, enemy)
     }
 
-    private fun renderEnemy(shapeRenderer: ShapeRenderer, enemy: Enemy) {
-        if (enemy.timeUntilNextCrawl > state.enemyCrawlTransitionTime /* Not yet moving to the next segment */) {
-            shapeRenderer.translate(enemy.segment.centre.x, enemy.segment.centre.y, -enemy.depth)
-            shapeRenderer.rotate(0f, 0f, 1f, enemy.segment.angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
-            shapeRenderer.identity()
+    private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
+        if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
+            renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
+                it.polygon(flipperShape)
+            }
         } else {
+            val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
+            val nextSegment = enemy.segment.next(enemy.direction)
 
-            val crawlPercent = 1f - enemy.timeUntilNextCrawl / state.enemyCrawlTransitionTime
-            val nextSegment = getNextSegment(enemy)
+            val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
+            val angle = enemy.segment.angle + (flipPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
 
-            val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(crawlPercent))
-            val angle = enemy.segment.angle + (crawlPercent * if (enemy.direction == Enemy.Direction.Clockwise) 180f else -180f)
-            shapeRenderer.translate(pos.x, pos.y, -enemy.depth)
-            shapeRenderer.rotate(0f, 0f, 1f, angle)
-            shapeRenderer.box(-1f, -0.25f, -1f, 3f, 0.5f, 1f)
-            shapeRenderer.identity()
+            renderOnAngle(shapeRenderer, pos, -enemy.zPosition, angle) {
+                it.polygon(flipperShape)
+            }
+        }
+    }
+
+    private fun renderFlipperTanker(shapeRenderer: ShapeRenderer, enemy: FlipperTanker) {
+        renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
+            it.rotate(1f, 1f, 1f, 45f)
+            it.box(-1f, -1f, -1f, 2f, 2f, 2f)
+        }
+    }
+
+    private fun exactEnemyPosition(enemy: Enemy): Vector2 = when(enemy) {
+        is Flipper -> exactFlipperPosition(enemy)
+        else -> enemy.segment.centre
+    }
+
+    private fun exactFlipperPosition(enemy: Flipper): Vector2 {
+        if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
+            return enemy.segment.centre
+        } else {
+            val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
+            val nextSegment = enemy.segment.next(enemy.direction)
+            return enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
         }
     }
 
     private fun renderBullet(shapeRenderer: ShapeRenderer, bullet: Bullet) {
-        shapeRenderer.box(bullet.segment.centre.x, bullet.segment.centre.y, -bullet.depth, 1f, 1f, 1f)
+        shapeRenderer.box(bullet.segment.centre.x, bullet.segment.centre.y, -bullet.zPosition, 1f, 1f, 1f)
     }
 
     private fun renderSegment(shapeRenderer: ShapeRenderer, segment: Segment) {
@@ -455,14 +608,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         shapeRenderer.line(segment.start.x, segment.start.y, 0f, segment.start.x, segment.start.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.end.x, segment.end.y, 0f, segment.end.x, segment.end.y, -TempestGameState.LEVEL_DEPTH)
         shapeRenderer.line(segment.start, segment.end)
-    }
-
-    private fun getNextSegment(enemy: Enemy): Segment {
-        val currentEnemyIndex = state.level.segments.indexOf(enemy.segment)
-        return when(enemy.direction) {
-            Enemy.Direction.Clockwise -> state.level.segments[(state.level.segments.size + currentEnemyIndex - 1) % state.level.segments.size]
-            Enemy.Direction.CounterClockwise -> state.level.segments[(currentEnemyIndex + 1) % state.level.segments.size]
-        }
     }
 
 }
