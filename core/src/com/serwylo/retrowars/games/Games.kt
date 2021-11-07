@@ -71,8 +71,9 @@ object Games {
             "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Tempest,Beta%20Feedback&template=&title=",
             """
                 Known issues:
-                 * Only "flipper" enemies supported - missing flipper tankers, fuseballs,
+                 * Only flipper and flipper tanker enemies - missing fuseballs,
                    fuseball tankers, spikers, pulsars, and pulsar tankers
+                 * Enemies don't shoot
                  * Only three different levels
                  * No multiplayer support
             """.trimIndent()

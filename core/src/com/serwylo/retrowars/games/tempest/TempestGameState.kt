@@ -91,9 +91,13 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     var nextLevelTime: Float = 0f
     var nextPlayerRespawnTime: Float = 0f
     var nextEnemyTime: Float = 0f
-    var numEnemiesRemaining: Int = BASE_ENEMIES_PER_LEVEL
 
     var levelCount = 0
+
+    val poolOfFlippers = LinkedList<Flipper>()
+    val poolOfFlipperTankers = LinkedList<FlipperTanker>()
+    var numSpawnedFromPoolFlippers = 0
+    var numSpawnedFromPoolFlipperTankers = 0
 
     var moveCounterClockwise = ButtonState.Unpressed
     var moveClockwise = ButtonState.Unpressed
