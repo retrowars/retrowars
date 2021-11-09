@@ -19,15 +19,20 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         private const val ENEMY_SPEED_MAX = LEVEL_DEPTH / 4f
 
         /**
+         * Bullets fired by enemies travel this much faster than [enemySpeed].
+         */
+        const val ENEMY_BULLET_VS_SPEED_RATIO = 2f
+
+        /**
          * At which level will the players reach [ENEMY_SPEED_MAX].
          */
-        private const val ENEMY_SPEED_MAX_LEVEL = 10
+        private const val ENEMY_SPEED_MAX_LEVEL = 20
 
         /**
          * The time it takes to move from one segment to the next when flipping.
           */
         private const val ENEMY_FLIP_TRANSITION_TIME_INITIAL = 0.70f
-        private const val ENEMY_FLIP_TRANSITION_TIME_MIN = 0.3f
+        private const val ENEMY_FLIP_TRANSITION_TIME_MIN = 0.4f
 
         /**
          * Normally flip wait times are random (see [TIME_BETWEEN_ENEMIES_INITIAL], etc).
@@ -42,10 +47,8 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         private const val TIME_BETWEEN_ENEMIES_MIN = 0.5f
         const val TIME_BETWEEN_ENEMIES_VARIATION = 1f
 
-        const val SCORE_PER_ENEMY: Int = 4000
-
-        const val BASE_ENEMIES_PER_LEVEL = 5
-        const val ADDITIONAL_ENEMIES_PER_LEVEL = 2
+        const val SCORE_PER_FLIPPER: Int = 3000
+        const val SCORE_PER_FLIPPER_TANKER: Int = 1000
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
@@ -104,8 +107,6 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     var fire = ButtonState.Unpressed
 
     var playerSegment = level.segments[0]
-
-    fun shouldSpawnEnemy() = timer > nextEnemyTime
 }
 
 data class Explosion(
@@ -113,32 +114,24 @@ data class Explosion(
     var startTime: Float,
 )
 
-fun makeEnemy(segment: Segment, timeUntilFirstFlip: Float) = if (Math.random() > 1.1f) {
-        Flipper(
-            segment,
-            depth = TempestGameState.LEVEL_DEPTH,
-            timeUntilNextFlip = timeUntilFirstFlip,
-        )
-    } else {
-        FlipperTanker(
-            segment,
-            depth = TempestGameState.LEVEL_DEPTH,
-        )
-    }
-
 sealed class Enemy(
     var segment: Segment,
     var zPosition: Float,
-
-    /**
-     * Used for collision detection - equivalent of a bounding box but in 1 dimension.
-     */
-    var depth: Float,
 )
+
+/**
+ * A bit strange that this extends [Enemy], but it is much easier to implement this
+ * way - bullets are equally just things which move toward the player, can be hit by player
+ * bullets, and have a particular behaviour when reaching the end of the screen.
+ */
+class EnemyBullet(
+    segment: Segment,
+    zPosition: Float,
+): Enemy(segment, zPosition)
 
 class Flipper(
     segment: Segment,
-    depth: Float,
+    zPosition: Float,
 
     /**
      * Number of seconds before the enemy flips to an adjacent segment in [direction].
@@ -146,12 +139,12 @@ class Flipper(
     var timeUntilNextFlip: Float,
 
     var direction: Direction = listOf(Direction.Clockwise, Direction.CounterClockwise).random(),
-): Enemy(segment, depth, 2f)
+): Enemy(segment, zPosition)
 
 class FlipperTanker(
     segment: Segment,
-    depth: Float,
-): Enemy(segment, depth, 2f)
+    zPosition: Float,
+): Enemy(segment, zPosition)
 
 enum class Direction {
     Clockwise,
