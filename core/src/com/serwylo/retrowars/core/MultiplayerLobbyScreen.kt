@@ -717,7 +717,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             VerticalGroup().apply {
                 space(UI_SPACE)
                 addActor(
-                    Label("Looking for others to play with?\nInvite a friend to download Super Retro Mega Wars.", styles.label.small).apply {
+                    Label("Looking for others to play with? Tired of waiting?\nInvite a friend to download Super Retro Mega Wars.", styles.label.small).apply {
                         setAlignment(Align.center)
                     }
                 )

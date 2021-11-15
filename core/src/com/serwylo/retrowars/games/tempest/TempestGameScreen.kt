@@ -13,8 +13,8 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
-import com.serwylo.retrowars.games.tetris.ButtonState
 import com.serwylo.retrowars.input.TempestSoftController
+import java.lang.IllegalStateException
 import java.util.*
 import kotlin.random.Random
 
@@ -43,12 +43,12 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             { state.moveCounterClockwise = if (state.moveCounterClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveCounterClockwise = ButtonState.Unpressed })
 
-        controller!!.listen(
+        controller.listen(
             TempestSoftController.Buttons.MOVE_CLOCKWISE,
             { state.moveClockwise = if (state.moveClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.moveClockwise = ButtonState.Unpressed })
 
-        controller!!.listen(
+        controller.listen(
             TempestSoftController.Buttons.FIRE,
             { state.fire = if (state.fire == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
             { state.fire = ButtonState.Unpressed })
@@ -205,8 +205,15 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun spawnFlippersFromTanker(enemy: FlipperTanker) {
-        state.enemies.add(Flipper(enemy.segment.next(Direction.Clockwise), enemy.zPosition, state.enemyFlipWaitTime))
-        state.enemies.add(Flipper(enemy.segment.next(Direction.CounterClockwise), enemy.zPosition, state.enemyFlipWaitTime))
+        // One of these two directions will be non-null (potentially both, but at least one).
+        val clockwise = enemy.segment.next(Direction.Clockwise)
+        val counterClockwise = enemy.segment.next(Direction.CounterClockwise)
+
+        val nextSegmentClockwise = clockwise ?: counterClockwise!!
+        val nextSegmentCounterClockwise = counterClockwise ?: clockwise!!
+
+        state.enemies.add(Flipper(nextSegmentClockwise, enemy.zPosition, state.enemyFlipWaitTime))
+        state.enemies.add(Flipper(nextSegmentCounterClockwise, enemy.zPosition, state.enemyFlipWaitTime))
     }
 
     private fun updateExplosions() {
@@ -221,8 +228,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun maybeAdvanceLevel() {
         if (state.timer > state.nextLevelTime) {
+            val currentLevelIndex = state.allLevels.indexOf(state.level)
+            state.level = state.allLevels[(currentLevelIndex + 1) % state.allLevels.size]
+
             state.bullets.clear()
-            state.level = state.allLevels.filter { it != state.level }.random()
             state.playerSegment = state.level.segments[0]
             state.levelCount ++
             state.nextLevelTime = 0f
@@ -312,13 +321,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         state.poolOfFlippers += makeCounter(0, 10, 1).map {
+            val segment = state.level.segments.random()
             Flipper(
-                state.level.segments.random(),
+                segment,
                 TempestGameState.LEVEL_DEPTH,
 
                 // On level 1, the flippers don't actually flip, so set a really high "time until flip"
                 // All other levels, increase the speed as levels increase.
-                if (state.levelCount == 0) { 10000f } else { state.enemyFlipWaitTime }
+                if (state.levelCount == 0) { 10000f } else { state.enemyFlipWaitTime },
             )
         }
 
@@ -346,7 +356,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime / 2) enemy.segment
 
             // Started flipping and past half way, so consider it in its adjacent segment.
-            else enemy.segment.next(enemy.direction)
+            else enemy.segment.next(enemy.direction) ?: enemy.segment
 
         else -> enemy.segment
     }
@@ -355,7 +365,12 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         enemy.timeUntilNextFlip -= delta
 
         if (enemy.timeUntilNextFlip < 0) {
-            enemy.segment = enemy.segment.next(enemy.direction)
+            enemy.segment = enemy.segment.next(enemy.direction)!!
+
+            if (enemy.segment.next(enemy.direction) == null) {
+                enemy.direction = oppositeDirection(enemy.direction)
+            }
+
             enemy.timeUntilNextFlip = state.enemyFlipWaitTime + state.enemyFlipTransitionTime
 
             if (enemy.zPosition > 0) {
@@ -369,7 +384,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
                 val changeDirection = Random.nextFloat() > 0.8f
                 if (changeDirection) {
-                    enemy.direction = oppositeDirection(enemy.direction)
+                    val newDirection = oppositeDirection(enemy.direction)
+                    if (enemy.segment.next(newDirection) != null) {
+                        enemy.direction = newDirection
+                    }
                 }
             }
         }
@@ -455,12 +473,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun movePlayer() {
-        val currentIndex = state.level.segments.indexOf(state.playerSegment)
-
         if (state.moveClockwise == ButtonState.JustPressed) {
-            state.playerSegment = state.level.segments[(state.level.segments.size + currentIndex - 1) % state.level.segments.size]
+            state.playerSegment = state.playerSegment.next(Direction.Clockwise) ?: state.playerSegment
         } else if (state.moveCounterClockwise == ButtonState.JustPressed) {
-            state.playerSegment = state.level.segments[(currentIndex + 1) % state.level.segments.size]
+            state.playerSegment = state.playerSegment.next(Direction.CounterClockwise) ?: state.playerSegment
         }
     }
 
@@ -494,7 +510,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     override fun renderGame(camera: Camera) {
         camera.apply {
-            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f - viewport.worldHeight / 8f, viewport.worldHeight.coerceAtMost(viewport.worldWidth))
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, viewport.worldHeight.coerceAtMost(viewport.worldWidth))
             lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, 0f)
             update()
         }
@@ -641,7 +657,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
         } else {
             val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
-            val nextSegment = enemy.segment.next(enemy.direction)
+
+            // When we assigned the direction in the past, we ensured the next segment is not null
+            // before assigning, so we are very confident that it is not null here.
+            if (enemy.direction == null) {
+                throw IllegalStateException("Oops 0")
+            } else if (enemy.segment == null) {
+                throw IllegalStateException("Oops 1")
+            } else if (enemy.segment.next(enemy.direction) == null) {
+                throw IllegalStateException("Oops 2")
+            }
+
+            val nextSegment = enemy.segment.next(enemy.direction)!!
 
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
             val angle = enemy.segment.angle + (flipPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
@@ -669,7 +696,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return enemy.segment.centre
         } else {
             val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
-            val nextSegment = enemy.segment.next(enemy.direction)
+
+            // When we assigned the direction in the past, we ensured the next segment is not null
+            // before assigning, so we are very confident that it is not null here.
+            val nextSegment = enemy.segment.next(enemy.direction)!!
+
             return enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
         }
     }
