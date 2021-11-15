@@ -10,7 +10,7 @@ Enjoy retro games? Enjoy multiplayer games? Ever wanted to play one retro game a
 
 Play against your friends, with each of you can competing by playing a different game. Score points in your game and every other game will be handicaped in their own unique way. But watch out, as others score, your game will become more difficult too.
 
-Still in early stage development (networking is quite buggy), but currently supports four different single and multi-player versions of games based on classic retro titles.
+Still in early stage development, but currently supports four different single and multi-player versions of games based on classic retro titles.
 
 No ads. No in game purchases. Just retro games and good times.
 

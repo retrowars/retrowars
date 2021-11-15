@@ -73,8 +73,6 @@ object Games {
                 Known issues:
                  * Only flipper and flipper tanker enemies - missing fuseballs,
                    fuseball tankers, spikers, pulsars, and pulsar tankers
-                 * Enemies don't shoot
-                 * Only three different levels
                  * No multiplayer support
             """.trimIndent()
         ),
