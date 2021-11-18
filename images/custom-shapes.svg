@@ -26,11 +26,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7071068"
-     inkscape:cx="-433.53535"
-     inkscape:cy="664.94213"
+     inkscape:zoom="1"
+     inkscape:cx="40.73036"
+     inkscape:cy="645.34623"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      showgrid="false"
      inkscape:window-width="1916"
      inkscape:window-height="1041"
@@ -55,7 +55,8 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     style="display:inline;opacity:0.41666667">
+     style="display:inline;opacity:0.41666667"
+     sodipodi:insensitive="true">
     <path
        style="fill:none;stroke:#000000;stroke-width:0.027;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m -10.655756,292.63627 1.8619413,-3.89664 -0.7102253,3.244 1.1358147,0.46069 1.0773268,-0.46069 -0.6526394,-3.30158 1.4869731,4.03774 -1.9116605,1.08064 z"
@@ -18673,6 +18674,12 @@ QwAAAABJRU5ErkJggg==
        id="path239"
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 362.81167,120.25547 4.637,-12.12604 0.55851,-14.388581 1.38238,-12.997422 7.62027,-8.95307 h 11.7583 l 8.67061,8.6021 4.45854,12.730192 h 10.43538 l 4.45854,-12.730192 8.67061,-8.6021 h 11.75829 l 7.62029,8.95307 1.38237,12.997422 0.55851,14.388581 4.637,12.12604"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccccccccccc" />
+    <path
+       id="path257"
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -13.626048,152.60922 -3.43958,-17.19791 -3.43958,-17.1979 -3.439583,-17.19791 -12.038542,1.4552 -4.894791,-15.081253 -2.645834,-18.25625 -5.027083,-14.55208 -10.715622,2.91042 -8.73125,-8.59896 -7.011458,16.27187 -3.571875,14.2875 -2.645834,17.19792 -1.455208,17.065623 -2.645833,15.47812 -4.7625,13.89063"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccccccccccccc" />
   </g>

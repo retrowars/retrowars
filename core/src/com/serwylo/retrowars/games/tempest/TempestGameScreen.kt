@@ -72,11 +72,12 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
                 recordInput()
                 movePlayer()
+                fire()
 
                 if (state.nextLevelTime > 0) {
+                    advancePlayer()
                     maybeAdvanceLevel()
                 } else {
-                    fire()
                     checkEndLevel()
                     if (state.numLives <= 0) {
                         endGame()
@@ -222,7 +223,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun checkEndLevel() {
         if (getState() == State.Playing && state.poolOfFlippers.isEmpty() && state.poolOfFlipperTankers.isEmpty() && state.enemies.isEmpty()) {
-            state.nextLevelTime = state.timer + TempestGameState.TIME_BETWEEN_LEVELS
+            state.nextLevelTime = state.timer + TempestGameState.TOTAL_TIME_BETWEEN_LEVELS
+        }
+    }
+
+    private fun advancePlayer() {
+        if (state.nextLevelTime - state.timer < TempestGameState.LEVEL_END_TRANSIT_TIME) {
+            val percent = 1f - (state.nextLevelTime - state.timer) / TempestGameState.LEVEL_END_TRANSIT_TIME
+            state.playerDepth = TempestGameState.LEVEL_DEPTH * percent
         }
     }
 
@@ -233,6 +241,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             state.bullets.clear()
             state.playerSegment = state.level.segments[0]
+            state.playerDepth = 0f
             state.levelCount ++
             state.nextLevelTime = 0f
 
@@ -252,6 +261,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.bullets.clear()
             state.enemies.clear()
             state.playerSegment = state.level.segments[0]
+            state.playerDepth = 0f
             state.nextEnemyTime = TempestGameState.PAUSE_AFTER_DEATH
             state.nextPlayerRespawnTime = 0f
 
@@ -320,7 +330,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
         }
 
-        state.poolOfFlippers += makeCounter(0, 10, 1).map {
+        state.poolOfFlippers += makeCounter(0, 1, 1).map {
             val segment = state.level.segments.random()
             Flipper(
                 segment,
@@ -501,7 +511,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             onEnemiesRemoved(flippersToHit.subList(0, 1))
         } else {
-            state.bullets.add(Bullet(state.playerSegment, 0f))
+            state.bullets.add(Bullet(state.playerSegment, state.playerDepth))
         }
     }
 
@@ -510,8 +520,28 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     override fun renderGame(camera: Camera) {
         camera.apply {
-            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, viewport.worldHeight.coerceAtMost(viewport.worldWidth))
-            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, 0f)
+            val startZ = viewport.worldHeight.coerceAtMost(viewport.worldWidth) // Arbitrarily chosen depth which seems to work well.
+            val cameraZ: Float
+            val lookAtZ: Float
+            if (state.nextLevelTime > 0 && state.nextLevelTime - state.timer < TempestGameState.LEVEL_END_TRANSIT_TIME) {
+                val percent = 1 - ((state.nextLevelTime - state.timer) / TempestGameState.LEVEL_END_TRANSIT_TIME)
+
+                // Make this lag a little bit so we can still see the player as we advance forward.
+                val lagBehindPlayer = (TempestGameState.LEVEL_DEPTH / 3)
+                val endZ = lagBehindPlayer
+                val amountMoved = (endZ + startZ + lagBehindPlayer) * percent
+
+                cameraZ = (startZ - amountMoved).coerceAtMost(startZ) // Because we want to lag, but the camera normally sits on the player...
+                lookAtZ = -(TempestGameState.LEVEL_DEPTH * 5) * percent
+
+                println("PlayerZ: ${state.playerDepth}, CameraZ: $cameraZ, LookAtZ: $lookAtZ")
+            } else {
+                cameraZ = startZ
+                lookAtZ = 0f
+            }
+
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, cameraZ)
+            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, lookAtZ)
             update()
         }
 
@@ -596,7 +626,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderPlayer(shapeRenderer: ShapeRenderer) {
-        renderOnAngle(shapeRenderer, state.playerSegment.centre, 0f, state.playerSegment.angle) {
+        renderOnAngle(shapeRenderer, state.playerSegment.centre, -state.playerDepth, state.playerSegment.angle) {
             it.polygon(playerShape)
         }
     }

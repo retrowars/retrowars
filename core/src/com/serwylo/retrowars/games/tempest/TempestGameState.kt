@@ -8,7 +8,7 @@ import java.util.*
 class TempestGameState(private val worldWidth: Float, private val worldHeight: Float) {
 
     companion object {
-        const val LEVEL_DEPTH = 300f
+        const val LEVEL_DEPTH = 200f
         const val BULLET_SPEED = LEVEL_DEPTH / 0.5f // Take 0.5 seconds to traverse the whole screen.
 
         /*
@@ -58,7 +58,8 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
         const val EXPLOSION_TIME = 0.35f
 
-        const val TIME_BETWEEN_LEVELS = 2f
+        const val TOTAL_TIME_BETWEEN_LEVELS = 2.5f
+        const val LEVEL_END_TRANSIT_TIME = 2f
 
     }
 
@@ -120,6 +121,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     var fire = ButtonState.Unpressed
 
     var playerSegment = level.segments[0]
+    var playerDepth = 0f
 }
 
 data class Explosion(
