@@ -49,6 +49,9 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
         const val SCORE_PER_FLIPPER: Int = 3000
         const val SCORE_PER_FLIPPER_TANKER: Int = 1000
+        const val SCORE_PER_SPIKE_HIT: Int = 100
+
+        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 12f
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
@@ -179,6 +182,11 @@ class Flipper(
 
 
 class FlipperTanker(
+    segment: Segment,
+    zPosition: Float,
+): Enemy(segment, zPosition)
+
+class Spike(
     segment: Segment,
     zPosition: Float,
 ): Enemy(segment, zPosition)
