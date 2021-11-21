@@ -40,18 +40,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     init {
         controller!!.listen(
             TempestSoftController.Buttons.MOVE_COUNTER_CLOCKWISE,
-            { state.moveCounterClockwise = if (state.moveCounterClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.moveCounterClockwise = ButtonState.Unpressed })
+            { state.moveCounterClockwise.softKeyPress() },
+            { state.moveCounterClockwise.softKeyRelease() })
 
         controller.listen(
             TempestSoftController.Buttons.MOVE_CLOCKWISE,
-            { state.moveClockwise = if (state.moveClockwise == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.moveClockwise = ButtonState.Unpressed })
+            { state.moveClockwise.softKeyPress() },
+            { state.moveClockwise.softKeyRelease() })
 
         controller.listen(
             TempestSoftController.Buttons.FIRE,
-            { state.fire = if (state.fire == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.fire = ButtonState.Unpressed })
+            { state.fire.softKeyPress() },
+            { state.fire.softKeyRelease() })
 
         addGameScoreToHUD(lifeContainer)
 
@@ -70,7 +70,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 maybeRespawnPlayer()
             } else {
 
-                recordInput()
+                recordInput(delta)
                 movePlayer()
                 fire()
 
@@ -85,8 +85,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 if (state.numLives <= 0) {
                     endGame()
                 }
-
-                resetInput()
             }
         }
 
@@ -127,14 +125,14 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         val hitEnemies = mutableListOf<Enemy>()
 
-        val enemyIt = state.enemies.iterator()
-        while (enemyIt.hasNext()) {
-            val enemy = enemyIt.next()
-            val apparentSegment = apparentSegment(enemy)
+        val bulletIt = state.bullets.iterator()
+        while (bulletIt.hasNext()) {
+            val bullet = bulletIt.next()
+            val enemyIt = state.enemies.iterator()
 
-            val bulletIt = state.bullets.iterator()
-            while (bulletIt.hasNext()) {
-                val bullet = bulletIt.next()
+            while (enemyIt.hasNext()) {
+                val enemy = enemyIt.next()
+                val apparentSegment = apparentSegment(enemy)
 
                 if (apparentSegment !== bullet.segment) {
                     continue
@@ -188,6 +186,9 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                         enemyIt.remove()
                         hitEnemies.add(enemy)
                     }
+
+                    break
+
                 }
 
             }
@@ -338,25 +339,29 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
     }
 
-    private fun recordInput() {
+    private fun recordInput(delta: Float) {
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
-            state.moveCounterClockwise = ButtonState.JustPressed
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            state.moveCounterClockwise.keyPress()
+        } else {
+            state.moveCounterClockwise.keyRelease()
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            state.moveClockwise = ButtonState.JustPressed
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            state.moveClockwise.keyPress()
+        } else {
+            state.moveClockwise.keyRelease()
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            state.fire = ButtonState.JustPressed
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+            state.fire.keyPress()
+        } else {
+            state.fire.keyRelease()
         }
-    }
 
-    private fun resetInput() {
-        state.moveCounterClockwise = ButtonState.Unpressed
-        state.moveClockwise = ButtonState.Unpressed
-        state.fire = ButtonState.Unpressed
+        state.moveCounterClockwise.update(delta)
+        state.moveClockwise.update(delta)
+        state.fire.update(delta)
     }
 
     private fun moveEnemies(delta: Float) {
@@ -573,15 +578,17 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun movePlayer() {
-        if (state.moveClockwise == ButtonState.JustPressed) {
+        if (state.moveClockwise.trigger()) {
             state.playerSegment = state.playerSegment.next(Direction.Clockwise) ?: state.playerSegment
-        } else if (state.moveCounterClockwise == ButtonState.JustPressed) {
+        }
+
+        if (state.moveCounterClockwise.trigger()) {
             state.playerSegment = state.playerSegment.next(Direction.CounterClockwise) ?: state.playerSegment
         }
     }
 
     private fun fire() {
-        if (state.fire != ButtonState.JustPressed) {
+        if (!state.fire.trigger() || state.bullets.size >= TempestGameState.MAX_PLAYER_BULLETS_AT_ONCE) {
             return
         }
 
