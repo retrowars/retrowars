@@ -49,7 +49,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
         const val SCORE_PER_FLIPPER: Int = 3000
         const val SCORE_PER_FLIPPER_TANKER: Int = 1000
-        const val SCORE_PER_SPIKE_HIT: Int = 100
+        const val SCORE_PER_SPIKE_BUILDER: Int = 1000
 
         const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 12f
 
@@ -116,8 +116,10 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
 
     val poolOfFlippers = LinkedList<Flipper>()
     val poolOfFlipperTankers = LinkedList<FlipperTanker>()
+    val poolOfSpikeBuilders = LinkedList<SpikeBuilder>()
     var numSpawnedFromPoolFlippers = 0
     var numSpawnedFromPoolFlipperTankers = 0
+    var numSpawnedFromPoolSpikeBuilder = 0
 
     var moveCounterClockwise = ButtonState.Unpressed
     var moveClockwise = ButtonState.Unpressed
@@ -183,13 +185,46 @@ class Flipper(
 
 class FlipperTanker(
     segment: Segment,
-    zPosition: Float,
+    zPosition: Float = TempestGameState.LEVEL_DEPTH,
 ): Enemy(segment, zPosition)
 
 class Spike(
     segment: Segment,
     zPosition: Float,
 ): Enemy(segment, zPosition)
+
+class SpikeBuilder(
+    segment: Segment,
+    zPosition: Float = TempestGameState.LEVEL_DEPTH,
+    val spike: Spike = Spike(segment, TempestGameState.LEVEL_DEPTH),
+    var direction: ZDirection = ZDirection.Advancing,
+): Enemy(segment, zPosition) {
+    companion object {
+        val vertices = floatArrayOf(
+            1.3717206f, 0.70842665f,
+            1.4630519f, 2.0407734f,
+            0.32039535f, 2.69244f,
+            -0.98175764f, 2.2703066f,
+            -0.48876882f, 1.5640967f,
+            0.2748803f, 1.3464468f,
+            0.9370318f, 1.6608467f,
+            1.2125256f, 2.2993166f,
+            0.8500339f, 3.0635567f,
+            0.30236346f, 3.2039268f,
+            -0.14560995f, 2.8120368f,
+            -0.09727795f, 2.3089967f,
+            0.1443831f, 2.1735666f,
+            0.35045266f, 2.2039666f,
+            0.43061566f, 2.3863566f,
+            0.3023626f, 2.4924965f,
+        )
+    }
+}
+
+enum class ZDirection {
+    Advancing,
+    Retreating,
+}
 
 enum class Direction {
     Clockwise,
