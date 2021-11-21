@@ -5,11 +5,13 @@ import com.badlogic.gdx.math.Vector3
 import java.lang.IllegalStateException
 import java.util.*
 
-class TempestGameState(private val worldWidth: Float, private val worldHeight: Float) {
+class TempestGameState(worldWidth: Float, worldHeight: Float) {
 
     companion object {
         const val LEVEL_DEPTH = 200f
         const val BULLET_SPEED = LEVEL_DEPTH / 0.5f // Take 0.5 seconds to traverse the whole screen.
+
+        const val MAX_PLAYER_BULLETS_AT_ONCE = 8
 
         /*
          * Take 6 seconds to traverse the whole screen, based on a crude measure
@@ -51,7 +53,7 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
         const val SCORE_PER_FLIPPER_TANKER: Int = 1000
         const val SCORE_PER_SPIKE_BUILDER: Int = 1000
 
-        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 12f
+        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 25f
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
@@ -121,9 +123,9 @@ class TempestGameState(private val worldWidth: Float, private val worldHeight: F
     var numSpawnedFromPoolFlipperTankers = 0
     var numSpawnedFromPoolSpikeBuilder = 0
 
-    var moveCounterClockwise = ButtonState.Unpressed
-    var moveClockwise = ButtonState.Unpressed
-    var fire = ButtonState.Unpressed
+    var moveCounterClockwise = ThrottledButton(0.1f)
+    var moveClockwise = ThrottledButton(0.1f)
+    var fire = ThrottledButton(1 / 30f)
 
     var playerSegment = level.segments[0]
     var playerDepth = 0f
@@ -842,8 +844,59 @@ data class Segment(
         "Segment[$start -> $end]"
 }
 
-enum class ButtonState {
-    Unpressed,
-    JustPressed,
-    Held,
+class ThrottledButton(
+
+    private val timeBetweenTriggers: Float,
+    private var pressed: State = State.Released,
+    private var timeUntilNextTriggers: Float = 0f) {
+
+    fun softKeyPress() {
+        if (pressed == State.Released) {
+            pressed = State.SoftKeyPressed
+        }
+    }
+
+    fun keyPress() {
+        if (pressed == State.Released) {
+            pressed = State.KeyPressed
+            timeUntilNextTriggers = 0f
+        }
+    }
+
+    fun softKeyRelease() {
+        if (pressed == State.SoftKeyPressed) {
+            pressed = State.Released
+            timeUntilNextTriggers = 0f
+        }
+    }
+
+    fun keyRelease() {
+        if (pressed == State.KeyPressed) {
+            pressed = State.Released
+            timeUntilNextTriggers = 0f
+        }
+    }
+
+    fun update(delta: Float) {
+        timeUntilNextTriggers -= delta
+    }
+
+    /**
+     * If [timeUntilNextTriggers] has reached zero, then reset it back to [timeBetweenTriggers] and
+     * then return true.
+     */
+    fun trigger() =
+        if (pressed != State.Released && timeUntilNextTriggers <= 0f) {
+            timeUntilNextTriggers = timeBetweenTriggers
+            true
+        } else {
+            false
+        }
+
+    enum class State {
+        SoftKeyPressed,
+        KeyPressed,
+        Released,
+    }
+
 }
