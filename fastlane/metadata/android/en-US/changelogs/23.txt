@@ -1,0 +1,13 @@
+New (beta) game - Tempest!
+
+Still unfinished, early release to gather feedback
+
+Limitations:
+ * Only "flipper", "flipper tanker", and "spiker" enemies supported - missing fuseballs and pulsars
+ * No multiplayer support yet
+
+v0.13.1: Add flipper tankers
+v0.13.2: Enemies now fire + all 16 level patterns from original
+v0.13.3: Add "spiker" enemies
+
+Please donate to support further development

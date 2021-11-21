@@ -72,15 +72,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
                 recordInput()
                 movePlayer()
+                fire()
 
                 if (state.nextLevelTime > 0) {
-                    maybeAdvanceLevel()
-                } else {
-                    fire()
-                    checkEndLevel()
-                    if (state.numLives <= 0) {
-                        endGame()
+                    if (advancePlayer()) {
+                        maybeAdvanceLevel()
                     }
+                } else {
+                    checkEndLevel()
+                }
+
+                if (state.numLives <= 0) {
+                    endGame()
                 }
 
                 resetInput()
@@ -105,6 +108,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             if (state.poolOfFlippers.isNotEmpty() && state.numSpawnedFromPoolFlippers < 4) {
                 state.numSpawnedFromPoolFlippers ++
                 maybeSpawnFromPool(state.poolOfFlippers)
+            }
+
+            if (state.poolOfSpikeBuilders.isNotEmpty() && state.numSpawnedFromPoolSpikeBuilder < 3) {
+                state.numSpawnedFromPoolSpikeBuilder ++
+                maybeSpawnFromPool(state.poolOfSpikeBuilders)?.let {
+                    state.enemies += it.spike
+                }
             }
 
             val max = state.timeBetweenEnemies + TempestGameState.TIME_BETWEEN_ENEMIES_VARIATION / 2f
@@ -158,17 +168,26 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
                 ) {
 
-                    when (enemy) {
-                        is EnemyBullet -> {}
-                        is FlipperTanker -> increaseScore(TempestGameState.SCORE_PER_FLIPPER_TANKER)
-                        is Flipper -> increaseScore(TempestGameState.SCORE_PER_FLIPPER)
-                    }
-                    queueExplosion(exactEnemyPosition(enemy), enemy.zPosition)
-
                     bulletIt.remove()
-                    enemyIt.remove()
 
-                    hitEnemies.add(enemy)
+                    if (enemy is Spike) {
+                        enemy.zPosition += TempestGameState.SPIKE_LENGTH_LOSS_PER_HIT
+                        if (enemy.zPosition >= TempestGameState.LEVEL_DEPTH) {
+                            enemyIt.remove()
+                        }
+                    } else {
+                        when (enemy) {
+                            is EnemyBullet -> { }
+                            is FlipperTanker -> increaseScore(TempestGameState.SCORE_PER_FLIPPER_TANKER)
+                            is Flipper -> increaseScore(TempestGameState.SCORE_PER_FLIPPER)
+                            is SpikeBuilder -> increaseScore(TempestGameState.SCORE_PER_SPIKE_BUILDER)
+                            is Spike -> { } // Handled above separately (no explosions)
+                        }
+
+                        queueExplosion(exactEnemyPosition(enemy), enemy.zPosition)
+                        enemyIt.remove()
+                        hitEnemies.add(enemy)
+                    }
                 }
 
             }
@@ -190,18 +209,37 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 }
 
                 is EnemyBullet -> {} // No need to do anything specific here.
+                is Spike -> {}
+                is SpikeBuilder -> {
+                    // If we are removing the spike builder not because it got hit, but rather
+                    // because it got back to its original location, then spawn a flipper tanker.
+                    if (enemy.direction == ZDirection.Retreating && enemy.zPosition >= TempestGameState.LEVEL_DEPTH) {
+                        spawnFlipperTankerFromSpikeBuilder(enemy)
+                    }
+
+                    maybeSpawnFromPool(state.poolOfSpikeBuilders)?.let {
+                        state.enemies += it.spike
+                    }
+                }
             }
         }
     }
 
-    private fun maybeSpawnFromPool(pool: LinkedList<out Enemy>) {
+    private fun <T: Enemy>maybeSpawnFromPool(pool: LinkedList<out T>): T? {
         if (pool.isEmpty()) {
-            return
+            return null
         }
 
         val newEnemy = pool.pop()
         state.enemies += newEnemy
         state.enemies += EnemyBullet(newEnemy.segment, newEnemy.zPosition)
+
+        return newEnemy
+    }
+
+    private fun spawnFlipperTankerFromSpikeBuilder(enemy: SpikeBuilder) {
+        // One of these two directions will be non-null (potentially both, but at least one).
+        state.enemies.add(FlipperTanker(state.level.segments.random()))
     }
 
     private fun spawnFlippersFromTanker(enemy: FlipperTanker) {
@@ -221,9 +259,37 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun checkEndLevel() {
-        if (getState() == State.Playing && state.poolOfFlippers.isEmpty() && state.poolOfFlipperTankers.isEmpty() && state.enemies.isEmpty()) {
-            state.nextLevelTime = state.timer + TempestGameState.TIME_BETWEEN_LEVELS
+        if (
+            getState() == State.Playing &&
+            state.poolOfFlippers.isEmpty() &&
+            state.poolOfFlipperTankers.isEmpty() &&
+            state.enemies.none { it !is Spike && it !is EnemyBullet }
+        ) {
+            state.nextLevelTime = state.timer + TempestGameState.TOTAL_TIME_BETWEEN_LEVELS
         }
+    }
+
+    /**
+     * Return false if we hit a spike (and hence need to restart the level again).
+     */
+    private fun advancePlayer(): Boolean {
+        if (state.nextLevelTime - state.timer < TempestGameState.LEVEL_END_TRANSIT_TIME) {
+            val percent = 1f - (state.nextLevelTime - state.timer) / TempestGameState.LEVEL_END_TRANSIT_TIME
+            state.playerDepth = TempestGameState.LEVEL_DEPTH * percent
+
+            val hitSpike = state.enemies.find {
+                it is Spike && // All enemies at this stage should be a spike, but doesn't hurt to ask...
+                it.segment === state.playerSegment &&
+                it.zPosition < state.playerDepth
+            }
+
+            if (hitSpike != null) {
+                onPlayerHit(hitSpike)
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun maybeAdvanceLevel() {
@@ -233,6 +299,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             state.bullets.clear()
             state.playerSegment = state.level.segments[0]
+            state.playerDepth = 0f
             state.levelCount ++
             state.nextLevelTime = 0f
 
@@ -241,6 +308,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             state.numSpawnedFromPoolFlippers = 0
             state.numSpawnedFromPoolFlipperTankers = 0
+            state.numSpawnedFromPoolSpikeBuilder = 0
 
             state.increaseSpeed()
             initEnemyPool()
@@ -252,6 +320,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.bullets.clear()
             state.enemies.clear()
             state.playerSegment = state.level.segments[0]
+            state.playerDepth = 0f
             state.nextEnemyTime = TempestGameState.PAUSE_AFTER_DEATH
             state.nextPlayerRespawnTime = 0f
 
@@ -263,6 +332,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             state.numSpawnedFromPoolFlippers = 0
             state.numSpawnedFromPoolFlipperTankers = 0
+            state.numSpawnedFromPoolSpikeBuilder = 0
 
             initEnemyPool()
         }
@@ -298,6 +368,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 is Flipper -> moveFlipper(delta, enemy)
                 is FlipperTanker -> moveFlipperTanker(delta, enemy)
                 is EnemyBullet -> moveEnemyBullet(delta, enemy)
+                is SpikeBuilder -> moveSpikeBuilder(delta, enemy)
+                is Spike -> false
             }
 
             if (remove) {
@@ -311,16 +383,24 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun initEnemyPool() {
 
-        val makeCounter = { startLevel: Int, startAmount: Int, amountPerLevel: Int ->
+        // Most enemies should already be gone from here (because we advanced to the next level),
+        // however spikes may still exist. Need to clear these before the next level starts.
+        state.enemies.clear()
+
+        state.poolOfFlippers.clear()
+        state.poolOfFlipperTankers.clear()
+        state.poolOfSpikeBuilders.clear()
+
+        val makeCounter = { startLevel: Int, startAmount: Int, amountPerLevel: Int, maxNumber: Int ->
             if (startLevel > state.levelCount) {
                 emptyList()
             } else {
-                val max = startAmount + (state.levelCount - startLevel) * amountPerLevel
-                (0 until max)
+                val end = startAmount + (state.levelCount - startLevel) * amountPerLevel
+                (0 until end.coerceAtMost(maxNumber))
             }
         }
 
-        state.poolOfFlippers += makeCounter(0, 10, 1).map {
+        state.poolOfFlippers += makeCounter(0, 10, 1, 15).map {
             val segment = state.level.segments.random()
             Flipper(
                 segment,
@@ -332,11 +412,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             )
         }
 
-        state.poolOfFlipperTankers += makeCounter(2, 2, 1).map {
-            FlipperTanker(
-                state.level.segments.random(),
-                TempestGameState.LEVEL_DEPTH,
-            )
+        state.poolOfFlipperTankers += makeCounter(2, 2, 1, 6).map {
+            FlipperTanker(state.level.segments.random(),)
+        }
+
+        val segmentsForSpikes = state.level.segments.shuffled()
+        state.poolOfSpikeBuilders += makeCounter(3, 3, 1, 12).map { i ->
+            SpikeBuilder(segmentsForSpikes[i])
         }
 
     }
@@ -427,6 +509,23 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         return false
     }
 
+    private fun moveSpikeBuilder(delta: Float, enemy: SpikeBuilder): Boolean {
+        if (enemy.direction == ZDirection.Advancing) {
+            enemy.zPosition -= state.enemySpeed * delta
+            enemy.spike.zPosition = enemy.zPosition + 0.01f // Ever so slightly further back, so a bullet should hit the spike builder before the spike.
+            if (enemy.zPosition <= TempestGameState.LEVEL_DEPTH / 5f) {
+                enemy.direction = ZDirection.Retreating
+            }
+        } else {
+            enemy.zPosition += state.enemySpeed * delta
+            if (enemy.zPosition >= TempestGameState.LEVEL_DEPTH) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     private fun moveEnemyBullet(delta: Float, bullet: EnemyBullet): Boolean {
         bullet.zPosition -= state.enemySpeed * delta * TempestGameState.ENEMY_BULLET_VS_SPEED_RATIO
 
@@ -452,11 +551,12 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         state.numLives --
-        queueExplosion(state.playerSegment.centre, enemy.zPosition)
-        queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), enemy.zPosition)
-        queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), enemy.zPosition)
-        queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), enemy.zPosition)
-        queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), enemy.zPosition)
+        state.nextLevelTime = 0f
+        queueExplosion(state.playerSegment.centre, state.playerDepth)
+        queueExplosion(state.playerSegment.centre.cpy().add(1.5f, 1.5f), state.playerDepth)
+        queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, -1.5f), state.playerDepth)
+        queueExplosion(state.playerSegment.centre.cpy().add(-1.5f, 1.5f), state.playerDepth)
+        queueExplosion(state.playerSegment.centre.cpy().add(1.5f, -1.5f), state.playerDepth)
 
         state.nextPlayerRespawnTime = state.timer + TempestGameState.PAUSE_AFTER_DEATH
     }
@@ -501,7 +601,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             onEnemiesRemoved(flippersToHit.subList(0, 1))
         } else {
-            state.bullets.add(Bullet(state.playerSegment, 0f))
+            state.bullets.add(Bullet(state.playerSegment, state.playerDepth))
         }
     }
 
@@ -510,8 +610,26 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     override fun renderGame(camera: Camera) {
         camera.apply {
-            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, viewport.worldHeight.coerceAtMost(viewport.worldWidth))
-            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, 0f)
+            val startZ = viewport.worldHeight.coerceAtMost(viewport.worldWidth) // Arbitrarily chosen depth which seems to work well.
+            val cameraZ: Float
+            val lookAtZ: Float
+            if (state.nextLevelTime > 0 && state.nextLevelTime - state.timer < TempestGameState.LEVEL_END_TRANSIT_TIME) {
+                val percent = 1 - ((state.nextLevelTime - state.timer) / TempestGameState.LEVEL_END_TRANSIT_TIME)
+
+                // Make this lag a little bit so we can still see the player as we advance forward.
+                val lagBehindPlayer = (TempestGameState.LEVEL_DEPTH / 3)
+                val endZ = lagBehindPlayer
+                val amountMoved = (endZ + startZ + lagBehindPlayer) * percent
+
+                cameraZ = (startZ - amountMoved).coerceAtMost(startZ) // Because we want to lag, but the camera normally sits on the player...
+                lookAtZ = -(TempestGameState.LEVEL_DEPTH * 5) * percent
+            } else {
+                cameraZ = startZ
+                lookAtZ = 0f
+            }
+
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, cameraZ)
+            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, lookAtZ)
             update()
         }
 
@@ -550,7 +668,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             renderBullet(r, it)
         }
 
-        r.color = Color.WHITE
         state.enemies.onEach {
             renderEnemy(r, it)
         }
@@ -596,7 +713,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderPlayer(shapeRenderer: ShapeRenderer) {
-        renderOnAngle(shapeRenderer, state.playerSegment.centre, 0f, state.playerSegment.angle) {
+        renderOnAngle(shapeRenderer, state.playerSegment.centre, -state.playerDepth, state.playerSegment.angle) {
             it.polygon(playerShape)
         }
     }
@@ -619,9 +736,32 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         is Flipper -> renderFlipper(shapeRenderer, enemy)
         is FlipperTanker -> renderFlipperTanker(shapeRenderer, enemy)
         is EnemyBullet -> renderEnemyBullet(shapeRenderer, enemy)
+        is Spike -> renderSpike(shapeRenderer, enemy)
+        is SpikeBuilder -> renderSpikeBuilder(shapeRenderer, enemy)
+    }
+
+    private fun renderSpikeBuilder(shapeRenderer: ShapeRenderer, spikeBuilder: SpikeBuilder) {
+        shapeRenderer.color = Color.GREEN
+        shapeRenderer.translate(spikeBuilder.segment.centre.x, spikeBuilder.segment.centre.y, -spikeBuilder.zPosition)
+        shapeRenderer.polyline(SpikeBuilder.vertices)
+        // TODO: Offset by half the width of the spiral
+        shapeRenderer.identity()
+    }
+
+    private fun renderSpike(shapeRenderer: ShapeRenderer, spike: Spike) {
+        shapeRenderer.color = Color.GREEN
+        shapeRenderer.line(
+            spike.segment.centre.x, spike.segment.centre.y, -TempestGameState.LEVEL_DEPTH,
+            spike.segment.centre.x, spike.segment.centre.y, -spike.zPosition,
+        )
+        shapeRenderer.box(
+            spike.segment.centre.x - 0.25f, spike.segment.centre.y - 0.25f, -spike.zPosition - 0.25f,
+            0.5f, 0.5f, 0.5f,
+        )
     }
 
     private fun renderEnemyBullet(shapeRenderer: ShapeRenderer, bullet: EnemyBullet) {
+        shapeRenderer.color = Color.WHITE
         val angle = (state.timer % 3) * 360
 
         shapeRenderer.apply {
@@ -651,6 +791,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
+        shapeRenderer.color = Color.WHITE
         if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
             renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
                 it.polygon(flipperShape)
@@ -680,6 +821,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipperTanker(shapeRenderer: ShapeRenderer, enemy: FlipperTanker) {
+        shapeRenderer.color = Color.WHITE
         renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
             it.rotate(1f, 1f, 1f, 45f)
             it.box(-1f, -1f, -1f, 2f, 2f, 2f)
