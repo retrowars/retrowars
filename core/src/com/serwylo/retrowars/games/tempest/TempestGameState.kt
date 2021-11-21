@@ -123,10 +123,6 @@ class TempestGameState(worldWidth: Float, worldHeight: Float) {
     var numSpawnedFromPoolFlipperTankers = 0
     var numSpawnedFromPoolSpikeBuilder = 0
 
-    var moveCounterClockwise = ThrottledButton(0.1f)
-    var moveClockwise = ThrottledButton(0.1f)
-    var fire = ThrottledButton(1 / 30f)
-
     var playerSegment = level.segments[0]
     var playerDepth = 0f
 }
@@ -842,61 +838,4 @@ data class Segment(
 
     override fun toString() =
         "Segment[$start -> $end]"
-}
-
-class ThrottledButton(
-
-    private val timeBetweenTriggers: Float,
-    private var pressed: State = State.Released,
-    private var timeUntilNextTriggers: Float = 0f) {
-
-    fun softKeyPress() {
-        if (pressed == State.Released) {
-            pressed = State.SoftKeyPressed
-        }
-    }
-
-    fun keyPress() {
-        if (pressed == State.Released) {
-            pressed = State.KeyPressed
-            timeUntilNextTriggers = 0f
-        }
-    }
-
-    fun softKeyRelease() {
-        if (pressed == State.SoftKeyPressed) {
-            pressed = State.Released
-            timeUntilNextTriggers = 0f
-        }
-    }
-
-    fun keyRelease() {
-        if (pressed == State.KeyPressed) {
-            pressed = State.Released
-            timeUntilNextTriggers = 0f
-        }
-    }
-
-    fun update(delta: Float) {
-        timeUntilNextTriggers -= delta
-    }
-
-    /**
-     * If [timeUntilNextTriggers] has reached zero, then reset it back to [timeBetweenTriggers] and
-     * then return true.
-     */
-    fun trigger() =
-        if (pressed != State.Released && timeUntilNextTriggers <= 0f) {
-            timeUntilNextTriggers = timeBetweenTriggers
-            true
-        } else {
-            false
-        }
-
-    enum class State {
-        SoftKeyPressed,
-        KeyPressed,
-        Released,
-    }
-
 }
