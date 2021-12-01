@@ -648,7 +648,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.networkEnemies += flipperTankers
     }
 
-    override fun renderGame(camera: Camera) {
+    override fun setupCamera(camera: Camera, yOffset: Float) {
         camera.apply {
             val startZ = viewport.worldHeight.coerceAtMost(viewport.worldWidth) // Arbitrarily chosen depth which seems to work well.
             val cameraZ: Float
@@ -668,11 +668,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 lookAtZ = 0f
             }
 
-            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, cameraZ)
-            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, lookAtZ)
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset + yOffset * 0.5f, cameraZ)
+            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f + yOffset * 0.5f, lookAtZ)
             update()
         }
+    }
 
+    override fun renderGame(camera: Camera) {
         renderLevel(camera)
 
         if (lifeContainer.children.size != state.numLives) {
