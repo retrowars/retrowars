@@ -14,6 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.input.TempestSoftController
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import java.lang.IllegalStateException
 import java.util.*
 import kotlin.random.Random
@@ -251,8 +252,16 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val nextSegmentClockwise = clockwise ?: counterClockwise!!
         val nextSegmentCounterClockwise = counterClockwise ?: clockwise!!
 
-        state.enemies.add(Flipper(nextSegmentClockwise, enemy.zPosition, state.enemyFlipWaitTime))
-        state.enemies.add(Flipper(nextSegmentCounterClockwise, enemy.zPosition, state.enemyFlipWaitTime))
+        val newEnemies = listOf(
+            Flipper(nextSegmentClockwise, enemy.zPosition, state.enemyFlipWaitTime),
+            Flipper(nextSegmentCounterClockwise, enemy.zPosition, state.enemyFlipWaitTime),
+        )
+
+        state.enemies += newEnemies
+
+        if (state.networkEnemies.contains(enemy)) {
+            state.networkEnemies += newEnemies
+        }
     }
 
     private fun updateExplosions() {
@@ -295,6 +304,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun maybeAdvanceLevel() {
         if (state.timer > state.nextLevelTime) {
+            Gdx.app.log(TAG, "Advancing to next level.")
             val currentLevelIndex = state.allLevels.indexOf(state.level)
             state.level = state.allLevels[(currentLevelIndex + 1) % state.allLevels.size]
 
@@ -311,6 +321,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.numSpawnedFromPoolFlipperTankers = 0
             state.numSpawnedFromPoolSpikeBuilder = 0
 
+            state.networkEnemies.clear()
+
             state.increaseSpeed()
             initEnemyPool()
         }
@@ -318,6 +330,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun maybeRespawnPlayer() {
         if (state.timer > state.nextPlayerRespawnTime) {
+            Gdx.app.log(TAG, "Respawning player.")
             state.bullets.clear()
             state.enemies.clear()
             state.playerSegment = state.level.segments[0]
@@ -325,16 +338,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.nextEnemyTime = TempestGameState.PAUSE_AFTER_DEATH
             state.nextPlayerRespawnTime = 0f
 
-            // Don't clear the pool of enemies, because in the original tempest a death doesn't
-            // restart the level - it remembers how many you killed and kind of "resumes" from
-            // where you left off...
-            // But we do set the counter back to 0 to encourage respawning of what is left in the
-            // pool.
-
             state.numSpawnedFromPoolFlippers = 0
             state.numSpawnedFromPoolFlipperTankers = 0
             state.numSpawnedFromPoolSpikeBuilder = 0
 
+            // TODO: Don't clear the pool of enemies, because in the original tempest a death doesn't
+            // restart the level - it remembers how many you killed and kind of "resumes" from
+            // where you left off...
             initEnemyPool()
         }
     }
@@ -425,6 +435,11 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.poolOfSpikeBuilders += makeCounter(3, 3, 1, 12).map { i ->
             SpikeBuilder(segmentsForSpikes[i])
         }
+
+        // For if we accumulated any attacks over the network while transitioning levels or waiting
+        // for the player to respawn...
+        spawnNetworkEnemies(state.numQueuedNetworkEnemies)
+        state.numQueuedNetworkEnemies = 0
 
     }
 
@@ -613,6 +628,24 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     override fun onReceiveDamage(strength: Int) {
+        val numEnemies = strength * 2
+        if (state.nextLevelTime > 0 || state.nextPlayerRespawnTime > 0) {
+            Gdx.app.debug(TAG, "Queuing up enemy attacks from network because we are not currently in a a state to receive them.")
+            state.numQueuedNetworkEnemies += numEnemies
+        } else {
+            Gdx.app.debug(TAG, "Applying network attack immediately.")
+            spawnNetworkEnemies(numEnemies)
+        }
+    }
+
+    private fun spawnNetworkEnemies(numEnemies: Int) {
+        Gdx.app.debug(TAG, "Spawning $numEnemies enemies from network attacks.")
+        val flipperTankers = (0 until numEnemies).map {
+            FlipperTanker(state.level.segments.random())
+        }
+
+        state.enemies += flipperTankers
+        state.networkEnemies += flipperTankers
     }
 
     override fun renderGame(camera: Camera) {
@@ -768,7 +801,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderEnemyBullet(shapeRenderer: ShapeRenderer, bullet: EnemyBullet) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(bullet)) ENEMY_ATTACK_COLOUR else Color.WHITE
         val angle = (state.timer % 3) * 360
 
         shapeRenderer.apply {
@@ -798,7 +831,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(enemy)) ENEMY_ATTACK_COLOUR else Color.WHITE
         if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
             renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
                 it.polygon(flipperShape)
@@ -828,7 +861,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipperTanker(shapeRenderer: ShapeRenderer, enemy: FlipperTanker) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(enemy)) ENEMY_ATTACK_COLOUR else Color.WHITE
         renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
             it.rotate(1f, 1f, 1f, 45f)
             it.box(-1f, -1f, -1f, 2f, 2f, 2f)
