@@ -53,7 +53,7 @@ class TempestGameState(worldWidth: Float, worldHeight: Float) {
         const val SCORE_PER_FLIPPER_TANKER: Int = 1000
         const val SCORE_PER_SPIKE_BUILDER: Int = 1000
 
-        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 25f
+        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 50f
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
