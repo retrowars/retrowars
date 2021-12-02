@@ -483,7 +483,8 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             id
         }
 
-        val player = Player(playerId, randomGame(), room.statusForNewPlayer())
+        val game = if (room.players.isEmpty()) Games.missileCommand else Games.tempest
+        val player = Player(playerId, game.id, room.statusForNewPlayer())
 
         connection.player = player
 
@@ -575,10 +576,12 @@ class WebSocketNetworkServer(
          * for the best, or it may suppress this server from the list (perhaps with some kind of
          * prompt about upgrading the game).
          *
-         * At present, version 0.7.0 (9) is the first version with true multiplayer support at all).
+         * Changelog:
+         *  - Version 0.7.0 (9): first version with true multiplayer support at all.
+         *  - Version 0.14.0 (25): addition of Tempest game.
          */
-        private const val MIN_SUPPORTED_CLIENT_VERSION_CODE = 9
-        private const val MIN_SUPPORTED_CLIENT_VERSION_NAME = "0.7.0"
+        private const val MIN_SUPPORTED_CLIENT_VERSION_CODE = 25
+        private const val MIN_SUPPORTED_CLIENT_VERSION_NAME = "0.14.0"
 
     }
 

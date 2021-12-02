@@ -18,6 +18,13 @@ class ShakeAnimation(
         shakeAmplitude = distance
     }
 
+    /**
+     * Most the time you can just use the return value from the [update] method, which is the
+     * *relative amount of change* since the last update. However sometimes you may wish to
+     * know the absolute position of this shake.
+     */
+    fun getY() = yPosition
+
     fun update(delta: Float): Float {
         if (totalDuration <= 0) {
             return 0f

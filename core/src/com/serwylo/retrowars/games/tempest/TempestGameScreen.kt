@@ -14,6 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.input.TempestSoftController
+import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import java.lang.IllegalStateException
 import java.util.*
 import kotlin.random.Random
@@ -215,7 +216,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                     // If we are removing the spike builder not because it got hit, but rather
                     // because it got back to its original location, then spawn a flipper tanker.
                     if (enemy.direction == ZDirection.Retreating && enemy.zPosition >= TempestGameState.LEVEL_DEPTH) {
-                        spawnFlipperTankerFromSpikeBuilder(enemy)
+                        spawnFlipperTankerFromSpikeBuilder()
                     }
 
                     maybeSpawnFromPool(state.poolOfSpikeBuilders)?.let {
@@ -238,8 +239,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         return newEnemy
     }
 
-    private fun spawnFlipperTankerFromSpikeBuilder(enemy: SpikeBuilder) {
-        // One of these two directions will be non-null (potentially both, but at least one).
+    private fun spawnFlipperTankerFromSpikeBuilder() {
         state.enemies.add(FlipperTanker(state.level.segments.random()))
     }
 
@@ -251,8 +251,16 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         val nextSegmentClockwise = clockwise ?: counterClockwise!!
         val nextSegmentCounterClockwise = counterClockwise ?: clockwise!!
 
-        state.enemies.add(Flipper(nextSegmentClockwise, enemy.zPosition, state.enemyFlipWaitTime))
-        state.enemies.add(Flipper(nextSegmentCounterClockwise, enemy.zPosition, state.enemyFlipWaitTime))
+        val newEnemies = listOf(
+            Flipper(nextSegmentClockwise, enemy.zPosition, state.enemyFlipWaitTime),
+            Flipper(nextSegmentCounterClockwise, enemy.zPosition, state.enemyFlipWaitTime),
+        )
+
+        state.enemies += newEnemies
+
+        if (state.networkEnemies.contains(enemy)) {
+            state.networkEnemies += newEnemies
+        }
     }
 
     private fun updateExplosions() {
@@ -285,7 +293,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
 
             if (hitSpike != null) {
-                onPlayerHit(hitSpike)
+                onPlayerHit()
                 return false
             }
         }
@@ -295,6 +303,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun maybeAdvanceLevel() {
         if (state.timer > state.nextLevelTime) {
+            Gdx.app.log(TAG, "Advancing to next level.")
             val currentLevelIndex = state.allLevels.indexOf(state.level)
             state.level = state.allLevels[(currentLevelIndex + 1) % state.allLevels.size]
 
@@ -311,6 +320,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.numSpawnedFromPoolFlipperTankers = 0
             state.numSpawnedFromPoolSpikeBuilder = 0
 
+            state.networkEnemies.clear()
+
             state.increaseSpeed()
             initEnemyPool()
         }
@@ -318,6 +329,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun maybeRespawnPlayer() {
         if (state.timer > state.nextPlayerRespawnTime) {
+            Gdx.app.log(TAG, "Respawning player.")
             state.bullets.clear()
             state.enemies.clear()
             state.playerSegment = state.level.segments[0]
@@ -325,16 +337,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.nextEnemyTime = TempestGameState.PAUSE_AFTER_DEATH
             state.nextPlayerRespawnTime = 0f
 
-            // Don't clear the pool of enemies, because in the original tempest a death doesn't
-            // restart the level - it remembers how many you killed and kind of "resumes" from
-            // where you left off...
-            // But we do set the counter back to 0 to encourage respawning of what is left in the
-            // pool.
-
             state.numSpawnedFromPoolFlippers = 0
             state.numSpawnedFromPoolFlipperTankers = 0
             state.numSpawnedFromPoolSpikeBuilder = 0
 
+            // TODO: Don't clear the pool of enemies, because in the original tempest a death doesn't
+            // restart the level - it remembers how many you killed and kind of "resumes" from
+            // where you left off...
             initEnemyPool()
         }
     }
@@ -418,13 +427,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         state.poolOfFlipperTankers += makeCounter(2, 2, 1, 6).map {
-            FlipperTanker(state.level.segments.random(),)
+            FlipperTanker(state.level.segments.random())
         }
 
         val segmentsForSpikes = state.level.segments.shuffled()
         state.poolOfSpikeBuilders += makeCounter(3, 3, 1, 12).map { i ->
             SpikeBuilder(segmentsForSpikes[i])
         }
+
+        // For if we accumulated any attacks over the network while transitioning levels or waiting
+        // for the player to respawn...
+        spawnNetworkEnemies(state.numQueuedNetworkEnemies)
+        state.numQueuedNetworkEnemies = 0
 
     }
 
@@ -494,7 +508,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         if (enemy.zPosition <= 0 && enemy.segment === state.playerSegment) {
-            onPlayerHit(enemy)
+            onPlayerHit()
             return true
         }
 
@@ -506,7 +520,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         if (enemy.zPosition <= 0) {
             if (enemy.segment === state.playerSegment) {
-                onPlayerHit(enemy)
+                onPlayerHit()
             }
             return true
         }
@@ -536,7 +550,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         if (bullet.zPosition <= 0) {
             if (bullet.segment === state.playerSegment) {
-                onPlayerHit(bullet)
+                onPlayerHit()
             }
             return true
         }
@@ -549,7 +563,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.explosions.add(Explosion(Vector3(position.x, position.y, zPosition), state.timer))
     }
 
-    private fun onPlayerHit(enemy: Enemy) {
+    private fun onPlayerHit() {
         // We have already been hit and are waiting to spawn again, no need to check again.
         if (state.nextPlayerRespawnTime > state.timer) {
             return
@@ -613,9 +627,27 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     override fun onReceiveDamage(strength: Int) {
+        val numEnemies = strength * 2
+        if (state.nextLevelTime > 0 || state.nextPlayerRespawnTime > 0) {
+            Gdx.app.debug(TAG, "Queuing up enemy attacks from network because we are not currently in a a state to receive them.")
+            state.numQueuedNetworkEnemies += numEnemies
+        } else {
+            Gdx.app.debug(TAG, "Applying network attack immediately.")
+            spawnNetworkEnemies(numEnemies)
+        }
     }
 
-    override fun renderGame(camera: Camera) {
+    private fun spawnNetworkEnemies(numEnemies: Int) {
+        Gdx.app.debug(TAG, "Spawning $numEnemies enemies from network attacks.")
+        val flipperTankers = (0 until numEnemies).map {
+            FlipperTanker(state.level.segments.random())
+        }
+
+        state.enemies += flipperTankers
+        state.networkEnemies += flipperTankers
+    }
+
+    override fun setupCamera(camera: Camera, yOffset: Float) {
         camera.apply {
             val startZ = viewport.worldHeight.coerceAtMost(viewport.worldWidth) // Arbitrarily chosen depth which seems to work well.
             val cameraZ: Float
@@ -635,11 +667,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 lookAtZ = 0f
             }
 
-            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset, cameraZ)
-            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f, lookAtZ)
+            position.set(viewport.worldWidth / 2f, viewport.worldHeight / 2f + state.level.cameraOffset + yOffset * 0.5f, cameraZ)
+            lookAt(viewport.worldWidth / 2f, viewport.worldHeight / 2f + yOffset * 0.5f, lookAtZ)
             update()
         }
+    }
 
+    override fun renderGame(camera: Camera) {
         renderLevel(camera)
 
         if (lifeContainer.children.size != state.numLives) {
@@ -768,7 +802,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderEnemyBullet(shapeRenderer: ShapeRenderer, bullet: EnemyBullet) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(bullet)) ENEMY_ATTACK_COLOUR else Color.WHITE
         val angle = (state.timer % 3) * 360
 
         shapeRenderer.apply {
@@ -798,7 +832,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipper(shapeRenderer: ShapeRenderer, enemy: Flipper) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(enemy)) ENEMY_ATTACK_COLOUR else Color.WHITE
         if (enemy.timeUntilNextFlip > state.enemyFlipTransitionTime /* Not yet moving to the next segment */) {
             renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
                 it.polygon(flipperShape)
@@ -808,16 +842,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
             // When we assigned the direction in the past, we ensured the next segment is not null
             // before assigning, so we are very confident that it is not null here.
-            if (enemy.direction == null) {
-                throw IllegalStateException("Oops 0")
-            } else if (enemy.segment == null) {
-                throw IllegalStateException("Oops 1")
-            } else if (enemy.segment.next(enemy.direction) == null) {
-                throw IllegalStateException("Oops 2")
-            }
-
-            val nextSegment = enemy.segment.next(enemy.direction)!!
-
+            val nextSegment = enemy.segment.next(enemy.direction) ?: throw IllegalStateException("Should always have a next direction.")
             val pos = enemy.segment.centre.cpy().add(nextSegment.centre.cpy().sub(enemy.segment.centre).scl(flipPercent))
             val angle = enemy.segment.angle + (flipPercent * if (enemy.direction == Direction.Clockwise) -180f else 180f)
 
@@ -828,7 +853,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun renderFlipperTanker(shapeRenderer: ShapeRenderer, enemy: FlipperTanker) {
-        shapeRenderer.color = Color.WHITE
+        shapeRenderer.color = if (state.networkEnemies.contains(enemy)) ENEMY_ATTACK_COLOUR else Color.WHITE
         renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
             it.rotate(1f, 1f, 1f, 45f)
             it.box(-1f, -1f, -1f, 2f, 2f, 2f)

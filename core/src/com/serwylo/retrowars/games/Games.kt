@@ -65,18 +65,7 @@ object Games {
         other,
     )
 
-    val betaInfo = listOf(
-        BetaInfo(
-            tempest,
-            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Tempest,Beta%20Feedback&template=&title=",
-            """
-                Known issues:
-                 * Only flipper, flipper tanker, and spike enemies (missing
-                   fuseballs, fuseball tankers, pulsars, and pulsar tankers)
-                 * No multiplayer support
-            """.trimIndent()
-        ),
-    )
+    val betaInfo = listOf<BetaInfo>()
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }

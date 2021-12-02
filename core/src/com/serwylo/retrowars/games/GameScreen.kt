@@ -315,6 +315,20 @@ abstract class GameScreen(
     }
 
     protected abstract fun updateGame(delta: Float)
+
+    /**
+     * Most of the time, the [GameScreen] base class will take care of the camera management,
+     * especially if it is an orthographic camera. However if you are doing something more custom
+     * (e.g. see [TempestGameScreen] with its [PerspectiveCamera]), then the game itself is
+     * responsible for setting up the camera, and therefore ensuring it shakes correctly in response
+     * to enemy attacks in multiplayer (by applying [yOffset]).
+     */
+    protected open fun setupCamera(camera: Camera, yOffset: Float) {
+        // Do nothing by default (i.e. for orthographic cameras).
+        // If using a perspective camera, you probably want to override this and then ensure you
+        // correctly apply yOffset in addition to whatever else you need to do with your camera.
+    }
+
     protected abstract fun renderGame(camera: Camera)
 
     /**
@@ -387,6 +401,7 @@ abstract class GameScreen(
 
         game.uiAssets.getEffects().render {
             viewport.renderIn {
+                setupCamera(camera, shakeAnimation.getY())
                 renderGame(camera)
             }
 

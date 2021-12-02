@@ -53,7 +53,7 @@ class TempestGameState(worldWidth: Float, worldHeight: Float) {
         const val SCORE_PER_FLIPPER_TANKER: Int = 1000
         const val SCORE_PER_SPIKE_BUILDER: Int = 1000
 
-        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 25f
+        const val SPIKE_LENGTH_LOSS_PER_HIT = LEVEL_DEPTH / 50f
 
         /**
          * Wait for this many seconds after dying before spawning the next enemy at the start of
@@ -80,6 +80,19 @@ class TempestGameState(worldWidth: Float, worldHeight: Float) {
     val bullets = LinkedList<Bullet>()
     val enemies = LinkedList<Enemy>()
     val explosions = LinkedList<Explosion>()
+
+    /**
+     * If an enemy is in here (in addition to the [enemies] list), then it came from an attack
+     * in a multiplayer game. This will be rendered differently to the player.
+     */
+    val networkEnemies = mutableSetOf<Enemy>()
+
+    /**
+     * If we received an attack while transitioning between levels, then the enemies that were
+     * spawned as a result will be recorded such that they can be applied at the start of the
+     * next level (or the start of the current level if we hit a spike while transitioning).
+     */
+    var numQueuedNetworkEnemies = 0
 
     var numLives = 3
 
