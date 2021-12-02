@@ -1,0 +1,8 @@
+New game - Tempest!
+
+Includes multiplayer support, so make sure to upgrade the app and then connect to the new server to play.
+
+Limitations:
+ * No fuseballs or pulsars (just flippers, tankers, and spikers)
+
+Please donate to support further development
