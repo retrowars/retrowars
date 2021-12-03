@@ -271,7 +271,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             ).expandX().colspan(2).spaceBottom(UI_SPACE).left()
 
             row()
-            add(Label("Unsupported.\nPlease upgrade to at least v${AppProperties.appVersionName}.", styles.label.small)).top().left()
+            add(Label("Unsupported.\nPlease upgrade to at least v${server.minSupportedClientVersionName}.", styles.label.small)).top().left()
             add(
                 makeButton("Join", styles) {}.apply {
                     isDisabled = true
