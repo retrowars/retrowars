@@ -186,10 +186,75 @@ interface ControllerButton {
     fun update(delta: Float) {}
 }
 
-class ThrottledButton(
+class ContinuousPressButton: ControllerButton {
+
+    private var isPressed = false
+
+    override fun softKeyPress() {
+        isPressed = true
+    }
+
+    override fun softKeyRelease() {
+        isPressed = false
+    }
+
+    override fun keyPress() {
+        isPressed = true
+    }
+
+    override fun keyRelease() {
+        isPressed = false
+    }
+
+    override fun trigger(): Boolean {
+        return isPressed
+    }
+
+}
+
+class SingleShotButton: ControllerButton {
+
+    private var isPressed = false
+    private var hasTriggered = false
+
+    override fun softKeyPress() {
+        isPressed = true
+    }
+
+    override fun softKeyRelease() {
+        isPressed = false
+        hasTriggered = false
+    }
+
+    override fun keyPress() {
+        isPressed = true
+    }
+
+    override fun keyRelease() {
+        isPressed = false
+        hasTriggered = false
+    }
+
+    override fun trigger(): Boolean {
+        if (isPressed && !hasTriggered) {
+            hasTriggered = true
+            return true
+        }
+
+        return false
+    }
+
+}
+
+class ThrottledButton(timeBetweenTriggers: Float):
+    DelayedThrottledButton(timeBetweenTriggers, timeBetweenTriggers)
+
+open class DelayedThrottledButton(
+    private val timeBeforeSecondTrigger: Float,
     private val timeBetweenTriggers: Float,
 ): ControllerButton {
 
+    private var numTriggers: Int = 0
     private var pressed: State = State.Released
     private var timeUntilNextTriggers: Float = 0f
 
@@ -210,6 +275,7 @@ class ThrottledButton(
         if (pressed == State.SoftKeyPressed) {
             pressed = State.Released
             timeUntilNextTriggers = 0f
+            numTriggers = 0
         }
     }
 
@@ -217,6 +283,7 @@ class ThrottledButton(
         if (pressed == State.KeyPressed) {
             pressed = State.Released
             timeUntilNextTriggers = 0f
+            numTriggers = 0
         }
     }
 
@@ -230,7 +297,8 @@ class ThrottledButton(
      */
     override fun trigger() =
         if (pressed != State.Released && timeUntilNextTriggers <= 0f) {
-            timeUntilNextTriggers = timeBetweenTriggers
+            timeUntilNextTriggers = if (numTriggers == 0) timeBeforeSecondTrigger else timeBetweenTriggers
+            numTriggers ++
             true
         } else {
             false
@@ -326,33 +394,81 @@ class AsteroidsSoftController: SoftControllerLayout() {
 
 class TetrisSoftController: SoftControllerLayout() {
 
+    /**
+     * DAS is 23 frames out of approx 60.
+     * Auto repeat rate is every 9 frames.
+     * https://tetris.wiki/Tetris_(Game_Boy)#Timings
+     */
+    private val delayedAutoShift = 23f / 60f
+    private val autoRepeatRate = 9f / 60f
+
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { DelayedThrottledButton(delayedAutoShift, autoRepeatRate) },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { DelayedThrottledButton(delayedAutoShift, autoRepeatRate) },
+        ),
+        ButtonDefinition(
+            Buttons.ROTATE_CW,
+            { sprites -> sprites.buttonIcons.rotate_clockwise },
+            listOf(Input.Keys.A, Input.Keys.UP),
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.ROTATE_CCW,
+            { sprites -> sprites.buttonIcons.rotate_counter_clockwise },
+            Input.Keys.S,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.DOWN,
+            { sprites -> sprites.buttonIcons.down },
+            Input.Keys.DOWN,
+            { ThrottledButton(1 / 20f) },
+        ),
+        ButtonDefinition(
+            Buttons.DROP,
+            { sprites -> sprites.buttonIcons.drop },
+            Input.Keys.SPACE,
+            { SingleShotButton() },
+        ),
+    )
+
     fun getIcons(sprites: UiAssets.Sprites) = mapOf(
         Buttons.LEFT to sprites.buttonIcons.left,
         Buttons.RIGHT to sprites.buttonIcons.right,
         Buttons.ROTATE_CW to sprites.buttonIcons.rotate_clockwise,
         Buttons.ROTATE_CCW to sprites.buttonIcons.rotate_counter_clockwise,
         Buttons.DROP to sprites.buttonIcons.drop,
+        Buttons.DOWN to sprites.buttonIcons.down,
     )
 
     override fun getLayouts() = listOf(
         """
-        [      ][       ][    ][            ][   drop    ]
+        [      ][       ][    ][   down     ][   drop    ]
         [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
         """,
 
         """
         [      ][       ][    ][ rotate_ccw ][ rotate_cw ]
-        [ left ][ right ][<-->][            ][   drop    ]
+        [ left ][ right ][<-->][   down     ][   drop    ]
         """,
 
         """
         [ left ][ right ][<-->][            ][           ]
-        [ drop ][       ][    ][ rotate_ccw ][ rotate_cw ]
+        [ drop ][ down  ][    ][ rotate_ccw ][ rotate_cw ]
         """,
 
         """
         [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
-        [ drop ][       ][    ][            ][           ]
+        [ drop ][ down  ][    ][            ][           ]
         """,
     )
 
@@ -362,6 +478,7 @@ class TetrisSoftController: SoftControllerLayout() {
         const val ROTATE_CW = "rotate_cw"
         const val ROTATE_CCW = "rotate_ccw"
         const val DROP = "drop"
+        const val DOWN = "down"
     }
 
 }
