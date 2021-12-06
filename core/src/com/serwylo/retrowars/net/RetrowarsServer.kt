@@ -483,8 +483,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             id
         }
 
-        val game = if (room.players.isEmpty()) Games.missileCommand else Games.tempest
-        val player = Player(playerId, game.id, room.statusForNewPlayer())
+        val player = Player(playerId, randomGame(), room.statusForNewPlayer())
 
         connection.player = player
 
