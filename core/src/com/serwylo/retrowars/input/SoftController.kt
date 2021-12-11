@@ -188,26 +188,34 @@ interface ControllerButton {
 
 class ContinuousPressButton: ControllerButton {
 
-    private var isPressed = false
+    private var state = State.Released
 
     override fun softKeyPress() {
-        isPressed = true
+        state = State.SoftKeyPressed
     }
 
     override fun softKeyRelease() {
-        isPressed = false
+        if (state == State.SoftKeyPressed) {
+            state = State.Released
+        }
     }
 
     override fun keyPress() {
-        isPressed = true
+        state = State.KeyPressed
     }
 
     override fun keyRelease() {
-        isPressed = false
+        if (state == State.KeyPressed) {
+            state = State.Released
+        }
     }
 
-    override fun trigger(): Boolean {
-        return isPressed
+    override fun trigger() = state == State.KeyPressed || state == State.SoftKeyPressed
+
+    enum class State {
+        SoftKeyPressed,
+        KeyPressed,
+        Released,
     }
 
 }
@@ -368,11 +376,31 @@ class SnakeSoftController: SoftControllerLayout() {
 }
 
 class AsteroidsSoftController: SoftControllerLayout() {
-    fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.THRUST to sprites.buttonIcons.thrust,
-        Buttons.FIRE to sprites.buttonIcons.fire,
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.THRUST,
+            { sprites -> sprites.buttonIcons.thrust },
+            Input.Keys.UP,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.FIRE,
+            { sprites -> sprites.buttonIcons.fire },
+            Input.Keys.SPACE,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { ContinuousPressButton() },
+        ),
     )
 
     override fun getLayouts() = listOf(
@@ -439,15 +467,6 @@ class TetrisSoftController: SoftControllerLayout() {
             Input.Keys.SPACE,
             { SingleShotButton() },
         ),
-    )
-
-    fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
-        Buttons.ROTATE_CW to sprites.buttonIcons.rotate_clockwise,
-        Buttons.ROTATE_CCW to sprites.buttonIcons.rotate_counter_clockwise,
-        Buttons.DROP to sprites.buttonIcons.drop,
-        Buttons.DOWN to sprites.buttonIcons.down,
     )
 
     override fun getLayouts() = listOf(

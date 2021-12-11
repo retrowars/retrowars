@@ -45,11 +45,13 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     override fun updateGame(delta: Float) {
         state.timer += delta
 
+        controller!!.update(delta)
+
         if (getState() == State.Playing) {
-            state.ship.left = controller!!.isPressed(AsteroidsSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-            state.ship.right = controller!!.isPressed(AsteroidsSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-            state.ship.shooting = controller!!.isPressed(AsteroidsSoftController.Buttons.FIRE) || Gdx.input.isKeyPressed(Input.Keys.SPACE)
-            state.ship.thrust = controller!!.isPressed(AsteroidsSoftController.Buttons.THRUST) || Gdx.input.isKeyPressed(Input.Keys.UP)
+            state.ship.left = controller.trigger(AsteroidsSoftController.Buttons.LEFT)
+            state.ship.right = controller.trigger(AsteroidsSoftController.Buttons.RIGHT)
+            state.ship.shooting = controller.trigger(AsteroidsSoftController.Buttons.FIRE)
+            state.ship.thrust = controller.trigger(AsteroidsSoftController.Buttons.THRUST)
         }
 
         updateEntities(delta)
