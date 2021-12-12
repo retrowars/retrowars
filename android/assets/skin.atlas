@@ -60,28 +60,28 @@ button.locked
   index: -1
 checkbox
   rotate: false
-  xy: 310, 145
+  xy: 611, 678
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 checkbox-over
   rotate: false
-  xy: 611, 678
+  xy: 673, 748
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 checkbox-pressed
   rotate: false
-  xy: 673, 748
+  xy: 509, 490
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 checkbox-pressed-over
   rotate: false
-  xy: 509, 490
+  xy: 208, 98
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
@@ -125,21 +125,21 @@ list
   index: -1
 minus
   rotate: false
-  xy: 509, 470
+  xy: 561, 582
   size: 18, 18
   orig: 18, 18
   offset: 0, 0
   index: -1
 plus
   rotate: false
-  xy: 561, 582
+  xy: 924, 934
   size: 18, 18
   orig: 18, 18
   offset: 0, 0
   index: -1
 progress-bar
   rotate: false
-  xy: 509, 385
+  xy: 509, 379
   size: 9, 37
   split: 0, 0, 0, 23
   pad: 0, 0, 0, 0
@@ -205,7 +205,7 @@ radio-over
   index: -1
 radio-pressed
   rotate: false
-  xy: 673, 722
+  xy: 509, 464
   size: 24, 24
   orig: 24, 24
   offset: 0, 0
@@ -228,7 +228,7 @@ scroll-horizontal
   index: -1
 scroll-vertical
   rotate: false
-  xy: 509, 424
+  xy: 509, 418
   size: 15, 44
   split: 7, 7, 11, 11
   pad: 0, 0, 0, 0
@@ -337,7 +337,7 @@ textfield
   index: -1
 textfield-login
   rotate: false
-  xy: 208, 100
+  xy: 561, 602
   size: 29, 30
   split: 18, 3, 0, 29
   pad: 20, 4, 0, 6
@@ -346,7 +346,7 @@ textfield-login
   index: -1
 textfield-login-selected
   rotate: false
-  xy: 561, 602
+  xy: 893, 922
   size: 29, 30
   split: 18, 3, 0, 29
   pad: 20, 4, 0, 6
@@ -355,7 +355,7 @@ textfield-login-selected
   index: -1
 textfield-password
   rotate: false
-  xy: 893, 922
+  xy: 345, 147
   size: 29, 30
   split: 19, 3, 0, 29
   pad: 21, 4, 0, 6
@@ -364,7 +364,7 @@ textfield-password
   index: -1
 textfield-password-selected
   rotate: false
-  xy: 344, 147
+  xy: 673, 716
   size: 29, 30
   split: 20, 3, 0, 29
   pad: 21, 4, 0, 6
@@ -415,6 +415,15 @@ white
 window
   rotate: false
   xy: 561, 634
+  size: 33, 32
+  split: 5, 5, 5, 5
+  pad: 4, 4, 4, 4
+  orig: 33, 32
+  offset: 0, 0
+  index: -1
+window-empty
+  rotate: false
+  xy: 310, 145
   size: 33, 32
   split: 5, 5, 5, 5
   pad: 4, 4, 4, 4

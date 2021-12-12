@@ -77,7 +77,7 @@ class HUD(private val assets: UiAssets) {
         // The "game window" is pure decoration. The actual viewport which aligns with this same
         // amount of space is managed by the game via the [GameViewport].
         val gameWindow = Table()
-        gameWindow.background = assets.getSkin().getDrawable("window")
+        gameWindow.background = assets.getSkin().getDrawable("window-empty")
 
         gameWindow.add(
             Stack(
@@ -90,7 +90,7 @@ class HUD(private val assets: UiAssets) {
         avatars = client?.players?.associateWith { Avatar(it.id, assets) } ?: emptyMap()
 
         val infoWindow = Table().apply {
-            background = assets.getSkin().getDrawable("window")
+            background = assets.getSkin().getDrawable("window-empty")
             pad(UI_SPACE)
 
             row()

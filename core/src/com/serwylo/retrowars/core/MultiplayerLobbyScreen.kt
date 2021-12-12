@@ -271,7 +271,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             ).expandX().colspan(2).spaceBottom(UI_SPACE).left()
 
             row()
-            add(Label("Unsupported.\nPlease upgrade to at least v${AppProperties.appVersionName}.", styles.label.small)).top().left()
+            add(Label("Unsupported.\nPlease upgrade to at least v${server.minSupportedClientVersionName}.", styles.label.small)).top().left()
             add(
                 makeButton("Join", styles) {}.apply {
                     isDisabled = true
@@ -790,7 +790,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             if (client.lastSurvivor == me) {
                 listOf(
                     "You win. You are the sole survivor.\nYou have the highest score. Nobody can catch you.",
-                    "You win. You outlasted your challengers.\nYour score is the best. You win.",
+                    "You win. You outlasted your challengers.\nYour score is the best.",
                     "You win. Your survival skills are superior.\nTheir scores are inferior.",
                 ).random()
             } else {

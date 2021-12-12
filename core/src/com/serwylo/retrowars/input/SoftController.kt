@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.input
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
@@ -12,13 +13,31 @@ import com.serwylo.retrowars.ui.IconButton
 
 abstract class SoftControllerLayout {
     abstract fun getLayouts(): List<String>
-    abstract fun getIcons(sprites: UiAssets.Sprites): Map<String, TextureRegion>
+    open fun getButtons(): List<ButtonDefinition> {
+        return listOf()
+    }
+}
+
+class ButtonDefinition(
+    val name: String,
+    val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
+    val keys: List<Int>,
+    val makeButton: () -> ControllerButton,
+) {
+    constructor(
+        name: String,
+        icon: (sprites: UiAssets.Sprites) -> TextureRegion,
+        key: Int,
+        makeButton: () -> ControllerButton,
+    ): this(name, icon, listOf(key), makeButton)
 }
 
 class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: Int) {
 
     private val table = Table()
-    private val buttons: Map<String, IconButton>
+    private val buttonDefs = layout.getButtons()
+    private val buttonStates = buttonDefs.associateBy({ it.name }, { it.makeButton() })
+    private val buttonActors: Map<String, IconButton>
 
     companion object {
         private const val TAG = "SoftController"
@@ -36,11 +55,11 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
                 }
             }
 
-        val expectedButtons = layout.getIcons(uiAssets.getSprites())
+        val expectedButtons = buttonDefs.map { it.name }
 
-        val missingButtons = expectedButtons.keys.filter { button ->
+        val missingButtons = expectedButtons.filter { buttonName ->
             val found = cellContents.any { row ->
-                row.any { cell -> cell == button }
+                row.any { cell -> cell == buttonName }
             }
 
             !found
@@ -54,7 +73,7 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
         table.bottom().pad(UI_SPACE * 4)
 
-        val buttons = mutableMapOf<String, IconButton>()
+        val actors = mutableMapOf<String, IconButton>()
 
         cellContents.onEach { row ->
 
@@ -72,10 +91,26 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
                 } else {
 
-                    val button = IconButton(uiAssets.getSkin(), expectedButtons[buttonContent]!!)
+                    val buttonDef = buttonDefs.find { it.name == buttonContent } ?: error("Could not find button \"$buttonContent\" in controller layout.")
+                    val button = IconButton(uiAssets.getSkin(), buttonDef.icon(uiAssets.getSprites()))
                     button.addAction(Actions.alpha(0.4f))
                     table.add(button).space(UI_SPACE * 2).size(buttonSize)
-                    buttons[buttonContent] = button
+                    actors[buttonContent] = button
+
+                    val listener = object: ClickListener() {
+
+                        override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                            buttonStates[buttonContent]?.softKeyPress()
+                            return true
+                        }
+
+                        override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                            buttonStates[buttonContent]?.softKeyRelease()
+                        }
+
+                    }
+
+                    button.addListener(listener)
 
                 }
 
@@ -83,7 +118,7 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
         }
 
-        this.buttons = buttons.toMap()
+        this.buttonActors = actors.toMap()
     }
 
     private fun getLayout(layouts: List<String>, index: Int): String = if (layouts.size >= index) {
@@ -95,8 +130,29 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
     fun getActor() = table
 
-    fun isPressed(button: String) = buttons[button]!!.isPressed
+    fun update(delta: Float) {
+        buttonStates.onEach { (name, state) ->
+            val def = buttonDefs.find { it.name == name } ?: error("Cannot update button $name.")
 
+            if (def.keys.any { Gdx.input.isKeyPressed(it) }) {
+                state.keyPress()
+            } else {
+                state.keyRelease()
+            }
+
+            state.update(delta)
+        }
+    }
+
+    // TODO: Remove
+    fun isPressed(button: String) = false
+
+    fun trigger(button: String): Boolean {
+        val state = buttonStates[button] ?: error("Could not find button \"$button\".")
+        return state.trigger()
+    }
+
+    // TODO: Make private.
     fun listen(button: String, touchDown: () -> Unit, touchUp: () -> Unit) {
 
         val listener = object: ClickListener() {
@@ -112,8 +168,149 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
         }
 
-        buttons[button]!!.addListener(listener)
+        buttonActors[button]!!.addListener(listener)
 
+    }
+
+}
+
+interface ControllerButton {
+    fun softKeyPress()
+    fun softKeyRelease()
+
+    fun keyPress()
+    fun keyRelease()
+
+    fun trigger(): Boolean
+
+    fun update(delta: Float) {}
+}
+
+class ContinuousPressButton: ControllerButton {
+
+    private var state = State.Released
+
+    override fun softKeyPress() {
+        state = State.SoftKeyPressed
+    }
+
+    override fun softKeyRelease() {
+        if (state == State.SoftKeyPressed) {
+            state = State.Released
+        }
+    }
+
+    override fun keyPress() {
+        state = State.KeyPressed
+    }
+
+    override fun keyRelease() {
+        if (state == State.KeyPressed) {
+            state = State.Released
+        }
+    }
+
+    override fun trigger() = state == State.KeyPressed || state == State.SoftKeyPressed
+
+    enum class State {
+        SoftKeyPressed,
+        KeyPressed,
+        Released,
+    }
+
+}
+
+class SingleShotButton: ControllerButton {
+
+    private var pressed = false
+
+    override fun softKeyPress() {
+        pressed = true
+    }
+
+    override fun softKeyRelease() {
+    }
+
+    override fun keyPress() {
+        pressed = true
+    }
+
+    override fun keyRelease() {
+    }
+
+    override fun trigger(): Boolean {
+        if (pressed) {
+            pressed = false
+            return true
+        }
+
+        return false
+    }
+
+}
+
+class ThrottledButton(timeBetweenTriggers: Float):
+    DelayedThrottledButton(timeBetweenTriggers, timeBetweenTriggers)
+
+open class DelayedThrottledButton(
+    private val timeBeforeSecondTrigger: Float,
+    private val timeBetweenTriggers: Float,
+): ControllerButton {
+
+    private var numTriggers: Int = 0
+    private var pressed: State = State.Released
+    private var timeUntilNextTriggers: Float = 0f
+
+    override fun softKeyPress() {
+        if (pressed == State.Released) {
+            pressed = State.SoftKeyPressed
+        }
+    }
+
+    override fun keyPress() {
+        if (pressed == State.Released) {
+            pressed = State.KeyPressed
+            timeUntilNextTriggers = 0f
+        }
+    }
+
+    override fun softKeyRelease() {
+        if (pressed == State.SoftKeyPressed) {
+            pressed = State.Released
+            timeUntilNextTriggers = 0f
+            numTriggers = 0
+        }
+    }
+
+    override fun keyRelease() {
+        if (pressed == State.KeyPressed) {
+            pressed = State.Released
+            timeUntilNextTriggers = 0f
+            numTriggers = 0
+        }
+    }
+
+    override fun update(delta: Float) {
+        timeUntilNextTriggers -= delta
+    }
+
+    /**
+     * If [timeUntilNextTriggers] has reached zero, then reset it back to [timeBetweenTriggers] and
+     * then return true.
+     */
+    override fun trigger() =
+        if (pressed != State.Released && timeUntilNextTriggers <= 0f) {
+            timeUntilNextTriggers = if (numTriggers == 0) timeBeforeSecondTrigger else timeBetweenTriggers
+            numTriggers ++
+            true
+        } else {
+            false
+        }
+
+    enum class State {
+        SoftKeyPressed,
+        KeyPressed,
+        Released,
     }
 
 }
@@ -164,21 +361,61 @@ class SnakeSoftController: SoftControllerLayout() {
             """,
     )
 
-    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.UP to sprites.buttonIcons.up,
-        Buttons.DOWN to sprites.buttonIcons.down,
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.UP,
+            { sprites -> sprites.buttonIcons.up },
+            Input.Keys.UP,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.DOWN,
+            { sprites -> sprites.buttonIcons.down },
+            Input.Keys.DOWN,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { SingleShotButton() },
+        ),
     )
 
 }
 
 class AsteroidsSoftController: SoftControllerLayout() {
-    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.THRUST to sprites.buttonIcons.thrust,
-        Buttons.FIRE to sprites.buttonIcons.fire,
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.THRUST,
+            { sprites -> sprites.buttonIcons.thrust },
+            Input.Keys.UP,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.FIRE,
+            { sprites -> sprites.buttonIcons.fire },
+            Input.Keys.SPACE,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { ContinuousPressButton() },
+        ),
     )
 
     override fun getLayouts() = listOf(
@@ -200,33 +437,72 @@ class AsteroidsSoftController: SoftControllerLayout() {
 
 class TetrisSoftController: SoftControllerLayout() {
 
-    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
-        Buttons.ROTATE_CW to sprites.buttonIcons.rotate_clockwise,
-        Buttons.ROTATE_CCW to sprites.buttonIcons.rotate_counter_clockwise,
-        Buttons.DROP to sprites.buttonIcons.drop,
+    /**
+     * DAS is 23 frames out of approx 60.
+     * Auto repeat rate is every 9 frames.
+     * https://tetris.wiki/Tetris_(Game_Boy)#Timings
+     */
+    private val delayedAutoShift = 23f / 60f
+    private val autoRepeatRate = 9f / 60f
+
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { DelayedThrottledButton(delayedAutoShift, autoRepeatRate) },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { DelayedThrottledButton(delayedAutoShift, autoRepeatRate) },
+        ),
+        ButtonDefinition(
+            Buttons.ROTATE_CW,
+            { sprites -> sprites.buttonIcons.rotate_clockwise },
+            listOf(Input.Keys.A, Input.Keys.UP),
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.ROTATE_CCW,
+            { sprites -> sprites.buttonIcons.rotate_counter_clockwise },
+            Input.Keys.S,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.DOWN,
+            { sprites -> sprites.buttonIcons.down },
+            Input.Keys.DOWN,
+            { ThrottledButton(1 / 20f) },
+        ),
+        ButtonDefinition(
+            Buttons.DROP,
+            { sprites -> sprites.buttonIcons.drop },
+            Input.Keys.SPACE,
+            { SingleShotButton() },
+        ),
     )
 
     override fun getLayouts() = listOf(
         """
-        [      ][       ][    ][            ][   drop    ]
+        [      ][       ][    ][   down     ][   drop    ]
         [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
         """,
 
         """
         [      ][       ][    ][ rotate_ccw ][ rotate_cw ]
-        [ left ][ right ][<-->][            ][   drop    ]
+        [ left ][ right ][<-->][   down     ][   drop    ]
         """,
 
         """
         [ left ][ right ][<-->][            ][           ]
-        [ drop ][       ][    ][ rotate_ccw ][ rotate_cw ]
+        [ drop ][ down  ][    ][ rotate_ccw ][ rotate_cw ]
         """,
 
         """
         [ left ][ right ][<-->][ rotate_ccw ][ rotate_cw ]
-        [ drop ][       ][    ][            ][           ]
+        [ drop ][ down  ][    ][            ][           ]
         """,
     )
 
@@ -236,16 +512,32 @@ class TetrisSoftController: SoftControllerLayout() {
         const val ROTATE_CW = "rotate_cw"
         const val ROTATE_CCW = "rotate_ccw"
         const val DROP = "drop"
+        const val DOWN = "down"
     }
 
 }
 
 class TempestSoftController: SoftControllerLayout() {
 
-    override fun getIcons(sprites: UiAssets.Sprites) = mapOf(
-        Buttons.MOVE_CLOCKWISE to sprites.buttonIcons.rotate_clockwise,
-        Buttons.MOVE_COUNTER_CLOCKWISE to sprites.buttonIcons.rotate_counter_clockwise,
-        Buttons.FIRE to sprites.buttonIcons.fire,
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.MOVE_CLOCKWISE,
+            { sprites -> sprites.buttonIcons.rotate_clockwise },
+            Input.Keys.RIGHT,
+            { ThrottledButton(0.1f) },
+        ),
+        ButtonDefinition(
+            Buttons.MOVE_COUNTER_CLOCKWISE,
+            { sprites -> sprites.buttonIcons.rotate_counter_clockwise },
+            Input.Keys.LEFT,
+            { ThrottledButton(0.1f) },
+        ),
+        ButtonDefinition(
+            Buttons.FIRE,
+            { sprites -> sprites.buttonIcons.fire },
+            Input.Keys.SPACE,
+            { ThrottledButton(1 / 20f) },
+        ),
     )
 
     override fun getLayouts() = listOf(

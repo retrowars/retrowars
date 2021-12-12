@@ -9,8 +9,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
+import com.serwylo.retrowars.games.tempest.Direction
 import com.serwylo.retrowars.games.tetris.entities.Tetronimo
 import com.serwylo.retrowars.games.tetris.entities.Tetronimos
+import com.serwylo.retrowars.input.TempestSoftController
 import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
@@ -27,29 +29,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
     init {
-
-        controller!!.listen(TetrisSoftController.Buttons.LEFT,
-            { state.moveLeft = if (state.moveLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.moveLeft = ButtonState.Unpressed })
-
-        controller!!.listen(TetrisSoftController.Buttons.RIGHT,
-            { state.moveRight = if (state.moveRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.moveRight = ButtonState.Unpressed })
-
-        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CCW,
-            { state.rotateLeft = if (state.rotateLeft == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.rotateLeft = ButtonState.Unpressed })
-
-        controller!!.listen(TetrisSoftController.Buttons.ROTATE_CW,
-            { state.rotateRight = if (state.rotateRight == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.rotateRight = ButtonState.Unpressed })
-
-        controller!!.listen(TetrisSoftController.Buttons.DROP,
-            { state.drop = if (state.drop == ButtonState.Unpressed) ButtonState.JustPressed else ButtonState.Held },
-            { state.drop = ButtonState.Unpressed })
-
         addGameScoreToHUD(linesLabel)
-
     }
 
     override fun show() {
@@ -63,7 +43,8 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
 
         state.timer += delta
 
-        recordInput()
+        controller?.update(delta)
+
         moveLaterally()
         rotate()
 
@@ -76,52 +57,19 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
         }
 
         clearLines()
-        resetInput()
 
-    }
-
-    private fun recordInput() {
-
-        // TODO: Holding a key should result in a single action, then a pause, then continued movement.
-        //       This is referred to as Delayed Auto Shift (DAS) and is extremely well documented:
-        //       https://harddrop.com/wiki/DAS
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
-            state.moveLeft = ButtonState.JustPressed
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            state.moveRight = ButtonState.JustPressed
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.UP) || Gdx.input.isKeyJustPressed(Input.Keys.A)) {
-            state.rotateLeft = ButtonState.JustPressed
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
-            state.rotateRight = ButtonState.JustPressed
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
-            state.drop = ButtonState.JustPressed
-        }
-
-    }
-
-    private fun resetInput() {
-        state.moveLeft = ButtonState.Unpressed
-        state.moveRight = ButtonState.Unpressed
-        state.rotateLeft = ButtonState.Unpressed
-        state.rotateRight = ButtonState.Unpressed
-        state.drop = ButtonState.Unpressed
     }
 
     private fun moveLaterally() {
-        if (state.moveLeft == ButtonState.JustPressed && state.moveRight == ButtonState.Unpressed && isLegalMove(state.currentPiece, state.currentX - 1, state.currentY)) {
+
+        if (controller!!.trigger(TetrisSoftController.Buttons.LEFT) && isLegalMove(state.currentPiece, state.currentX - 1, state.currentY)) {
             state.currentX --
-        } else if (state.moveRight == ButtonState.JustPressed && state.moveLeft == ButtonState.Unpressed && isLegalMove(state.currentPiece, state.currentX + 1, state.currentY)) {
+        }
+
+        if (controller.trigger(TetrisSoftController.Buttons.RIGHT) && isLegalMove(state.currentPiece, state.currentX + 1, state.currentY)) {
             state.currentX ++
         }
+
     }
 
     private fun rotate() {
@@ -129,14 +77,10 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
         val n = state.currentPieceRotations.size
         var nextPiece: Tetronimo? = null
 
-        if (state.rotateLeft == ButtonState.JustPressed && state.rotateRight == ButtonState.Unpressed) {
-
+        if (controller!!.trigger(TetrisSoftController.Buttons.ROTATE_CW)) {
             nextPiece = state.currentPieceRotations[(i + n - 1) % n] // Add n to make sure we don't go below zero
-
-        } else if (state.rotateRight == ButtonState.JustPressed && state.rotateLeft == ButtonState.Unpressed) {
-
+        } else if (controller.trigger(TetrisSoftController.Buttons.ROTATE_CCW)) {
             nextPiece = state.currentPieceRotations[(i + 1) % n]
-
         }
 
         if (nextPiece != null && isLegalMove(nextPiece, state.currentX, state.currentY)) {
@@ -148,7 +92,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
      * Return false if the game has ended due to this piece dropping and a new piece spawning.
      */
     private fun drop(): Boolean {
-        if (state.drop != ButtonState.JustPressed) {
+        if (!controller!!.trigger(TetrisSoftController.Buttons.DROP)) {
             return true
         }
 
@@ -193,16 +137,21 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
     }
 
     /**
+     * We move down either because the player is holding the "down" button, or because a certain
+     * time has passed and gravitiy is ready to pull it down.
+     *
      * Return false if the game ends due to the piece moving down, being placed in the grid, and a
      * new tetronimo spawning above the top row.
      */
     private fun moveDown(): Boolean {
-
-        if (state.timer < state.nextTimeStep) {
+        val isPressingDown = controller!!.trigger(TetrisSoftController.Buttons.DOWN)
+        if (!isPressingDown && state.timer < state.nextTimeStep) {
             return true
         }
 
-        state.nextTimeStep = state.nextTimeStep + state.timeStep()
+        if (!isPressingDown && state.timer >= state.nextTimeStep) {
+            state.nextTimeStep = state.nextTimeStep + state.timeStep()
+        }
 
         if (isLegalMove(state.currentPiece, state.currentX, state.currentY + 1)) {
 

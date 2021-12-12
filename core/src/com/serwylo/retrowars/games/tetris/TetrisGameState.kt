@@ -78,22 +78,10 @@ class TetrisGameState() {
 
     var nextPieceRotations: TetronimoOrientations = Tetronimos.random()
 
-    var moveLeft = ButtonState.Unpressed
-    var moveRight = ButtonState.Unpressed
-    var rotateLeft = ButtonState.Unpressed
-    var rotateRight = ButtonState.Unpressed
-    var drop = ButtonState.Unpressed
-
 }
 
 enum class CellState {
     Empty,
     Full,
     FullFromEnemy,
-}
-
-enum class ButtonState {
-    Unpressed,
-    JustPressed,
-    Held,
 }

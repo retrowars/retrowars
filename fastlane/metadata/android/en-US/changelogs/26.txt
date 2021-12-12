@@ -1,0 +1,8 @@
+Improvements:
+ * Improved contrast during gameplay.
+ * Tetris supports holding left + right buttons and a new soft drop button.
+
+Fixes:
+ * Correctly report required client version when connecting to newer servers.
+
+Please donate to support further development

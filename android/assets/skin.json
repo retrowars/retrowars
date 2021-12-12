@@ -448,5 +448,9 @@ WindowStyle: {
 		background: window-transparent-text-background
 		titleFont: font_medium
 	}
+	window-empty: {
+		parent: default
+		background: window-empty
+	}
 }
 }

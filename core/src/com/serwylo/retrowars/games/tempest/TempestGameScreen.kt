@@ -39,21 +39,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
     init {
-        controller!!.listen(
-            TempestSoftController.Buttons.MOVE_COUNTER_CLOCKWISE,
-            { state.moveCounterClockwise.softKeyPress() },
-            { state.moveCounterClockwise.softKeyRelease() })
-
-        controller.listen(
-            TempestSoftController.Buttons.MOVE_CLOCKWISE,
-            { state.moveClockwise.softKeyPress() },
-            { state.moveClockwise.softKeyRelease() })
-
-        controller.listen(
-            TempestSoftController.Buttons.FIRE,
-            { state.fire.softKeyPress() },
-            { state.fire.softKeyRelease() })
-
         addGameScoreToHUD(lifeContainer)
 
         initEnemyPool()
@@ -71,7 +56,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
                 maybeRespawnPlayer()
             } else {
 
-                recordInput(delta)
+                controller?.update(delta)
                 movePlayer()
                 fire()
 
@@ -348,31 +333,6 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         }
     }
 
-    private fun recordInput(delta: Float) {
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            state.moveCounterClockwise.keyPress()
-        } else {
-            state.moveCounterClockwise.keyRelease()
-        }
-
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            state.moveClockwise.keyPress()
-        } else {
-            state.moveClockwise.keyRelease()
-        }
-
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            state.fire.keyPress()
-        } else {
-            state.fire.keyRelease()
-        }
-
-        state.moveCounterClockwise.update(delta)
-        state.moveClockwise.update(delta)
-        state.fire.update(delta)
-    }
-
     private fun moveEnemies(delta: Float) {
         val enemyIt = state.enemies.iterator()
         val toRemove = mutableListOf<Enemy>()
@@ -592,17 +552,18 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun movePlayer() {
-        if (state.moveClockwise.trigger()) {
+        if (controller!!.trigger(TempestSoftController.Buttons.MOVE_CLOCKWISE)) {
             state.playerSegment = state.playerSegment.next(Direction.Clockwise) ?: state.playerSegment
         }
 
-        if (state.moveCounterClockwise.trigger()) {
+        if (controller.trigger(TempestSoftController.Buttons.MOVE_COUNTER_CLOCKWISE)) {
             state.playerSegment = state.playerSegment.next(Direction.CounterClockwise) ?: state.playerSegment
         }
     }
 
     private fun fire() {
-        if (!state.fire.trigger() || state.bullets.size >= TempestGameState.MAX_PLAYER_BULLETS_AT_ONCE) {
+        val isFiring = controller!!.trigger(TempestSoftController.Buttons.FIRE)
+        if (!isFiring || state.bullets.size >= TempestGameState.MAX_PLAYER_BULLETS_AT_ONCE) {
             return
         }
 
