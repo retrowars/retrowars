@@ -222,30 +222,25 @@ class ContinuousPressButton: ControllerButton {
 
 class SingleShotButton: ControllerButton {
 
-    private var isPressed = false
-    private var hasTriggered = false
+    private var pressed = false
 
     override fun softKeyPress() {
-        isPressed = true
+        pressed = true
     }
 
     override fun softKeyRelease() {
-        isPressed = false
-        hasTriggered = false
     }
 
     override fun keyPress() {
-        isPressed = true
+        pressed = true
     }
 
     override fun keyRelease() {
-        isPressed = false
-        hasTriggered = false
     }
 
     override fun trigger(): Boolean {
-        if (isPressed && !hasTriggered) {
-            hasTriggered = true
+        if (pressed) {
+            pressed = false
             return true
         }
 
@@ -366,12 +361,32 @@ class SnakeSoftController: SoftControllerLayout() {
             """,
     )
 
-    /*override fun getButtons(sprites: UiAssets.Sprites) = listOf(
-        Buttons.UP to sprites.buttonIcons.up,
-        Buttons.DOWN to sprites.buttonIcons.down,
-        Buttons.LEFT to sprites.buttonIcons.left,
-        Buttons.RIGHT to sprites.buttonIcons.right,
-    )*/
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.UP,
+            { sprites -> sprites.buttonIcons.up },
+            Input.Keys.UP,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.DOWN,
+            { sprites -> sprites.buttonIcons.down },
+            Input.Keys.DOWN,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { SingleShotButton() },
+        ),
+    )
 
 }
 

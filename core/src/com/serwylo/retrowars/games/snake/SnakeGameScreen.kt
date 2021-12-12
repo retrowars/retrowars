@@ -33,17 +33,10 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat 
 
         state.timer += delta
 
-        recordInput()
+        controller!!.update(delta)
         decideNextDirection()
         moveSnake()
 
-    }
-
-    private fun recordInput() {
-        state.left = controller!!.isPressed(SnakeSoftController.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        state.right = controller!!.isPressed(SnakeSoftController.Buttons.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        state.up = controller!!.isPressed(SnakeSoftController.Buttons.UP) || Gdx.input.isKeyPressed(Input.Keys.UP)
-        state.down = controller!!.isPressed(SnakeSoftController.Buttons.DOWN) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
     }
 
     /**
@@ -53,13 +46,18 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat 
      * snake actually moves.
       */
     private fun decideNextDirection() {
-        if (state.left && state.currentDirection != Direction.RIGHT && !state.right && !state.up && !state.down) {
+        val left = controller!!.trigger(SnakeSoftController.Buttons.LEFT)
+        val right = controller.trigger(SnakeSoftController.Buttons.RIGHT)
+        val up = controller.trigger(SnakeSoftController.Buttons.UP)
+        val down = controller.trigger(SnakeSoftController.Buttons.DOWN)
+
+        if (left && state.currentDirection != Direction.RIGHT && !right && !up && !down) {
             state.nextDirection = Direction.LEFT
-        } else if (state.right && state.currentDirection != Direction.LEFT && !state.left && !state.up && !state.down) {
+        } else if (right && state.currentDirection != Direction.LEFT && !left && !up && !down) {
             state.nextDirection = Direction.RIGHT
-        } else if (state.up && state.currentDirection != Direction.DOWN && !state.left && !state.right && !state.down) {
+        } else if (up && state.currentDirection != Direction.DOWN && !left && !right && !down) {
             state.nextDirection = Direction.UP
-        } else if (state.down && state.currentDirection != Direction.UP && !state.left && !state.right && !state.up) {
+        } else if (down && state.currentDirection != Direction.UP && !left && !right && !up) {
             state.nextDirection = Direction.DOWN
         }
     }
@@ -80,7 +78,6 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat 
             return
         }
 
-        Gdx.app.log(TAG, "Moving ${state.currentDirection} from $currentHead -> $newHead")
         state.snake.addFirst(newHead)
 
         if (newHead == state.food) {

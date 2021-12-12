@@ -35,11 +35,6 @@ class SnakeGameState {
 
     var food: Cell = cells[CELLS_HIGH / 2][CELLS_WIDE * 5 / 6]
 
-    var left = false
-    var right = false
-    var up = false
-    var down = false
-
     var currentDirection = Direction.RIGHT
     var nextDirection = Direction.RIGHT
 
