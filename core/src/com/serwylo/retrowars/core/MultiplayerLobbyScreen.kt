@@ -790,7 +790,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             if (client.lastSurvivor == me) {
                 listOf(
                     "You win. You are the sole survivor.\nYou have the highest score. Nobody can catch you.",
-                    "You win. You outlasted your challengers.\nYour score is the best. You win.",
+                    "You win. You outlasted your challengers.\nYour score is the best.",
                     "You win. Your survival skills are superior.\nTheir scores are inferior.",
                 ).random()
             } else {
