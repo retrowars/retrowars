@@ -1,0 +1,4 @@
+Fixes:
+ * Tetris rotates pieces the correct direction again.
+
+Please donate to support further development.

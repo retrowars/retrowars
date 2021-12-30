@@ -77,9 +77,9 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "Fi
         val n = state.currentPieceRotations.size
         var nextPiece: Tetronimo? = null
 
-        if (controller!!.trigger(TetrisSoftController.Buttons.ROTATE_CW)) {
+        if (controller!!.trigger(TetrisSoftController.Buttons.ROTATE_CCW)) {
             nextPiece = state.currentPieceRotations[(i + n - 1) % n] // Add n to make sure we don't go below zero
-        } else if (controller.trigger(TetrisSoftController.Buttons.ROTATE_CCW)) {
+        } else if (controller.trigger(TetrisSoftController.Buttons.ROTATE_CW)) {
             nextPiece = state.currentPieceRotations[(i + 1) % n]
         }
 
