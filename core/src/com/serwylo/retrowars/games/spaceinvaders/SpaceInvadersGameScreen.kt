@@ -59,7 +59,19 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun updateEntities(delta: Float) {
+        val distance = SpaceInvadersGameState.PLAYER_SPEED * delta
 
+        if (state.isMovingLeft) {
+            if (state.playerX - distance > state.padding + state.cellWidth / 2) {
+                state.playerX -= distance
+            }
+        }
+
+        if (state.isMovingRight) {
+            if (state.playerX + distance < viewport.worldWidth - state.padding - state.cellWidth / 2) {
+                state.playerX += distance
+            }
+        }
     }
 
 }

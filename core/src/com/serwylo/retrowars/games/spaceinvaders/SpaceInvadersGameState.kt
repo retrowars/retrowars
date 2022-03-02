@@ -3,6 +3,7 @@ package com.serwylo.retrowars.games.spaceinvaders
 class SpaceInvadersGameState(worldWidth: Float, worldHeight: Float) {
 
     companion object {
+        const val PLAYER_SPEED = 100f
     }
 
     val cellWidth = worldWidth / 20f
