@@ -30,9 +30,12 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             state.isMovingLeft = controller.trigger(SpaceInvadersSoftController.Buttons.LEFT)
             state.isMovingRight = controller.trigger(SpaceInvadersSoftController.Buttons.RIGHT)
             state.isFiring = controller.trigger(SpaceInvadersSoftController.Buttons.FIRE)
+
+            updatePlayer(delta)
         }
 
-        updatePlayer(delta)
+        updateBullets(delta)
+
         updateEnemies(delta)
     }
 
@@ -59,6 +62,15 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 )
             }
         }
+
+        state.playerBullet?.also { bullet ->
+            r.rect(
+                bullet.x - state.padding / 4f,
+                bullet.y,
+                state.padding / 2f,
+                state.padding * 2f,
+            )
+        }
         r.end()
     }
 
@@ -68,6 +80,16 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     override fun onReceiveDamage(strength: Int) {
 
+    }
+
+    private fun updateBullets(delta: Float) {
+        state.playerBullet?.also { bullet ->
+            bullet.y += SpaceInvadersGameState.PLAYER_BULLET_SPEED * delta
+
+            if (bullet.y >= viewport.worldHeight) {
+                state.playerBullet = null
+            }
+        }
     }
 
     private fun updateEnemies(delta: Float) {
@@ -134,6 +156,12 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun updatePlayer(delta: Float) {
+
+        if (state.isFiring && state.playerBullet == null) {
+            state.playerBullet = Bullet(state.playerX, state.padding + state.cellHeight)
+            state.isFiring = false
+        }
+
         val distance = SpaceInvadersGameState.PLAYER_SPEED * delta
 
         if (state.isMovingLeft) {

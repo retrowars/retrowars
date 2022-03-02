@@ -1,11 +1,15 @@
 package com.serwylo.retrowars.games.spaceinvaders
 
+import java.util.*
+
 
 class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) {
 
     companion object {
         const val PLAYER_SPEED = 100f
         const val TIME_BETWEEN_ENEMY_STEP = 0.05f
+        const val PLAYER_BULLET_SPEED = 150f
+        const val ENEMY_BULLET_SPEED = 150f
     }
 
     val cellWidth = worldWidth / 20f
@@ -21,6 +25,9 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     var isMovingLeft = false
     var isMovingRight = false
     var isFiring = false
+
+    var playerBullet: Bullet? = null
+    val enemyBullets = LinkedList<Bullet>()
 
     var enemyDirection = Direction.Right
 
@@ -40,6 +47,11 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 }
 
 data class Enemy(
+    var x: Float,
+    var y: Float,
+)
+
+data class Bullet(
     var x: Float,
     var y: Float,
 )
