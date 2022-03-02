@@ -8,6 +8,7 @@ import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.spaceinvaders.SpaceInvadersGameScreen
 import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
 import com.serwylo.retrowars.input.*
@@ -54,6 +55,14 @@ object Games {
         { app -> TetrisGameScreen(app) }
     )
 
+    val spaceInvaders = GameDetails(
+        "space-invaders",
+        isAvailable = true,
+        SpaceInvadersSoftController(),
+        { s -> s.icons.unknown },
+        { app -> SpaceInvadersGameScreen(app) }
+    )
+
     val other = UnavailableGameDetails("other")
 
     val all = listOf(
@@ -62,6 +71,7 @@ object Games {
         snake,
         tempest,
         tetris,
+        spaceInvaders,
         other,
     )
 
