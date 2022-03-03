@@ -16,6 +16,8 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     val cellWidth = worldWidth / 20f
     val cellHeight = worldHeight / 20f
     val padding = cellWidth / 5f
+    val bulletHeight = padding * 2
+    val bulletWidth = padding / 2
     val enemyStepSize = cellWidth / 4
 
     var timer = 0f
@@ -39,7 +41,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     private fun spawnEnemies() = (0 until 5).map { y ->
         EnemyRow(
             y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
-            enemies = (0 until ENEMIES_PER_ROW).map { x -> Enemy(x * (padding + cellWidth) + padding,) },
+            enemies = (0 until ENEMIES_PER_ROW).map { x -> Enemy(x * (padding + cellWidth) + padding) }.toMutableList(),
         )
     }
 
@@ -47,7 +49,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
 data class EnemyRow(
     var y: Float,
-    val enemies: List<Enemy>,
+    val enemies: MutableList<Enemy>,
 )
 
 data class Enemy(

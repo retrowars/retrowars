@@ -65,10 +65,10 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         state.playerBullet?.also { bullet ->
             r.rect(
-                bullet.x - state.padding / 4f,
+                bullet.x - state.bulletWidth / 2,
                 bullet.y,
-                state.padding / 2f,
-                state.padding * 2f,
+                state.bulletWidth,
+                state.bulletHeight,
             )
         }
         r.end()
@@ -89,7 +89,34 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             if (bullet.y >= viewport.worldHeight) {
                 state.playerBullet = null
             }
+
+            if (checkPlayerBulletCollision(bullet)) {
+                state.playerBullet = null
+            }
         }
+    }
+
+    private fun checkPlayerBulletCollision(bullet: Bullet): Boolean {
+        val collisionRows = state.enemies.filter { row ->
+            bullet.y + state.bulletHeight > row.y &&
+                    bullet.y < row.y + state.cellHeight
+        }
+
+        for (row in collisionRows) {
+            val it = row.enemies.iterator()
+            while (it.hasNext()) {
+                val enemy = it.next()
+
+                if (enemy.x + state.cellWidth > bullet.x - state.bulletWidth &&
+                    enemy.x < bullet.x + state.bulletWidth) {
+
+                    it.remove()
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     private fun updateEnemies(delta: Float) {
