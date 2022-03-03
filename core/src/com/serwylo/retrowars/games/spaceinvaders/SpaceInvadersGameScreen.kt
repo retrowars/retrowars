@@ -52,11 +52,11 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             state.cellHeight,
         )
 
-        state.enemies.forEach { enemyRow ->
-            enemyRow.forEach { enemy ->
+        state.enemies.forEach { row ->
+            row.enemies.forEach { enemy ->
                 r.rect(
                     enemy.x,
-                    enemy.y,
+                    row.y,
                     state.cellWidth,
                     state.cellHeight,
                 )
@@ -103,14 +103,14 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
 
         // Skip empty rows
-        while (state.movingRow >= 0 && state.enemies[state.movingRow].isEmpty()) {
+        while (state.movingRow >= 0 && state.enemies[state.movingRow].enemies.isEmpty()) {
             state.movingRow --
         }
 
         if (state.movingRow == -1) {
 
             if (!shouldEnemiesDrop()) {
-                state.movingRow = state.enemies.indexOfLast { it.isNotEmpty() }
+                state.movingRow = state.enemies.indexOfLast { it.enemies.isNotEmpty() }
             } else {
                 dropEnemyRow()
 
@@ -120,23 +120,27 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         }
 
-        shuffleEnemyRowAcross()
+        val row = state.enemies.getOrNull(state.movingRow)
+        if (row != null) {
+            shuffleEnemyRowAcross(row)
+        }
+
         state.movingRow --
 
     }
 
     private fun shouldEnemiesDrop() = state.enemies.any { row ->
         if (state.enemyDirection == Direction.Right) {
-            val x = row.lastOrNull()?.x ?: Float.MIN_VALUE
+            val x = row.enemies.lastOrNull()?.x ?: Float.MIN_VALUE
             x + state.cellWidth + state.padding > viewport.worldWidth - state.padding
         } else {
-            val x = row.firstOrNull()?.x ?: Float.MAX_VALUE
+            val x = row.enemies.firstOrNull()?.x ?: Float.MAX_VALUE
             x - state.padding < state.padding
         }
     }
 
-    private fun shuffleEnemyRowAcross() {
-        state.enemies.getOrNull(state.movingRow)?.forEach { enemy ->
+    private fun shuffleEnemyRowAcross(row: EnemyRow) {
+        row.enemies.forEach { enemy ->
             if (state.enemyDirection == Direction.Right) {
                 enemy.x += state.enemyStepSize
             } else {
@@ -147,9 +151,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun dropEnemyRow() {
         state.enemies.forEach { row ->
-            row.forEach { e ->
-                e.y -= state.cellHeight + state.padding
-            }
+            row.y -= state.cellHeight + state.padding
         }
 
         state.enemyDirection = if (state.enemyDirection == Direction.Right) Direction.Left else Direction.Right

@@ -10,6 +10,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
         const val TIME_BETWEEN_ENEMY_STEP = 0.05f
         const val PLAYER_BULLET_SPEED = 150f
         const val ENEMY_BULLET_SPEED = 150f
+        const val ENEMIES_PER_ROW = 11
     }
 
     val cellWidth = worldWidth / 20f
@@ -31,24 +32,26 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
     var enemyDirection = Direction.Right
 
-    var enemies: List<List<Enemy>> = spawnEnemies()
+    var enemies: List<EnemyRow> = spawnEnemies()
 
     var movingRow = enemies.size - 1
 
-        private fun spawnEnemies() = (0 until 5).map { y ->
-        (0 until 11).map { x ->
-            Enemy(
-                x = x * (padding + cellWidth) + padding,
-                y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
-            )
-        }
+    private fun spawnEnemies() = (0 until 5).map { y ->
+        EnemyRow(
+            y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
+            enemies = (0 until ENEMIES_PER_ROW).map { x -> Enemy(x * (padding + cellWidth) + padding,) },
+        )
     }
 
 }
 
+data class EnemyRow(
+    var y: Float,
+    val enemies: List<Enemy>,
+)
+
 data class Enemy(
     var x: Float,
-    var y: Float,
 )
 
 data class Bullet(
