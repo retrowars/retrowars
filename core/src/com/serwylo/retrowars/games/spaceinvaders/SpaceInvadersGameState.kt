@@ -10,7 +10,13 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
         const val TIME_BETWEEN_ENEMY_STEP = 0.05f
         const val PLAYER_BULLET_SPEED = 150f
         const val ENEMY_BULLET_SPEED = 150f
-        const val ENEMIES_PER_ROW = 11
+
+        const val MIN_TIME_BETWEEN_ENEMY_FIRE = 3f
+        const val MAX_TIME_BETWEEN_ENEMY_FIRE = 6f
+        const val MAX_ENEMY_BULLETS_ON_SCREEN = 3
+
+        private const val NUM_ENEMIES_PER_ROW = 11
+        private const val NUM_ENEMY_ROWS = 5
     }
 
     val cellWidth = worldWidth / 20f
@@ -22,6 +28,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
     var timer = 0f
     var timeUntilEnemyStep = TIME_BETWEEN_ENEMY_STEP
+    var timeUntilEnemyFire = (Math.random() * (MAX_TIME_BETWEEN_ENEMY_FIRE - MIN_TIME_BETWEEN_ENEMY_FIRE) + MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
 
     var playerX = worldWidth / 2f
 
@@ -38,10 +45,10 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
     var movingRow = enemies.size - 1
 
-    private fun spawnEnemies() = (0 until 5).map { y ->
+    private fun spawnEnemies() = (0 until NUM_ENEMY_ROWS).map { y ->
         EnemyRow(
             y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
-            enemies = (0 until ENEMIES_PER_ROW).map { x -> Enemy(x * (padding + cellWidth) + padding) }.toMutableList(),
+            enemies = (0 until NUM_ENEMIES_PER_ROW).map { x -> Enemy(x * (padding + cellWidth) + padding) }.toMutableList(),
         )
     }
 

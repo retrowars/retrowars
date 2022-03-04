@@ -34,9 +34,11 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             updatePlayer(delta)
         }
 
+        maybeSpawnEnemyBullet(delta)
+
         updateBullets(delta)
 
-        updateEnemies(delta)
+        moveEnemies(delta)
     }
 
     override fun renderGame(camera: Camera) {
@@ -63,15 +65,18 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             }
         }
 
-        state.playerBullet?.also { bullet ->
-            r.rect(
-                bullet.x - state.bulletWidth / 2,
-                bullet.y,
-                state.bulletWidth,
-                state.bulletHeight,
-            )
-        }
+        state.playerBullet?.also { renderBullet(r, it) }
+        state.enemyBullets.forEach { renderBullet(r, it) }
         r.end()
+    }
+
+    private fun renderBullet(r: ShapeRenderer, bullet: Bullet) {
+        r.rect(
+            bullet.x - state.bulletWidth / 2,
+            bullet.y,
+            state.bulletWidth,
+            state.bulletHeight,
+        )
     }
 
     override fun show() {
@@ -92,6 +97,23 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
             if (checkPlayerBulletCollision(bullet)) {
                 state.playerBullet = null
+            }
+        }
+
+        val it = state.enemyBullets.iterator()
+        while (it.hasNext()) {
+            val bullet = it.next()
+
+            bullet.y -= SpaceInvadersGameState.ENEMY_BULLET_SPEED * delta
+
+            if (bullet.x - state.bulletWidth / 2 < state.playerX + state.cellWidth / 2 &&
+                    bullet.x + state.bulletWidth / 2 > state.playerX - state.cellWidth / 2 &&
+                    bullet.y + state.bulletHeight < state.padding + state.cellWidth) {
+
+                // Player hit
+                it.remove()
+            } else if (bullet.y < state.padding) {
+                it.remove()
             }
         }
     }
@@ -119,7 +141,33 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         return false
     }
 
-    private fun updateEnemies(delta: Float) {
+    private fun maybeSpawnEnemyBullet(delta: Float) {
+
+        state.timeUntilEnemyFire -= delta
+
+        if (state.timeUntilEnemyFire > 0 || state.enemyBullets.size >= SpaceInvadersGameState.MAX_ENEMY_BULLETS_ON_SCREEN) {
+            return
+        }
+
+        state.timeUntilEnemyFire = (Math.random()
+                * (SpaceInvadersGameState.MAX_TIME_BETWEEN_ENEMY_FIRE - SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE)
+                + SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+
+        val row = state.enemies.lastOrNull { it.enemies.isNotEmpty() }
+        row?.enemies?.random()?.also {  toFire ->
+
+            state.enemyBullets.add(
+                Bullet(
+                    x = toFire.x - state.cellWidth / 2,
+                    y = row.y - state.bulletHeight,
+                )
+            )
+
+        }
+
+    }
+
+    private fun moveEnemies(delta: Float) {
 
         state.timeUntilEnemyStep -= delta
 
