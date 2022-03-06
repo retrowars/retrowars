@@ -25,6 +25,20 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
         private const val NUM_ENEMIES_PER_ROW = 11
         private const val NUM_ENEMY_ROWS = 5
 
+        /**
+         * In the original, we have:
+         *  - Top row: 8 pixels wide: https://spaceinvaders.fandom.com/wiki/Squid_(Small_Invader)
+         *  - Middle row: 11 pixels wide: https://spaceinvaders.fandom.com/wiki/Crab_(Medium_Invader)
+         *  - Bottom 2 rows: 12 pixels wide: https://spaceinvaders.fandom.com/wiki/Octopus_(Large_Invader)
+         */
+        private val ROW_WIDTHS = listOf(
+            8f / 12f,
+            11f / 12f,
+            11f / 12f,
+            1f,
+            1f
+        )
+
     }
 
     val cellWidth = worldWidth / 20f
@@ -32,7 +46,11 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     val padding = cellWidth / 5f
     val bulletHeight = padding * 2
     val bulletWidth = padding / 2
-    val enemyStepSize = cellWidth / 4
+
+    /**
+     * 18 steps across per level. Find the remaining space and divide by 18.
+     */
+    val enemyStepSize = (worldWidth - (NUM_ENEMIES_PER_ROW * cellWidth) - ((NUM_ENEMIES_PER_ROW + 1) * padding)) / 18f
 
     /**
      * Just under 1 second to traverse the screen height.
@@ -68,7 +86,14 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     private fun spawnEnemies() = (0 until NUM_ENEMY_ROWS).map { y ->
         EnemyRow(
             y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
-            enemies = (0 until NUM_ENEMIES_PER_ROW).map { x -> Enemy(x * (padding * 1.5f + cellWidth) + padding) }.toMutableList(),
+            enemies = (0 until NUM_ENEMIES_PER_ROW).map { x ->
+                val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
+                val offsetFromCell = (cellWidth - enemyWidth) / 2
+                Enemy(
+                    x = x * (padding * 1.5f + cellWidth) + padding + offsetFromCell,
+                    width = enemyWidth,
+                )
+            }.toMutableList(),
         )
     }
 
@@ -81,6 +106,7 @@ data class EnemyRow(
 
 data class Enemy(
     var x: Float,
+    val width: Float,
 )
 
 data class Bullet(

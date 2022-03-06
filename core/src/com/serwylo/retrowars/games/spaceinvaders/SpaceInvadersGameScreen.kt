@@ -59,7 +59,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 r.rect(
                     enemy.x,
                     row.y,
-                    state.cellWidth,
+                    enemy.width,
                     state.cellHeight,
                 )
             }
