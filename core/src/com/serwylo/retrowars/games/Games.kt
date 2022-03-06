@@ -75,7 +75,19 @@ object Games {
         other,
     )
 
-    val betaInfo = listOf<BetaInfo>()
+    val betaInfo = listOf<BetaInfo>(
+        BetaInfo(
+            spaceInvaders,
+            "https://github.com/retrowars/retrowars/issues/9",
+            """
+            Warning: this is in the earliest of early stages. Future roadmap includes:
+             - Multiplayer support
+             - Defensive barriers
+             - Graphics for aliens
+             - Better enemy movement
+            """.trimIndent()
+        )
+    )
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }
