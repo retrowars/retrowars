@@ -89,7 +89,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun updateBullets(delta: Float) {
         state.playerBullet?.also { bullet ->
-            bullet.y += SpaceInvadersGameState.PLAYER_BULLET_SPEED * delta
+            bullet.y += state.playerBulletSpeed * delta
 
             if (bullet.y >= viewport.worldHeight) {
                 state.playerBullet = null
@@ -104,7 +104,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         while (it.hasNext()) {
             val bullet = it.next()
 
-            bullet.y -= SpaceInvadersGameState.ENEMY_BULLET_SPEED * delta
+            bullet.y -= state.enemyBulletSpeed * delta
 
             if (bullet.x - state.bulletWidth / 2 < state.playerX + state.cellWidth / 2 &&
                     bullet.x + state.bulletWidth / 2 > state.playerX - state.cellWidth / 2 &&
@@ -129,16 +129,23 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             while (it.hasNext()) {
                 val enemy = it.next()
 
-                if (enemy.x + state.cellWidth > bullet.x - state.bulletWidth &&
-                    enemy.x < bullet.x + state.bulletWidth) {
-
+                // Intentionally treat the bullet as 1 dimensional, otherwise it is too hard to
+                // have it travel in between columns of enemies as is often the case in the orignial.
+                if (bullet.x > enemy.x && bullet.x < enemy.x + state.cellWidth) {
                     it.remove()
+
+                    onEnemyHit(enemy)
+
                     return true
                 }
             }
         }
 
         return false
+    }
+
+    private fun onEnemyHit(enemy: Enemy) {
+        increaseScore(SpaceInvadersGameState.SCORE_PER_ENEMY)
     }
 
     private fun maybeSpawnEnemyBullet(delta: Float) {
