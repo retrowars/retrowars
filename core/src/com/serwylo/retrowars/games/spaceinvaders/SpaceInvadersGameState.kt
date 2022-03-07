@@ -15,6 +15,8 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
         const val MAX_TIME_BETWEEN_ENEMY_FIRE = 6f
         const val MAX_ENEMY_BULLETS_ON_SCREEN = 3
 
+        const val TIME_BETWEEN_LEVELS = 1.5f
+
         /**
          * From watching videos of the original space invaders, I can see that a row of enemies
          * shuffles across two enemies at a time, and initially they move once each frame (1/30 sec).
@@ -67,6 +69,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     var timer = 0f
     var timeUntilEnemyStep = TIME_BETWEEN_ENEMY_STEP
     var timeUntilEnemyFire = (Math.random() * (MAX_TIME_BETWEEN_ENEMY_FIRE - MIN_TIME_BETWEEN_ENEMY_FIRE) + MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+    var nextLevelTime = -1f
 
     var playerX = worldWidth / 2f
 
@@ -83,7 +86,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
     var movingRow = enemies.size - 1
 
-    private fun spawnEnemies() = (0 until NUM_ENEMY_ROWS).map { y ->
+    fun spawnEnemies() = (0 until NUM_ENEMY_ROWS).map { y ->
         EnemyRow(
             y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
             enemies = (0 until NUM_ENEMIES_PER_ROW).map { x ->

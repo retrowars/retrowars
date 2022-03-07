@@ -34,11 +34,22 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             updatePlayer(delta)
         }
 
-        maybeSpawnEnemyBullet(delta)
-
         updateBullets(delta)
 
-        moveEnemies(delta)
+        if (state.nextLevelTime > 0) {
+            if (state.timer > state.nextLevelTime) {
+                state.enemies = state.spawnEnemies()
+                state.nextLevelTime = -1f
+                state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
+                state.timeUntilEnemyFire = (Math.random() * (SpaceInvadersGameState.MAX_TIME_BETWEEN_ENEMY_FIRE - SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE) + SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+                state.movingRow = state.enemies.size - 1
+                state.enemyDirection = Direction.Right
+            }
+        } else {
+            maybeSpawnEnemyBullet(delta)
+            moveEnemies(delta)
+        }
+
     }
 
     override fun renderGame(camera: Camera) {
@@ -87,6 +98,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     }
 
+    private fun countEnemies() = state.enemies.fold(0, { acc, row -> acc + row.enemies.size })
+
     private fun updateBullets(delta: Float) {
         state.playerBullet?.also { bullet ->
             bullet.y += state.playerBulletSpeed * delta
@@ -97,6 +110,9 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
             if (checkPlayerBulletCollision(bullet)) {
                 state.playerBullet = null
+                if (countEnemies() == 0) {
+                    state.nextLevelTime = state.timer + SpaceInvadersGameState.TIME_BETWEEN_LEVELS
+                }
             }
         }
 
