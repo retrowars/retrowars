@@ -41,7 +41,9 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             state.isMovingRight = controller.trigger(SpaceInvadersSoftController.Buttons.RIGHT)
             state.isFiring = controller.trigger(SpaceInvadersSoftController.Buttons.FIRE)
 
-            updatePlayer(delta)
+            if (state.nextPlayerRespawnTime <= 0) {
+                updatePlayer(delta)
+            }
 
             if (state.nextPlayerRespawnTime > 0f && state.timer > state.nextPlayerRespawnTime) {
                 state.nextPlayerRespawnTime = -1f
