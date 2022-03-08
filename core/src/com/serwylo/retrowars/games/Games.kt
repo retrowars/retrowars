@@ -59,7 +59,7 @@ object Games {
         "space-invaders",
         isAvailable = true,
         SpaceInvadersSoftController(),
-        { s -> s.icons.unknown },
+        { s -> s.icons.spaceInvaders },
         { app -> SpaceInvadersGameScreen(app) }
     )
 
@@ -78,7 +78,7 @@ object Games {
     val betaInfo = listOf<BetaInfo>(
         BetaInfo(
             spaceInvaders,
-            "https://github.com/retrowars/retrowars/issues/9",
+            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Space%20Invaders,Beta%20Feedback&template=&title=",
             """
             Warning: this is in the earliest of early stages. Future roadmap includes:
              - Multiplayer support
