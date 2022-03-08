@@ -4,9 +4,13 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
+import com.serwylo.retrowars.games.tempest.TempestGameState
 import com.serwylo.retrowars.input.SpaceInvadersSoftController
 
 class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
@@ -21,6 +25,12 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private val state = SpaceInvadersGameState(viewport.worldWidth, viewport.worldHeight)
 
+    private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
+    init {
+        addGameScoreToHUD(lifeContainer)
+    }
+
     override fun updateGame(delta: Float) {
         state.timer += delta
 
@@ -32,6 +42,11 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             state.isFiring = controller.trigger(SpaceInvadersSoftController.Buttons.FIRE)
 
             updatePlayer(delta)
+
+            if (state.nextPlayerRespawnTime > 0f && state.timer > state.nextPlayerRespawnTime) {
+                state.nextPlayerRespawnTime = -1f
+                state.playerX = state.cellWidth + state.padding
+            }
         }
 
         updateBullets(delta)
@@ -41,7 +56,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 state.enemies = state.spawnEnemies()
                 state.nextLevelTime = -1f
                 state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
-                state.timeUntilEnemyFire = (Math.random() * (SpaceInvadersGameState.MAX_TIME_BETWEEN_ENEMY_FIRE - SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE) + SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+                state.timeUntilEnemyFire = SpaceInvadersGameState.INITIAL_DELAY_ENEMY_FIRE
                 state.movingRow = state.enemies.size - 1
                 state.enemyDirection = Direction.Right
             }
@@ -52,10 +67,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     }
 
-    override fun renderGame(camera: Camera) {
-        val r = game.uiAssets.shapeRenderer
-        r.projectionMatrix = camera.combined
-
+    private fun renderPlayer(r: ShapeRenderer) {
         r.begin(ShapeRenderer.ShapeType.Filled)
         r.color = Color.WHITE
         r.rect(
@@ -64,7 +76,19 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             state.cellWidth,
             state.cellHeight,
         )
+        r.end()
+    }
 
+    override fun renderGame(camera: Camera) {
+        val r = game.uiAssets.shapeRenderer
+        r.projectionMatrix = camera.combined
+
+        if (state.nextPlayerRespawnTime <= 0) {
+            renderPlayer(r)
+        }
+
+        r.begin(ShapeRenderer.ShapeType.Filled)
+        r.color = Color.WHITE
         state.enemies.forEach { row ->
             row.enemies.forEach { enemy ->
                 r.rect(
@@ -79,6 +103,17 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         state.playerBullet?.also { renderBullet(r, it) }
         state.enemyBullets.forEach { renderBullet(r, it) }
         r.end()
+
+        if (lifeContainer.children.size != state.numLives) {
+            redrawLives()
+        }
+    }
+
+    private fun redrawLives() {
+        lifeContainer.clear()
+        for (i in 0 until state.numLives) {
+            lifeContainer.addActor(Label("x", game.uiAssets.getStyles().label.large))
+        }
     }
 
     private fun renderBullet(r: ShapeRenderer, bullet: Bullet) {
@@ -126,7 +161,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                     bullet.x + state.bulletWidth / 2 > state.playerX - state.cellWidth / 2 &&
                     bullet.y + state.bulletHeight < state.padding + state.cellWidth) {
 
-                // Player hit
+                onPlayerHit()
                 it.remove()
             } else if (bullet.y < state.padding) {
                 it.remove()
@@ -164,24 +199,36 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         increaseScore(SpaceInvadersGameState.SCORE_PER_ENEMY)
     }
 
+    private fun onPlayerHit() {
+        state.numLives --
+
+        if (state.numLives <= 0) {
+            endGame()
+        } else {
+            state.nextPlayerRespawnTime = state.timer + SpaceInvadersGameState.PAUSE_AFTER_DEATH
+        }
+    }
+
     private fun maybeSpawnEnemyBullet(delta: Float) {
 
-        state.timeUntilEnemyFire -= delta
-
-        if (state.timeUntilEnemyFire > 0 || state.enemyBullets.size >= SpaceInvadersGameState.MAX_ENEMY_BULLETS_ON_SCREEN) {
+        if (state.enemyBullets.isNotEmpty()) {
             return
         }
 
-        state.timeUntilEnemyFire = (Math.random()
-                * (SpaceInvadersGameState.MAX_TIME_BETWEEN_ENEMY_FIRE - SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE)
-                + SpaceInvadersGameState.MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+        state.timeUntilEnemyFire -= delta
+
+        if (state.timeUntilEnemyFire > 0) {
+            return
+        }
+
+        state.timeUntilEnemyFire = SpaceInvadersGameState.DELAY_AFTER_ENEMY_FIRE
 
         val row = state.enemies.lastOrNull { it.enemies.isNotEmpty() }
         row?.enemies?.random()?.also {  toFire ->
 
             state.enemyBullets.add(
                 Bullet(
-                    x = toFire.x - state.cellWidth / 2,
+                    x = toFire.x + state.cellWidth / 2,
                     y = row.y - state.bulletHeight,
                 )
             )

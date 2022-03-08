@@ -7,13 +7,21 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
 
     companion object {
 
+        const val PAUSE_AFTER_DEATH = 3f
+
         const val PLAYER_SPEED = 100f
 
         const val SCORE_PER_ENEMY = 2000
 
-        const val MIN_TIME_BETWEEN_ENEMY_FIRE = 3f
-        const val MAX_TIME_BETWEEN_ENEMY_FIRE = 6f
         const val MAX_ENEMY_BULLETS_ON_SCREEN = 3
+
+        /**
+         * Watching the original, it seems like after a bullet hits something and explodes, there
+         * are then 6 frames of waiting before the next bullet is launched.
+         */
+        const val DELAY_AFTER_ENEMY_FIRE = 6f / 30f
+
+        const val INITIAL_DELAY_ENEMY_FIRE = DELAY_AFTER_ENEMY_FIRE * 5
 
         const val TIME_BETWEEN_LEVELS = 1.5f
 
@@ -47,7 +55,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     val cellHeight = worldHeight / 20f
     val padding = cellWidth / 5f
     val bulletHeight = padding * 2
-    val bulletWidth = padding / 2
+    val bulletWidth = padding / 4
 
     /**
      * 18 steps across per level. Find the remaining space and divide by 18.
@@ -64,14 +72,17 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
      * measure how long it takes for an enemy on the starting row to hit the ground, then we double
      * it as it is approximately halfway down the screen.
      */
-    val enemyBulletSpeed = (worldHeight - padding * 2) * 30f / 70f
+    val enemyBulletSpeed = (worldHeight - padding * 2) * 30f / 80f
 
     var timer = 0f
     var timeUntilEnemyStep = TIME_BETWEEN_ENEMY_STEP
-    var timeUntilEnemyFire = (Math.random() * (MAX_TIME_BETWEEN_ENEMY_FIRE - MIN_TIME_BETWEEN_ENEMY_FIRE) + MIN_TIME_BETWEEN_ENEMY_FIRE).toFloat()
+    var timeUntilEnemyFire = INITIAL_DELAY_ENEMY_FIRE
     var nextLevelTime = -1f
 
-    var playerX = worldWidth / 2f
+    var numLives = 3
+    var nextPlayerRespawnTime = -1f
+
+    var playerX = cellWidth / 2f + padding
 
     var isMovingLeft = false
     var isMovingRight = false
