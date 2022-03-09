@@ -435,6 +435,47 @@ class AsteroidsSoftController: SoftControllerLayout() {
     }
 }
 
+class SpaceInvadersSoftController: SoftControllerLayout() {
+
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.FIRE,
+            { sprites -> sprites.buttonIcons.fire },
+            Input.Keys.SPACE,
+            { ContinuousPressButton() },
+        ),
+    )
+
+    override fun getLayouts() = listOf(
+        """
+        [ left ][ right ][<-->][ fire ]
+        """,
+
+        """
+        [ fire ][<-->][ left ][ right ]
+        """,
+    )
+
+    object Buttons {
+        const val LEFT = "left"
+        const val RIGHT = "right"
+        const val FIRE = "fire"
+    }
+
+}
+
 class TetrisSoftController: SoftControllerLayout() {
 
     /**

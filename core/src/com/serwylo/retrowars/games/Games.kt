@@ -8,6 +8,7 @@ import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.spaceinvaders.SpaceInvadersGameScreen
 import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
 import com.serwylo.retrowars.input.*
@@ -54,6 +55,14 @@ object Games {
         { app -> TetrisGameScreen(app) }
     )
 
+    val spaceInvaders = GameDetails(
+        "space-invaders",
+        isAvailable = true,
+        SpaceInvadersSoftController(),
+        { s -> s.icons.spaceInvaders },
+        { app -> SpaceInvadersGameScreen(app) }
+    )
+
     val other = UnavailableGameDetails("other")
 
     val all = listOf(
@@ -62,10 +71,22 @@ object Games {
         snake,
         tempest,
         tetris,
+        spaceInvaders,
         other,
     )
 
-    val betaInfo = listOf<BetaInfo>()
+    val betaInfo = listOf<BetaInfo>(
+        BetaInfo(
+            spaceInvaders,
+            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Space%20Invaders,Beta%20Feedback&template=&title=",
+            """
+            Warning: this is in the earliest of early stages. Future roadmap includes:
+             - Multiplayer support
+             - Defensive barriers
+             - Graphics for aliens
+            """.trimIndent()
+        )
+    )
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }
