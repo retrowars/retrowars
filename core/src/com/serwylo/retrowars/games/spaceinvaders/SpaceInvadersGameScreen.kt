@@ -63,10 +63,24 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 state.enemyDirection = Direction.Right
             }
         } else {
-            maybeSpawnEnemyBullet(delta)
-            moveEnemies(delta)
+
+            if (isLowestRowAtTheBottom()) {
+                if (getState() == State.Playing) {
+                    endGame()
+                }
+            } else {
+                maybeSpawnEnemyBullet(delta)
+                moveEnemies(delta)
+            }
+
         }
 
+    }
+
+    private fun isLowestRowAtTheBottom(): Boolean {
+        val lowestRowY = state.enemies.lastOrNull { it.enemies.isNotEmpty() }?.y ?: 0f
+
+        return lowestRowY < state.padding + state.cellHeight
     }
 
     private fun renderPlayer(r: ShapeRenderer) {
@@ -249,7 +263,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
 
-        // Skip empty rows
+        // Skip empty rows as the row we *were* moving may have been emptied by our bullets since
+        // the previous step.
         while (state.movingRow >= 0 && state.enemies[state.movingRow].enemies.isEmpty()) {
             state.movingRow --
         }
