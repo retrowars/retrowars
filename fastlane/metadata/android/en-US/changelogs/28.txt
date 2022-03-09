@@ -1,0 +1,10 @@
+New (beta) game - Space Invaders!
+
+Still unfinished, but releasing early to allow feedback from the community.
+
+Limitations:
+ * Enemies shown as blocks instead of aliens.
+ * No barriers to protect the player.
+ * No multiplayer support yet.
+
+Please donate to support further development.

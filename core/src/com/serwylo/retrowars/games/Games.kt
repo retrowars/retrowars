@@ -84,7 +84,6 @@ object Games {
              - Multiplayer support
              - Defensive barriers
              - Graphics for aliens
-             - Better enemy movement
             """.trimIndent()
         )
     )
