@@ -30,10 +30,15 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
          * shuffles across two enemies at a time, and initially they move once each frame (1/30 sec).
          * The entire row thus takes 7/30 ths of a seconds to traverse the screen
          */
-        const val TIME_BETWEEN_ENEMY_STEP = 7f / 30f
+        const val TIME_BETWEEN_ENEMY_STEP_SLOWEST = 7f / 30f
 
-        private const val NUM_ENEMIES_PER_ROW = 11
-        private const val NUM_ENEMY_ROWS = 5
+        /**
+         * When only one enemy is left, it takes a step every frame.
+         */
+        const val TIME_BETWEEN_ENEMY_STEP_FASTEST = 1f / 30f
+
+        const val NUM_ENEMIES_PER_ROW = 11
+        const val NUM_ENEMY_ROWS = 5
 
         /**
          * In the original, we have:
@@ -75,7 +80,7 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     val enemyBulletSpeed = (worldHeight - padding * 2) * 30f / 80f
 
     var timer = 0f
-    var timeUntilEnemyStep = TIME_BETWEEN_ENEMY_STEP
+    var timeUntilEnemyStep = TIME_BETWEEN_ENEMY_STEP_SLOWEST
     var timeUntilEnemyFire = INITIAL_DELAY_ENEMY_FIRE
     var nextLevelTime = -1f
 

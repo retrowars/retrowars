@@ -57,7 +57,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             if (state.timer > state.nextLevelTime) {
                 state.enemies = state.spawnEnemies()
                 state.nextLevelTime = -1f
-                state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
+                state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST
                 state.timeUntilEnemyFire = SpaceInvadersGameState.INITIAL_DELAY_ENEMY_FIRE
                 state.movingRow = state.enemies.size - 1
                 state.enemyDirection = Direction.Right
@@ -261,7 +261,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
-        state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP
+        val enemiesLeft = (state.enemies.sumOf { it.enemies.size }).toFloat() / (SpaceInvadersGameState.NUM_ENEMIES_PER_ROW * SpaceInvadersGameState.NUM_ENEMY_ROWS)
+        state.timeUntilEnemyStep = (SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST - SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST) * enemiesLeft + SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST
 
         // Skip empty rows as the row we *were* moving may have been emptied by our bullets since
         // the previous step.
