@@ -3,6 +3,9 @@ package com.serwylo.retrowars.games.spaceinvaders
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -10,8 +13,8 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
-import com.serwylo.retrowars.games.tempest.TempestGameState
 import com.serwylo.retrowars.input.SpaceInvadersSoftController
+import kotlin.math.roundToInt
 
 class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     game,
@@ -23,9 +26,11 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     true
 ) {
 
-    private val state = SpaceInvadersGameState(viewport.worldWidth, viewport.worldHeight)
+    private val state = SpaceInvadersGameState(viewport.worldWidth, viewport.worldHeight, game.uiAssets.getSprites().gameSprites.space_invaders_barrier)
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
+    private val barrierTextures: MutableMap<Barrier, Texture> = state.barriers.associateWith { Texture(it.pixmap) }.toMutableMap()
 
     init {
         addGameScoreToHUD(lifeContainer)
@@ -96,6 +101,15 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     override fun renderGame(camera: Camera) {
+
+        val batch = SpriteBatch(1)
+        batch.projectionMatrix = camera.combined
+        batch.begin()
+        barrierTextures.onEach { (barrier, texture) ->
+            batch.draw(texture, barrier.x, barrier.y, barrier.width, barrier.height)
+        }
+        batch.end()
+
         val r = game.uiAssets.shapeRenderer
         r.projectionMatrix = camera.combined
 
@@ -165,6 +179,10 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                     state.nextLevelTime = state.timer + SpaceInvadersGameState.TIME_BETWEEN_LEVELS
                 }
             }
+
+            if (checkBulletBarrierCollision(bullet, false)) {
+                state.playerBullet = null
+            }
         }
 
         val it = state.enemyBullets.iterator()
@@ -181,8 +199,67 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 it.remove()
             } else if (bullet.y < state.padding) {
                 it.remove()
+            } else if (checkBulletBarrierCollision(bullet, true)) {
+                it.remove()
             }
         }
+    }
+
+    private fun checkBulletBarrierCollision(bullet: Bullet, isEnemyBullet: Boolean): Boolean {
+        val barrier = state.barriers.firstOrNull { barrier ->
+            bullet.y + state.bulletHeight > barrier.y
+                && bullet.y < barrier.y + barrier.height
+                && bullet.x > barrier.x
+                && bullet.x < barrier.x + barrier.width
+        } ?: return false
+
+        // Offset the bullet position into the same reference frame as the barrier to make pixel collision detection easier.
+        val bulletX = ((bullet.x - barrier.x) * barrier.pixmap.width / barrier.width).toInt()
+        val bulletY = ((bullet.y - barrier.y) * barrier.pixmap.height / barrier.height).toInt()
+
+        // Figure out the range of pixels in the Y dimension which overlap with the bullet:
+
+        // Use roundToInt() instead of toInt() because a lot of the time multiplying by the
+        // scaling factor "barrier.pixmap.height / barrier.height" may result in a value close to
+        // the highest pixel in the barrier, but not exactly there. Truncating under these circumstances
+        // will mean we never reach the end pixel.
+        val bulletYIntersectEnd = (bulletY + state.bulletHeight * barrier.pixmap.height / barrier.height).roundToInt().coerceAtMost(barrier.pixmap.height)
+        val bulletYIntersectStart = bulletY.coerceAtLeast(0)
+
+        val pixelsToIterate = if (isEnemyBullet) bulletYIntersectEnd downTo bulletYIntersectStart else bulletYIntersectStart .. bulletYIntersectEnd
+
+        for (y in pixelsToIterate) {
+            // Use barrier.height - y because a value of 0 is at the *top* not the bottom like we expect.
+            if (barrier.pixmap.getPixel(bulletX, (barrier.pixmap.height - y)) == 0xFFFFFFFF.toInt()) {
+
+                applyBarrierDamage(
+                    barrier,
+                    if (isEnemyBullet) SpaceInvadersGameState.enemyBulletExplosion else SpaceInvadersGameState.playerBulletExplosion,
+                    bulletX,
+                    y,
+                )
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun applyBarrierDamage(barrier: Barrier, pattern: ExplosionPattern, hitX: Int, hitY: Int) {
+
+        pattern.pattern.onEachIndexed { iy, row ->
+            row.onEachIndexed { ix, cell ->
+                if (cell) {
+                    barrier.pixmap.drawPixel(
+                        hitX - pattern.originX + ix,
+                        barrier.pixmap.height - (hitY - pattern.originX + iy),
+                        0x000000FF
+                    )
+                }
+            }
+        }
+
+        barrierTextures[barrier]?.load(PixmapTextureData(barrier.pixmap, barrier.pixmap.format, false, false))
     }
 
     private fun checkPlayerBulletCollision(bullet: Bullet): Boolean {

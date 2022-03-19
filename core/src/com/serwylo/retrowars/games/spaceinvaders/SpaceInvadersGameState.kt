@@ -1,9 +1,15 @@
 package com.serwylo.retrowars.games.spaceinvaders
 
+import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import java.util.*
 
 
-class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) {
+class SpaceInvadersGameState(
+    worldWidth: Float,
+    private val worldHeight: Float,
+    barrierTexture: TextureRegion,
+) {
 
     companion object {
 
@@ -54,6 +60,27 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
             1f
         )
 
+        val playerBulletExplosion = ExplosionPattern("""
+            x   x  x
+              x   x
+             xxxxxx
+            xxxxxxxx
+            xxxxxxxx
+             xxxxxx
+                Ox
+                   x
+        """)
+
+        val enemyBulletExplosion = ExplosionPattern("""
+            x
+              xx  
+             xxOxx
+            x xxx 
+             xxxxx
+            x xxx
+             x x x
+         """)
+
     }
 
     val cellWidth = worldWidth / 20f
@@ -61,6 +88,26 @@ class SpaceInvadersGameState(worldWidth: Float, private val worldHeight: Float) 
     val padding = cellWidth / 5f
     val bulletHeight = padding * 2
     val bulletWidth = padding / 4
+
+    val barriers = (1 until 5).map { x ->
+        val data = barrierTexture.texture.textureData
+        if (!data.isPrepared) {
+            data.prepare()
+        }
+
+        val pixmap = Pixmap(barrierTexture.regionWidth, barrierTexture.regionHeight, data.format).also { pixmap ->
+            pixmap.drawPixmap(data.consumePixmap(), 0, 0, barrierTexture.regionX, barrierTexture.regionY, barrierTexture.regionWidth, barrierTexture.regionHeight)
+        }
+
+        val barrierX = worldWidth / 5 * x
+        Barrier(
+            pixmap,
+            barrierX - cellWidth,
+            padding * 2 + cellHeight * 2,
+            cellWidth * 2,
+            cellHeight * 2,
+        )
+    }
 
     /**
      * 18 steps across per level. Find the remaining space and divide by 18.
@@ -136,4 +183,50 @@ data class Bullet(
 enum class Direction {
     Left,
     Right,
+}
+
+data class Barrier(
+    /**
+     * The destructive barrier is modelled by pixels in this pixmap. As it gets destroyed, pixels
+     * are set to black. Collision detection is based on pixel collisions.
+     */
+    val pixmap: Pixmap,
+
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+
+)
+
+class ExplosionPattern(patternString: String) {
+    val pattern: List<List<Boolean>>
+    val originX: Int
+    val originY: Int
+
+    init {
+        val chars = patternString
+            .trimIndent()
+            .split("\n")
+            .map { line ->
+                line.toCharArray()
+            }
+
+        var ox = 0
+        var oy = 0
+        pattern = chars.mapIndexed { y, row ->
+            row.mapIndexed { x, cell ->
+                if (cell == 'O') {
+                    ox = x
+                    oy = y
+                }
+
+                cell != ' '
+            }
+        }
+
+        originX = ox
+        originY = oy
+
+    }
 }

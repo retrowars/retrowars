@@ -454,7 +454,7 @@ class SpaceInvadersSoftController: SoftControllerLayout() {
             Buttons.FIRE,
             { sprites -> sprites.buttonIcons.fire },
             Input.Keys.SPACE,
-            { ContinuousPressButton() },
+            { SingleShotButton() },
         ),
     )
 
