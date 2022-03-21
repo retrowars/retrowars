@@ -8,7 +8,7 @@ import java.util.*
 class SpaceInvadersGameState(
     worldWidth: Float,
     private val worldHeight: Float,
-    barrierTexture: TextureRegion,
+    private val barrierTexture: TextureRegion,
 ) {
 
     companion object {
@@ -89,7 +89,9 @@ class SpaceInvadersGameState(
     val bulletHeight = padding * 2
     val bulletWidth = padding / 4
 
-    val barriers = (1 until 5).map { x ->
+    var barriers: List<Barrier> = spawnBarriers(worldWidth)
+
+    fun spawnBarriers(worldWidth: Float) = (1 until 5).map { x ->
         val data = barrierTexture.texture.textureData
         if (!data.isPrepared) {
             data.prepare()

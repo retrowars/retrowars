@@ -66,6 +66,9 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 state.timeUntilEnemyFire = SpaceInvadersGameState.INITIAL_DELAY_ENEMY_FIRE
                 state.movingRow = state.enemies.size - 1
                 state.enemyDirection = Direction.Right
+                state.barriers = state.spawnBarriers(viewport.worldWidth)
+                barrierTextures.clear()
+                state.barriers.onEach { barrier -> barrierTextures[barrier] = Texture(barrier.pixmap) }
             }
         } else {
 
