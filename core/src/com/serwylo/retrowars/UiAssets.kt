@@ -130,6 +130,11 @@ class UiAssets(locale: Locale) {
         val icons = Icons()
         val buttonIcons = ButtonIcons()
         val characters = Characters()
+        val gameSprites = GameSprites()
+
+        inner class GameSprites {
+            val space_invaders_barrier = atlas.findRegion("space_invaders_barrier")!!
+        }
 
         inner class Characters {
             val overlay_dead = atlas.findRegion("overlay_dead")!!

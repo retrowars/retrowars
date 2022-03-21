@@ -82,7 +82,6 @@ object Games {
             """
             Warning: this is in the earliest of early stages. Future roadmap includes:
              - Multiplayer support
-             - Defensive barriers
              - Graphics for aliens
             """.trimIndent()
         )
