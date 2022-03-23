@@ -60,6 +60,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         if (state.nextLevelTime > 0) {
             if (state.timer > state.nextLevelTime) {
+                state.level ++
                 state.enemies = state.spawnEnemies()
                 state.nextLevelTime = -1f
                 state.timeUntilEnemyStep = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST
