@@ -17,7 +17,7 @@ class SpaceInvadersGameState(
 
         const val PLAYER_SPEED = 100f
 
-        const val SCORE_PER_ENEMY = 2000
+        const val SCORE_PER_ENEMY = 3000
 
         const val MAX_ENEMY_BULLETS_ON_SCREEN = 3
 
@@ -60,7 +60,7 @@ class SpaceInvadersGameState(
          *  - Middle row: 11 pixels wide: https://spaceinvaders.fandom.com/wiki/Crab_(Medium_Invader)
          *  - Bottom 2 rows: 12 pixels wide: https://spaceinvaders.fandom.com/wiki/Octopus_(Large_Invader)
          */
-        private val ROW_WIDTHS = listOf(
+        val ROW_WIDTHS = listOf(
             8f / 12f,
             11f / 12f,
             11f / 12f,
@@ -157,6 +157,7 @@ class SpaceInvadersGameState(
     var enemyDirection = Direction.Right
 
     var enemies: List<EnemyRow> = spawnEnemies()
+    val networkEnemyCells: MutableSet<EnemyCell> = mutableSetOf()
 
     var movingRow = enemies.size - 1
 
@@ -166,18 +167,19 @@ class SpaceInvadersGameState(
             val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
             spawnEnemyRow(
                 y = worldHeight - cellHeight - y * (padding + cellHeight) - padding - yOffset.toFloat(),
+                startX = padding,
                 enemyWidth = enemyWidth,
                 hasEnemies = true,
             )
         }
     }
 
-    fun spawnEnemyRow(y: Float, enemyWidth: Float, hasEnemies: Boolean): EnemyRow {
+    fun spawnEnemyRow(y: Float, startX: Float, enemyWidth: Float, hasEnemies: Boolean): EnemyRow {
         return EnemyRow(
             y,
             cells = (0 until NUM_ENEMIES_PER_ROW).map { x ->
                 EnemyCell(
-                    x = x * (padding * 1.5f + cellWidth) + padding,
+                    x = startX + x * (padding * 1.5f + cellWidth),
                     width = enemyWidth,
                     hasEnemy =  hasEnemies,
                 )
@@ -198,7 +200,7 @@ data class EnemyRow(
     fun isNotEmpty() = cells.any { it.hasEnemy }
 }
 
-data class EnemyCell(
+class EnemyCell(
     var x: Float,
     val width: Float,
     var hasEnemy: Boolean,
