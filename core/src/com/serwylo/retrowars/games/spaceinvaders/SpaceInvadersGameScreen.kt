@@ -87,7 +87,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private fun isLowestRowAtTheBottom(): Boolean {
-        val lowestRowY = state.enemies.lastOrNull { it.enemies.isNotEmpty() }?.y ?: 0f
+        val lowestRowY = state.enemies.lastOrNull { it.isNotEmpty() }?.y ?: 0f
 
         return lowestRowY < state.padding + state.cellHeight
     }
@@ -124,13 +124,15 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         r.begin(ShapeRenderer.ShapeType.Filled)
         r.color = Color.WHITE
         state.enemies.forEach { row ->
-            row.enemies.forEach { enemy ->
-                r.rect(
-                    enemy.x,
-                    row.y,
-                    enemy.width,
-                    state.cellHeight,
-                )
+            row.cells.forEach { cell ->
+                if (cell.hasEnemy) {
+                    r.rect(
+                     cell.x + (state.cellWidth - row.enemyWidth) / 2,
+                        row.y,
+                        row.enemyWidth,
+                        state.cellHeight,
+                    )
+                }
             }
         }
 
@@ -167,7 +169,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     }
 
-    private fun countEnemies() = state.enemies.fold(0, { acc, row -> acc + row.enemies.size })
+    private fun countEnemies() = state.enemies.fold(0) { acc, row -> acc + row.cells.count { it.hasEnemy } }
 
     private fun updateBullets(delta: Float) {
         state.playerBullet?.also { bullet ->
@@ -273,16 +275,19 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         for (row in collisionRows) {
-            val it = row.enemies.iterator()
-            while (it.hasNext()) {
-                val enemy = it.next()
+            for (x in row.cells.indices) {
+                val cell = row.cells[x]
+
+                if (!cell.hasEnemy) {
+                    continue
+                }
 
                 // Intentionally treat the bullet as 1 dimensional, otherwise it is too hard to
-                // have it travel in between columns of enemies as is often the case in the orignial.
-                if (bullet.x > enemy.x && bullet.x < enemy.x + state.cellWidth) {
-                    it.remove()
+                // have it travel in between columns of enemies as is often the case in the original.
+                if (bullet.x > cell.x + (state.cellWidth - row.enemyWidth) / 2 && bullet.x < cell.x + (state.cellWidth - row.enemyWidth) / 2 + row.enemyWidth) {
+                    cell.hasEnemy = false
 
-                    onEnemyHit(enemy)
+                    onEnemyHit()
 
                     return true
                 }
@@ -292,7 +297,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         return false
     }
 
-    private fun onEnemyHit(enemy: Enemy) {
+    private fun onEnemyHit() {
         increaseScore(SpaceInvadersGameState.SCORE_PER_ENEMY)
     }
 
@@ -320,8 +325,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         state.timeUntilEnemyFire = SpaceInvadersGameState.DELAY_AFTER_ENEMY_FIRE
 
-        val row = state.enemies.lastOrNull { it.enemies.isNotEmpty() }
-        row?.enemies?.random()?.also {  toFire ->
+        val row = state.enemies.lastOrNull { it.isNotEmpty() }
+        row?.cells?.filter { it.hasEnemy }?.random()?.also {  toFire ->
 
             state.enemyBullets.add(
                 Bullet(
@@ -342,19 +347,19 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
-        val enemiesLeft = (state.enemies.sumOf { it.enemies.size }).toFloat() / (SpaceInvadersGameState.NUM_ENEMIES_PER_ROW * SpaceInvadersGameState.NUM_ENEMY_ROWS)
+        val enemiesLeft = (state.enemies.sumOf { row -> row.countEnemies() }).toFloat() / (SpaceInvadersGameState.NUM_ENEMIES_PER_ROW * SpaceInvadersGameState.NUM_ENEMY_ROWS)
         state.timeUntilEnemyStep = (SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST - SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST) * enemiesLeft + SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST
 
         // Skip empty rows as the row we *were* moving may have been emptied by our bullets since
         // the previous step.
-        while (state.movingRow >= 0 && state.enemies[state.movingRow].enemies.isEmpty()) {
+        while (state.movingRow >= 0 && state.enemies[state.movingRow].cells.all { !it.hasEnemy }) {
             state.movingRow --
         }
 
         if (state.movingRow == -1) {
 
             if (!shouldEnemiesDrop()) {
-                state.movingRow = state.enemies.indexOfLast { it.enemies.isNotEmpty() }
+                state.movingRow = state.enemies.indexOfLast { it.isNotEmpty() }
             } else {
                 dropEnemyRow()
 
@@ -375,20 +380,20 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun shouldEnemiesDrop() = state.enemies.any { row ->
         if (state.enemyDirection == Direction.Right) {
-            val x = row.enemies.lastOrNull()?.x ?: Float.MIN_VALUE
+            val x = row.cells.lastOrNull { it.hasEnemy }?.x ?: Float.MIN_VALUE
             x + state.cellWidth + state.padding > viewport.worldWidth - state.padding
         } else {
-            val x = row.enemies.firstOrNull()?.x ?: Float.MAX_VALUE
+            val x = row.cells.firstOrNull { it.hasEnemy }?.x ?: Float.MAX_VALUE
             x - state.padding < state.padding
         }
     }
 
     private fun shuffleEnemyRowAcross(row: EnemyRow) {
-        row.enemies.forEach { enemy ->
+        row.cells.forEach { cell ->
             if (state.enemyDirection == Direction.Right) {
-                enemy.x += state.enemyStepSize
+                cell.x += state.enemyStepSize
             } else {
-                enemy.x -= state.enemyStepSize
+                cell.x -= state.enemyStepSize
             }
         }
     }

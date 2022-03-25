@@ -2,7 +2,6 @@ package com.serwylo.retrowars.games.spaceinvaders
 
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.g2d.TextureRegion
-import io.ktor.utils.io.core.*
 import java.util.*
 
 
@@ -66,7 +65,7 @@ class SpaceInvadersGameState(
             11f / 12f,
             11f / 12f,
             1f,
-            1f
+            1f,
         )
 
         val playerBulletExplosion = ExplosionPattern("""
@@ -164,25 +163,45 @@ class SpaceInvadersGameState(
     fun spawnEnemies(): List<EnemyRow> {
         val yOffset = (level % MAX_LEVELS_BEFORE_RESET) * (padding + cellHeight) * 1.5
         return (0 until NUM_ENEMY_ROWS).map { y ->
-            EnemyRow(
-                y = worldHeight - cellHeight - y * (padding + cellHeight) - padding - yOffset.toInt(),
-                enemies = (0 until NUM_ENEMIES_PER_ROW).map { x ->
-                    val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
-                    val offsetFromCell = (cellWidth - enemyWidth) / 2
-                    Enemy(
-                        x = x * (padding * 1.5f + cellWidth) + padding + offsetFromCell,
-                        width = enemyWidth,
-                    )
-                }.toMutableList(),
+            val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
+            spawnEnemyRow(
+                y = worldHeight - cellHeight - y * (padding + cellHeight) - padding - yOffset.toFloat(),
+                enemyWidth = enemyWidth,
+                hasEnemies = true,
             )
         }
+    }
+
+    fun spawnEnemyRow(y: Float, enemyWidth: Float, hasEnemies: Boolean): EnemyRow {
+        return EnemyRow(
+            y,
+            cells = (0 until NUM_ENEMIES_PER_ROW).map { x ->
+                EnemyCell(
+                    x = x * (padding * 1.5f + cellWidth) + padding,
+                    width = enemyWidth,
+                    hasEnemy =  hasEnemies,
+                )
+            },
+            enemyWidth = enemyWidth,
+        )
     }
 
 }
 
 data class EnemyRow(
     var y: Float,
-    val enemies: MutableList<Enemy>,
+    val cells: List<EnemyCell>,
+    val enemyWidth: Float,
+) {
+    fun countEnemies() = cells.count { it.hasEnemy }
+    fun isEmpty() = cells.all { !it.hasEnemy }
+    fun isNotEmpty() = cells.any { it.hasEnemy }
+}
+
+data class EnemyCell(
+    var x: Float,
+    val width: Float,
+    var hasEnemy: Boolean,
 )
 
 data class Enemy(
