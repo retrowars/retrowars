@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -325,12 +326,25 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
         state.timeUntilEnemyFire = SpaceInvadersGameState.DELAY_AFTER_ENEMY_FIRE
 
-        val row = state.enemies.lastOrNull { it.isNotEmpty() }
-        row?.cells?.filter { it.hasEnemy }?.random()?.also {  toFire ->
+        val bottomMostCells: List<Pair<EnemyRow, EnemyCell>> = (0 until state.enemies.first().cells.size).map { i ->
+            val row = state.enemies.lastOrNull { it.cells[i].hasEnemy }
+
+            if (row == null) {
+                null
+            } else {
+                row to row.cells[i]
+            }
+        }.filterNotNull()
+
+        if (bottomMostCells.isEmpty()) {
+            return
+        }
+
+        bottomMostCells.random().also { (row, cell) ->
 
             state.enemyBullets.add(
                 Bullet(
-                    x = toFire.x + state.cellWidth / 2,
+                    x = cell.x + state.cellWidth / 2,
                     y = row.y - state.bulletHeight,
                 )
             )
