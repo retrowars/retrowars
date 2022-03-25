@@ -2,6 +2,7 @@ package com.serwylo.retrowars.games.spaceinvaders
 
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import io.ktor.utils.io.core.*
 import java.util.*
 
 
@@ -30,6 +31,14 @@ class SpaceInvadersGameState(
         const val INITIAL_DELAY_ENEMY_FIRE = DELAY_AFTER_ENEMY_FIRE * 5
 
         const val TIME_BETWEEN_LEVELS = 1.5f
+
+        /**
+         * Enemies spawn further down each time they respawn after the player successfully clears
+         * the screen. However this doesn't go forever, or else the game will become impossible
+         * after a certain number of levels. Therefore, they reset to the top row after this
+         * many levels have been cleared.
+         */
+        const val MAX_LEVELS_BEFORE_RESET = 4
 
         /**
          * From watching videos of the original space invaders, I can see that a row of enemies
@@ -83,6 +92,7 @@ class SpaceInvadersGameState(
 
     }
 
+    var level = 0
     val cellWidth = worldWidth / 20f
     val cellHeight = worldHeight / 20f
     val padding = cellWidth / 5f
@@ -151,18 +161,21 @@ class SpaceInvadersGameState(
 
     var movingRow = enemies.size - 1
 
-    fun spawnEnemies() = (0 until NUM_ENEMY_ROWS).map { y ->
-        EnemyRow(
-            y = worldHeight - cellHeight - y * (padding + cellHeight) - padding,
-            enemies = (0 until NUM_ENEMIES_PER_ROW).map { x ->
-                val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
-                val offsetFromCell = (cellWidth - enemyWidth) / 2
-                Enemy(
-                    x = x * (padding * 1.5f + cellWidth) + padding + offsetFromCell,
-                    width = enemyWidth,
-                )
-            }.toMutableList(),
-        )
+    fun spawnEnemies(): List<EnemyRow> {
+        val yOffset = (level % MAX_LEVELS_BEFORE_RESET) * (padding + cellHeight) * 1.5
+        return (0 until NUM_ENEMY_ROWS).map { y ->
+            EnemyRow(
+                y = worldHeight - cellHeight - y * (padding + cellHeight) - padding - yOffset.toInt(),
+                enemies = (0 until NUM_ENEMIES_PER_ROW).map { x ->
+                    val enemyWidth = cellWidth * (ROW_WIDTHS.getOrNull(y) ?: 1f)
+                    val offsetFromCell = (cellWidth - enemyWidth) / 2
+                    Enemy(
+                        x = x * (padding * 1.5f + cellWidth) + padding + offsetFromCell,
+                        width = enemyWidth,
+                    )
+                }.toMutableList(),
+            )
+        }
     }
 
 }

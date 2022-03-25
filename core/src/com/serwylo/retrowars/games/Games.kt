@@ -80,7 +80,7 @@ object Games {
             spaceInvaders,
             "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Space%20Invaders,Beta%20Feedback&template=&title=",
             """
-            Warning: this is in the earliest of early stages. Future roadmap includes:
+            Although in early development, the future roadmap includes:
              - Multiplayer support
              - Graphics for aliens
             """.trimIndent()
