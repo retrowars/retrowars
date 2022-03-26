@@ -69,23 +69,13 @@ object Games {
         asteroids,
         missileCommand,
         snake,
+        spaceInvaders,
         tempest,
         tetris,
-        spaceInvaders,
         other,
     )
 
-    val betaInfo = listOf<BetaInfo>(
-        BetaInfo(
-            spaceInvaders,
-            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Space%20Invaders,Beta%20Feedback&template=&title=",
-            """
-            Although in early development, the future roadmap includes:
-             - Multiplayer support
-             - Graphics for aliens
-            """.trimIndent()
-        )
-    )
+    val betaInfo = listOf<BetaInfo>()
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }
