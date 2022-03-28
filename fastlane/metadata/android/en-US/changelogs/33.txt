@@ -1,0 +1,7 @@
+Space invaders: Better icon.
+
+Previous icon looked too much like breakout (not yet implemented), so added barriers to differentiate.
+
+Remember - Space Invaders now includes multiplayer support, so make sure to upgrade the app and then connect to the new server to play!
+
+Please donate to support further development.
