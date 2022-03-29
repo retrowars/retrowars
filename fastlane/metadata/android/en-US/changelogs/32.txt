@@ -1,0 +1,5 @@
+New game - Space Invaders!
+
+Includes multiplayer support, so make sure to upgrade the app and then connect to the new server to play.
+
+Please donate to support further development.

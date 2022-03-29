@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.scenes.scene2d.ui.Cell
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -123,10 +122,10 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         r.begin(ShapeRenderer.ShapeType.Filled)
-        r.color = Color.WHITE
         state.enemies.forEach { row ->
             row.cells.forEach { cell ->
                 if (cell.hasEnemy) {
+                    r.color = if (state.networkEnemyCells.contains(cell)) Color.RED else Color.WHITE
                     r.rect(
                      cell.x + (state.cellWidth - row.enemyWidth) / 2,
                         row.y,
@@ -137,6 +136,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             }
         }
 
+        r.color = Color.WHITE
         state.playerBullet?.also { renderBullet(r, it) }
         state.enemyBullets.forEach { renderBullet(r, it) }
         r.end()
@@ -167,6 +167,93 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     override fun onReceiveDamage(strength: Int) {
+        for (i in 0 until strength) {
+            for (j in 0 until 4) {
+                spawnNetworkEnemy()
+            }
+        }
+    }
+
+    /**
+     * Try to spawn in the lowest row, unless that is a little bit too low, in which case we set
+     * a minimum height near the barriers.
+     *
+     * Obviously can only spawn in rows with empty cells. If the lowest eligible row doesn't have
+     * empty cells, move up.
+     *
+     * If there are no eligible rows, then spawn a new one above the top row. If it goes off the top
+     * of the screen then that is fine, we'll just keep respawning them higher and higher off the
+     * screen.
+     */
+    private fun spawnNetworkEnemy() {
+
+        // This is approximately in the middle of a barrier - don't spawn into rows below this or
+        // the player may die almost instantly without any opportunity to defend themselves.
+        val minSpawnHeight = state.padding * 3 + state.cellHeight * 3
+        val rowsAboveThreshold = state.enemies.filter { it.y > minSpawnHeight }
+        val lastRowWithEmptySpace = rowsAboveThreshold.lastOrNull { row -> row.cells.any { !it.hasEnemy } }
+
+        // No space available in any of the existing enemy rows, so lets spawn a new row.
+        // If we're spawning a new row, then almost by definition the main alien grid has dropped
+        // low enough that we know any new grids will have small aliens in them.
+        val rowToSpawnEnemy: EnemyRow = if (lastRowWithEmptySpace == null) {
+            val firstRow = state.enemies.first()
+            val newRow = state.spawnEnemyRow(
+                y = firstRow.y + state.padding + state.cellHeight,
+                startX = firstRow.cells.first().x,
+                enemyWidth = state.cellWidth * SpaceInvadersGameState.ROW_WIDTHS.first(),
+                hasEnemies = false,
+            )
+
+            state.enemies = listOf(newRow) + state.enemies
+            state.movingRow ++
+
+            newRow
+        } else {
+            lastRowWithEmptySpace
+        }
+
+
+        val emptySpaces = rowToSpawnEnemy.cells.filter { !it.hasEnemy }
+
+        // Shouldn't really happen due to our checks above, but just make sure we don't crash if it does.
+        if (emptySpaces.isEmpty()) {
+            return
+        }
+
+        // Prefer to spawn within the bounds of what aliens are left on the screen.
+        // Otherwise, for example, if there is only one column remaining, we don't want to spawn
+        // the next enemy way off in the distance in a place that is potentially far outside
+        // the bounds of the screen. Technically it will work (the row will drop, turn around, and
+        // continue moving until the enemy ends up on screen), but it is unintuitive, because the
+        // player can't see the newly spawned enemy and may think the game is buggy.
+        val minX = state.enemies
+            .mapNotNull { row -> row.cells.firstOrNull { it.hasEnemy }?.x }
+            .minOrNull() ?: state.padding
+
+        val maxX = state.enemies
+            .mapNotNull { row -> row.cells.lastOrNull { it.hasEnemy }?.x }
+            .maxOrNull() ?: viewport.worldWidth - state.padding - state.cellWidth
+
+        val preferredCells = emptySpaces.filter { it.x in minX..maxX }
+        val cell = if (preferredCells.isNotEmpty()) {
+            preferredCells.random()
+        } else {
+
+            // If we can't find a preferred cell within the bounds of existing enemies on screen,
+            // then pick a cell that is closest to the existing cohort of aliens to minimize the
+            // change of appearing well off screen.
+            emptySpaces.minByOrNull { cell ->
+                when {
+                    cell.x <= minX -> minX - cell.x
+                    cell.x >= maxX -> cell.x - maxX
+                    else -> Float.MAX_VALUE
+                }
+            } ?: return // Should never be null, but safely stop if it is.
+        }
+
+        cell.hasEnemy = true
+        state.networkEnemyCells.add(cell)
 
     }
 
@@ -287,6 +374,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
                 // have it travel in between columns of enemies as is often the case in the original.
                 if (bullet.x > cell.x + (state.cellWidth - row.enemyWidth) / 2 && bullet.x < cell.x + (state.cellWidth - row.enemyWidth) / 2 + row.enemyWidth) {
                     cell.hasEnemy = false
+                    // state.networkEnemyCells.remove(cell)
 
                     onEnemyHit()
 
@@ -362,7 +450,9 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         val enemiesLeft = (state.enemies.sumOf { row -> row.countEnemies() }).toFloat() / (SpaceInvadersGameState.NUM_ENEMIES_PER_ROW * SpaceInvadersGameState.NUM_ENEMY_ROWS)
-        state.timeUntilEnemyStep = (SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST - SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST) * enemiesLeft + SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST
+        val slowest = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_SLOWEST
+        val fastest = SpaceInvadersGameState.TIME_BETWEEN_ENEMY_STEP_FASTEST
+        state.timeUntilEnemyStep = ((slowest - fastest) * enemiesLeft + fastest).coerceIn(fastest, slowest)
 
         // Skip empty rows as the row we *were* moving may have been emptied by our bullets since
         // the previous step.
