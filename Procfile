@@ -1,1 +1,1 @@
-web: java -jar server/build/libs/server-1.0.jar
+web: java -jar server/build/libs/retrowars-server-*.jar
