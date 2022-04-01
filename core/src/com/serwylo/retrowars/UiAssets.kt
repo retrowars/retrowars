@@ -88,12 +88,14 @@ class UiAssets(locale: Locale) {
                 manager.cleanUpBuffers()
                 manager.beginInputCapture()
 
+                Gdx.gl20.glLineWidth(3f)
                 closure()
 
                 manager.endInputCapture()
                 manager.applyEffects()
                 manager.renderToScreen()
             } else {
+                Gdx.gl20.glLineWidth(2f)
                 closure()
             }
 
