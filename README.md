@@ -2,7 +2,7 @@
 
 [![Liberapay receiving](https://img.shields.io/liberapay/receives/retrowars)](https://liberapay.com/retrowars/donate)
 
-<img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/01_in_game.png" alt="Asteroids game play" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/03_multiplayer_lobby.png" alt="Multiplayer lobby" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_a.png" alt="Asteroids" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_b.png" alt="Missile Command" width="400">
+<img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/05_in_game.png" alt="Missile Command game play" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/03_multiplayer_lobby.png" alt="Multiplayer lobby" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/02_game_select.png" alt="Game select screen" width="400"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/04_game_b.png" alt="Missile Command" width="400">
 
 Enjoy retro games? Enjoy multiplayer games? Ever wanted to play one retro game against a different game in real time?
 
@@ -10,7 +10,7 @@ Enjoy retro games? Enjoy multiplayer games? Ever wanted to play one retro game a
 
 Play against your friends, with each of you can competing by playing a different game. Score points in your game and every other game will be handicapped in their own unique way. But watch out, as others score, your game will become more difficult too.
 
-Still in early stage development, but currently supports four different single and multi-player versions of games based on classic retro titles.
+Six different single and multi-player versions of games based on classic retro titles, with more in the pipeline!
 
 No ads. No in game purchases. Just retro games and good times.
 
