@@ -67,12 +67,15 @@ class UiAssets(locale: Locale) {
 
         init {
             manager.addEffect(FilmGrainEffect())
-            manager.addEffect(GaussianBlurEffect().apply {
-                amount = 0.8f
-            })
             manager.addEffect(RadialDistortionEffect().apply {
                 distortion = 0.08f
                 zoom = 0.98f
+            })
+            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 1.3f, 0.5f).apply {
+                sizeSource = CrtEffect.SizeSource.VIEWPORT
+            })
+            manager.addEffect(OldTvEffect().apply {
+                time = 0.15f
             })
         }
 
