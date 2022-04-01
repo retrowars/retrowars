@@ -2,6 +2,7 @@ package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
@@ -114,13 +115,13 @@ private fun summarisePlayerStatus(
     addActor(scoreLabel)
 }
 
-fun makeContributeServerInfo(styles: UiAssets.Styles) = VerticalGroup().apply {
+fun makeContributeServerInfo(styles: UiAssets.Styles) = HorizontalGroup().apply {
     space(UI_SPACE)
-    addActor(Label("Want to help the Super Retro Mega Wars project\nby running a public server?", styles.label.small).apply {
-        setAlignment(Align.center)
+    addActor(Label("Want to help the Super Retro Mega Wars\nproject by running a public server?", styles.label.small).apply {
+        setAlignment(Align.left)
     })
     addActor(
-        makeSmallButton("Learn how to help", styles) {
+        makeSmallButton("Learn How", styles) {
             Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
         }
     )
