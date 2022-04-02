@@ -67,12 +67,15 @@ class UiAssets(locale: Locale) {
 
         init {
             manager.addEffect(FilmGrainEffect())
-            manager.addEffect(GaussianBlurEffect().apply {
-                amount = 0.8f
-            })
             manager.addEffect(RadialDistortionEffect().apply {
                 distortion = 0.08f
                 zoom = 0.98f
+            })
+            manager.addEffect(CrtEffect(CrtEffect.LineStyle.HORIZONTAL_SMOOTH, 1.3f, 0.5f).apply {
+                sizeSource = CrtEffect.SizeSource.VIEWPORT
+            })
+            manager.addEffect(OldTvEffect().apply {
+                time = 0.15f
             })
         }
 
@@ -88,12 +91,14 @@ class UiAssets(locale: Locale) {
                 manager.cleanUpBuffers()
                 manager.beginInputCapture()
 
+                Gdx.gl20.glLineWidth(3f)
                 closure()
 
                 manager.endInputCapture()
                 manager.applyEffects()
                 manager.renderToScreen()
             } else {
+                Gdx.gl20.glLineWidth(2f)
                 closure()
             }
 

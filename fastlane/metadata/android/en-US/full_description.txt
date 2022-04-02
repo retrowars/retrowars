@@ -4,7 +4,7 @@ Welcome to Super Retro Mega Wars!
 
 Play against your friends, with each of you can competing by playing a different game. Score points in your game and every other game will be handicapped in their own unique way. But watch out, as others score, your game will become more difficult too.
 
-Still in early stage development, but currently supports four different single and multi-player versions of games based on classic retro titles.
+Six different single and multi-player versions of games based on classic retro titles, with more in the pipeline!
 
 No ads. No in game purchases. Just retro games and good times.
 
