@@ -171,6 +171,8 @@ class UiAssets(private val locale: Locale) {
             val fire = atlas.findRegion("fire")!!
             val rotate_clockwise = atlas.findRegion("rotate_clockwise")!!
             val rotate_counter_clockwise = atlas.findRegion("rotate_counter_clockwise")!!
+            val music_off = atlas.findRegion("music_off")!!
+            val music_on = atlas.findRegion("music_on")!!
         }
 
     }

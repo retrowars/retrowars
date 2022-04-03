@@ -19,8 +19,6 @@ import kotlin.math.roundToInt
 class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     game,
     Games.spaceInvaders,
-    "game.space-invaders.intro-message.positive",
-    "game.space-invaders.intro-message.negative",
     400f,
     400f,
     true

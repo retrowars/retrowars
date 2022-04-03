@@ -5,11 +5,13 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Interpolation
 import com.badlogic.gdx.scenes.scene2d.Action
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.Scaling
@@ -17,6 +19,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.Player
+import com.serwylo.retrowars.utils.Options
 import kotlin.random.Random
 
 fun makeStage() =
@@ -184,6 +187,26 @@ fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {
         setSize(Avatar.ICON_SIZE, Avatar.ICON_SIZE)
     }
 
+}
+
+private fun musicIcon(sprites: UiAssets.Sprites, isMute: Boolean): TextureRegion =
+    if (isMute) {
+        sprites.buttonIcons.music_off
+    } else {
+        sprites.buttonIcons.music_on
+    }
+
+fun makeToggleAudioButton(sprites: UiAssets.Sprites, onToggle: (isMute: Boolean) -> Unit): Image {
+    return Image(musicIcon(sprites, Options.isMute())).also { btn ->
+        btn.addListener(object: ClickListener() {
+            override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                val newMuteVal = !Options.isMute()
+                Options.setMute(newMuteVal)
+                btn.drawable = TextureRegionDrawable(musicIcon(sprites, newMuteVal))
+                onToggle(newMuteVal)
+            }
+        })
+    }
 }
 
 object CustomActions {

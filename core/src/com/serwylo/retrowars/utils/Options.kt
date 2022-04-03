@@ -11,6 +11,8 @@ object Options {
 
     private var playerId: Long = prefs().getLong("playerId", Random.nextLong())
 
+    private var mute: Boolean = prefs().getBoolean("mute", false)
+
     private var softControllers: MutableMap<GameDetails, Int> = Games.all.associateWith {
         prefs().getInteger("${it.id}-softController", 0)
     }.toMutableMap()
@@ -31,6 +33,15 @@ object Options {
     fun setPlayerId(value: Long) {
         prefs().putLong("playerId", value).flush()
         playerId = value
+    }
+
+    fun isMute(): Boolean {
+        return mute
+    }
+
+    fun setMute(mute: Boolean) {
+        prefs().putBoolean("mute", mute).flush()
+        this.mute = mute
     }
 
     fun getSoftController(game: GameDetails): Int {

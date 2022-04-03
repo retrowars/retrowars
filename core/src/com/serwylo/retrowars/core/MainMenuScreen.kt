@@ -1,12 +1,15 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.*
-import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.scenes.scene2d.InputEvent
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.utils.Options
 
 class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
@@ -65,6 +68,24 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         stage.addActor(container)
 
+        makeToggleAudioButton(game.uiAssets.getSprites()) { mute ->
+            setupMusicState(mute)
+        }.also { btn ->
+            btn.x = UI_SPACE * 2
+            btn.y = UI_SPACE * 2
+            stage.addActor(btn)
+        }
+
+        setupMusicState(Options.isMute())
+
+    }
+
+    private fun setupMusicState(mute: Boolean) {
+        if (!mute) {
+            game.unmute()
+        } else {
+            game.mute()
+        }
     }
 
     override fun resize(width: Int, height: Int) {

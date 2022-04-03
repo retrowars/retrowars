@@ -19,6 +19,9 @@ object Games {
         "asteroids",
         isAvailable = true,
         AsteroidsSoftController(),
+        "music/go_go_go.mp3",
+        "game.asteroids.intro-message.positive",
+        "game.asteroids.intro-message.negative",
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
     )
@@ -27,6 +30,9 @@ object Games {
         "missile-command",
         isAvailable = true,
         controllerLayout = null,
+        "music/go_go_faster.mp3",
+        "game.missile-command.intro-message.positive",
+        "game.missile-command.intro-message.negative",
         { s -> s.icons.missileCommand },
         { app -> MissileCommandGameScreen(app) }
     )
@@ -35,6 +41,9 @@ object Games {
         "snake",
         isAvailable = true,
         SnakeSoftController(),
+        "music/tutorial.mp3",
+        "game.snake.intro-message.positive",
+        "game.snake.intro-message.negative",
         { s -> s.icons.snake },
         { app -> SnakeGameScreen(app) }
     )
@@ -43,6 +52,9 @@ object Games {
         "tempest",
         isAvailable = true,
         TempestSoftController(),
+        "music/go_go_metallius.mp3",
+        "game.tempest.intro-message.positive",
+        "game.tempest.intro-message.negative",
         { s -> s.icons.tempest },
         { app -> TempestGameScreen(app) }
     )
@@ -51,6 +63,9 @@ object Games {
         "tetris",
         isAvailable = true,
         TetrisSoftController(),
+        "music/metallius.mp3",
+        "game.tetris.intro-message.positive",
+        "game.tetris.intro-message.negative",
         { s -> s.icons.tetris },
         { app -> TetrisGameScreen(app) }
     )
@@ -59,6 +74,9 @@ object Games {
         "space-invaders",
         isAvailable = true,
         SpaceInvadersSoftController(),
+        "music/wherever_aliens.mp3",
+        "game.space-invaders.intro-message.positive",
+        "game.space-invaders.intro-message.negative",
         { s -> s.icons.spaceInvaders },
         { app -> SpaceInvadersGameScreen(app) }
     )
@@ -92,6 +110,9 @@ class UnavailableGameDetails(name: String): GameDetails(
     name,
     isAvailable = false,
     controllerLayout = null,
+    "",
+    "",
+    "",
     { s -> s.icons.unknown },
     { game -> UnimplementedGameScreen(game) }
 )
@@ -100,6 +121,9 @@ open class GameDetails(
     val id: String,
     val isAvailable: Boolean,
     val controllerLayout: SoftControllerLayout?,
+    val songAsset: String,
+    val positiveDescription: String,
+    val negativeDescription: String,
     val icon: (sprites: UiAssets.Sprites) -> TextureRegion,
     val createScreen: (app: RetrowarsGame) -> Screen
 )
