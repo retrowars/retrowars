@@ -1,0 +1,1 @@
+Spill retrospill mot hverandre i alle kombinasjoner.
