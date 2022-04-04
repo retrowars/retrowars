@@ -712,9 +712,9 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.add(makeAvatarTiles(listOf(me), listOf()))
 
         // After a short break, fade in some additional messaging asking patience.
-        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.row().spaceTop(UI_SPACE * 5)
         wrapper.add(
-            VerticalGroup().apply {
+            HorizontalGroup().apply {
                 space(UI_SPACE)
                 addActor(
                     Label("Looking for others to play with? Tired of waiting?\nInvite a friend to download Super Retro Mega Wars.", styles.label.small).apply {
@@ -735,7 +735,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                     )
                 )
             }
-        )
+        ).top()
 
     }
 
