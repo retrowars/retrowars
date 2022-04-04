@@ -55,7 +55,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
 
             row().padTop(UI_SPACE * 2).padBottom(UI_SPACE)
             add(
-                Label("Controller layouts", styles.label.medium)
+                Label(strings["options.controller-layouts"], styles.label.medium)
             )
 
             row()
@@ -79,7 +79,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
 
             row().padTop(UI_SPACE * 2).padBottom(UI_SPACE)
             add(
-                Label("Multiplayer Avatar", styles.label.medium)
+                Label(strings["options.multiplayer-avatar"], styles.label.medium)
             )
 
             row()
@@ -116,6 +116,8 @@ class AvatarSelectScreen(
 
     private var currentPlayerId = Options.getPlayerId()
 
+    private var strings = game.uiAssets.getStrings()
+
     init {
 
         val container = Table().apply {
@@ -124,7 +126,7 @@ class AvatarSelectScreen(
 
             add(
                 makeHeading(
-                    "Choose your avatar",
+                    strings["options.avatar.choose"],
                     game.uiAssets.getStyles(),
                     game.uiAssets.getStrings()
                 ) {
@@ -137,7 +139,7 @@ class AvatarSelectScreen(
                 row()
                 add(
                     Label(
-                        "You have not currently chosen an avatar.\nChoose from one of these:",
+                        strings["options.avatar.choose-description-empty"],
                         game.uiAssets.getStyles().label.medium
                     ).apply {
                         setAlignment(Align.center)
@@ -147,7 +149,7 @@ class AvatarSelectScreen(
             } else {
 
                 row()
-                add(Label("Current avatar:", game.uiAssets.getStyles().label.medium))
+                add(Label(strings["options.avatar.current"], game.uiAssets.getStyles().label.medium))
 
                 row()
                 add(
@@ -155,14 +157,14 @@ class AvatarSelectScreen(
 
                         addActor(Avatar(currentPlayerId, game.uiAssets))
 
-                        addActor(makeSmallButton("Clear", game.uiAssets.getStyles()) {
+                        addActor(makeSmallButton(strings["options.avatar.btn-clear"], game.uiAssets.getStyles()) {
                             Options.setPlayerId(0)
                             Gdx.app.postRunnable {
                                 game.screen = AvatarSelectScreen(game)
                             }
                         })
 
-                        addActor(makeSmallButton("Help", game.uiAssets.getStyles()) {
+                        addActor(makeSmallButton(strings["options.avatar.btn-help"], game.uiAssets.getStyles()) {
                             Gdx.net.openURI("https://github.com/retrowars/retrowars/wiki/Avatars")
                         })
 
@@ -170,7 +172,7 @@ class AvatarSelectScreen(
                 )
 
                 row()
-                add(Label("To change, choose from one of these:", game.uiAssets.getStyles().label.medium))
+                add(Label(strings["options.avatar.choose-description"], game.uiAssets.getStyles().label.medium))
 
             }
 
@@ -179,7 +181,7 @@ class AvatarSelectScreen(
 
             row()
             add(
-                makeButton("Show me more", game.uiAssets.getStyles()) {
+                makeButton(strings["options.avatar.btn-show-more"], game.uiAssets.getStyles()) {
                     avatarGridCell.setActor(makeAvatarGrid(game.uiAssets))
                 }
             ).expandY().top()

@@ -185,7 +185,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
     private fun showSearchingForPublicServers() {
         wrapper.clear()
 
-        wrapper.add(Label("Looking for public servers...", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.looking-for-public-servers"], styles.label.medium))
     }
 
     private fun showEmptyServerList() {
@@ -371,7 +371,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.clear()
 
         wrapper.add(
-            Label("Play other retro fans\nover the internet", game.uiAssets.getStyles().label.medium).apply {
+            Label(strings["multiplayer.lobby.splash.play-others"], game.uiAssets.getStyles().label.medium).apply {
                 setAlignment(Align.center)
             }
         ).colspan(2).spaceBottom(UI_SPACE)
@@ -379,7 +379,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row()
 
         wrapper.add(
-            makeLargeButton("Play online", styles) {
+            makeLargeButton(strings["multiplayer.lobby.splash.btn.play-online"], styles) {
                 findPublicServersScope.launch {
                     findAndShowPublicServers()
                 }
@@ -389,7 +389,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row().spaceTop(UI_SPACE * 4)
 
         wrapper.add(
-            Label("Play friends on your WiFi network", game.uiAssets.getStyles().label.medium).apply {
+            Label(strings["multiplayer.lobby.splash.play-friends"], game.uiAssets.getStyles().label.medium).apply {
                 setAlignment(Align.center)
             }
         ).colspan(2).spaceBottom(UI_SPACE)
@@ -397,7 +397,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row()
 
         wrapper.add(
-            makeButton("Start local server", styles) {
+            makeButton(strings["multiplayer.lobby.splash.btn.start-local-server"], styles) {
                 changeState(Action.AttemptToStartServer)
 
                 GlobalScope.launch(Dispatchers.IO) {
@@ -411,7 +411,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         )
 
         wrapper.add(
-            makeButton("Join local server", styles) {
+            makeButton(strings["multiplayer.lobby.splash.btn.join-local-server"], styles) {
                 findAndJoinLocalServer()
             }
         )
@@ -647,10 +647,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
     private fun showSearchingForLocalServer() {
         wrapper.clear()
 
-        wrapper.add(Label("Searching for server", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.local.searching-for-server"], styles.label.medium))
         wrapper.row()
         wrapper.add(
-            Label("Make sure you're both connected to the same WiFi network", styles.label.small).apply {
+            Label(strings["multiplayer.local.ensure-same-wifi"], styles.label.small).apply {
                 addAction(
                     sequence(
                         alpha(0f, 0f), // Start at 0f alpha (hence duration 0f)...
@@ -665,35 +665,35 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
     private fun showNoLocalServerFound() {
         wrapper.clear()
 
-        wrapper.add(Label("Could not find server", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.local.could-not-find-server"], styles.label.medium))
         wrapper.row()
-        wrapper.add(Label("Has another player started a server?", styles.label.small))
+        wrapper.add(Label(strings["multiplayer.local.could-not-find-server.help-1"], styles.label.small))
         wrapper.row()
-        wrapper.add(Label("Are you on the same WiFi network?", styles.label.small))
+        wrapper.add(Label(strings["multiplayer.local.could-not-find-server.help-2"], styles.label.small))
         wrapper.row()
-        wrapper.add(Label("Do you both have the latest version of Super Retro Mega Wars?", styles.label.small))
+        wrapper.add(Label(strings["multiplayer.local.could-not-find-server.help-3"], styles.label.small))
     }
 
     private fun showConnectingToServer() {
         wrapper.clear()
 
-        wrapper.add(Label("Connecting to server", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.connecting-to-server"], styles.label.medium))
     }
 
     private fun showStartingServer() {
         wrapper.clear()
 
-        wrapper.add(Label("Starting server", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.local.starting-server"], styles.label.medium))
     }
 
     private fun showReadyToStart(players: List<Player>, previousPlayers: List<Player>) {
         wrapper.clear()
 
-        wrapper.add(Label("Ready to start", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.ready-to-start.description"], styles.label.medium))
 
         wrapper.row().spaceTop(UI_SPACE)
 
-        wrapper.add(makeButton("Start game", styles) {
+        wrapper.add(makeButton(strings["multiplayer.ready-to-start.btn.start-game"], styles) {
             RetrowarsClient.get()?.startGame()
         })
 
@@ -705,7 +705,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
     private fun showServerWaitingForClients(me: Player) {
         wrapper.clear()
 
-        wrapper.add(Label("Waiting for other players to join", styles.label.medium))
+        wrapper.add(Label(strings["multiplayer.local.waiting-for-others"], styles.label.medium))
 
         wrapper.row()
 
@@ -717,12 +717,12 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             HorizontalGroup().apply {
                 space(UI_SPACE)
                 addActor(
-                    Label("Looking for others to play with? Tired of waiting?\nInvite a friend to download Super Retro Mega Wars.", styles.label.small).apply {
+                    Label(strings["multiplayer.prompt-to-share"], styles.label.small).apply {
                         setAlignment(Align.center)
                     }
                 )
                 addActor(
-                    makeSmallButton("Share", styles) {
+                    makeSmallButton(strings["multiplayer.btn.share"], styles) {
                         game.platform.shareRetrowars()
                     }
                 )
@@ -831,7 +831,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         }
 
         add(myAvatarAndGame)
-        add(Label("You", uiAssets.getStyles().label.large))
+        add(Label(strings["multiplayer.avatar.you"], uiAssets.getStyles().label.large))
 
         if (players.size > 1) {
 

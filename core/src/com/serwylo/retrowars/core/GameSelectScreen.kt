@@ -157,7 +157,7 @@ class GameSelectScreen(private val game: RetrowarsGame): ScreenAdapter() {
         val subText = if (!game.isAvailable) {
             strings["unimplemented-game.coming-soon"]
         } else if (highScore.attempts > 0) {
-            "High Score\n${highScore.score}"
+            "${strings["game-select.high-score"]}\n${highScore.score}"
         } else {
             ""
         }

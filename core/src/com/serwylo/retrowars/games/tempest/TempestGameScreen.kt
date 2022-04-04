@@ -22,8 +22,8 @@ import kotlin.random.Random
 class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     game,
     Games.tempest,
-    "Shoot the enemies",
-    "Don't let them touch you",
+    "game.tempest.intro-message.positive",
+    "game.tempest.intro-message.negative",
     40f,
     40f,
     isOrthographic = false,

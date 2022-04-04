@@ -18,7 +18,7 @@ import com.serwylo.retrowars.utils.Options
 import java.util.*
 
 @Suppress("PropertyName") // Allow underscores in variable names here, because it better reflects the source files things come from.
-class UiAssets(locale: Locale) {
+class UiAssets(private val locale: Locale) {
 
     val shapeRenderer = ShapeRenderer()
 

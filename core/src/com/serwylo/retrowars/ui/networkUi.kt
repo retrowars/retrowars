@@ -95,7 +95,7 @@ private fun summarisePlayerStatus(
     columnAlign(Align.left)
 
     if (isMe) {
-        val youLabel = Label("You", styles.label.large)
+        val youLabel = Label(strings["multiplayer.avatar.you"], styles.label.large)
         addActor(youLabel)
     }
 
