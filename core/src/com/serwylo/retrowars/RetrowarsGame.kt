@@ -28,8 +28,7 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
             Options.forceRandomPlayerId()
         }
 
-        // uiAssets = UiAssets(Locale.getDefault())
-        uiAssets = UiAssets(Locale.FRENCH)
+        uiAssets = UiAssets(UiAssets.getLocale())
         uiAssets.initSync()
 
         setScreen(MainMenuScreen(this))

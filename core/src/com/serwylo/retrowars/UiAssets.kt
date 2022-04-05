@@ -179,6 +179,47 @@ class UiAssets(private val locale: Locale) {
 
         private const val TAG = "UiAssets"
 
+        /**
+         * Unfortunately despite the awesome effort of community translators, some languages
+         * are yet to be supported.
+         *
+         * Part of that is something we can solve, by choosing a bitmap font with a wider set of
+         * characters. This can be done, e.g. using tools such as Heiro (https://github.com/libgdx/libgdx/wiki/Hiero)
+         * and fonts such as Noto. Using such a font will cover a bigger range of characters, but
+         * lose the nice styles provided by the Kenney fonts used now. Therefore, it would be great
+         * to only enable these fonts for languages which require them, and leave Kenney fonts for others.
+         *
+         * The other part is an issue with libgdx, whereby it doesn't natively support RTL languages,
+         * or languages where glyphs are combined together such as Persian. This will be harder to
+         * accomplish unfortunately.
+         */
+        private val supportedLocales = setOf(
+            "de",
+            "en",
+            "fr",
+            "nb",
+        )
+
+        private fun isLocaleSupported(locale: Locale): Boolean {
+            val country = locale.language.toLowerCase(Locale.ENGLISH)
+            return supportedLocales.contains(country)
+        }
+
+        fun getLocale(): Locale {
+            // Even though Weblate is allowing this game to be translated into many different languages,
+            // only some of them are supported by libgdx. Ensure that we don't pick up an unsupported locale
+            // which *does* have translation files available, because it will render invalid glyphs and
+            // make the game unusable.
+            val systemLocale = Locale.getDefault()
+
+            return if (isLocaleSupported(systemLocale)) {
+                systemLocale
+            } else {
+                Gdx.app.error(TAG, "Unsupported locale: $systemLocale, falling back to English.")
+                Locale.ROOT
+            }
+        }
+
     }
 
 }
