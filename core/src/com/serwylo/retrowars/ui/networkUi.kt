@@ -3,6 +3,7 @@ package com.serwylo.retrowars.ui
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
+
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
@@ -95,7 +96,7 @@ private fun summarisePlayerStatus(
     columnAlign(Align.left)
 
     if (isMe) {
-        val youLabel = Label("You", styles.label.large)
+        val youLabel = Label(strings["multiplayer.avatar.you"], styles.label.large)
         addActor(youLabel)
     }
 
@@ -105,7 +106,7 @@ private fun summarisePlayerStatus(
 
         val scoreNeeded = highestScore + 1 - score
         if (isLastPlayerStanding && scoreNeeded > 0) {
-            val needsMoreLabel = Label("Needs $scoreNeeded more point${if (scoreNeeded == 1L) "" else "s" } to win!", styles.label.medium)
+            val needsMoreLabel = Label(strings.format("multiplayer.final-scores.points-required-to-win", scoreNeeded), styles.label.medium)
             addActor(needsMoreLabel)
         }
     }
@@ -115,13 +116,13 @@ private fun summarisePlayerStatus(
     addActor(scoreLabel)
 }
 
-fun makeContributeServerInfo(styles: UiAssets.Styles) = HorizontalGroup().apply {
+fun makeContributeServerInfo(assets: UiAssets) = HorizontalGroup().apply {
     space(UI_SPACE)
-    addActor(Label("Want to help the Super Retro Mega Wars\nproject by running a public server?", styles.label.small).apply {
+    addActor(Label(assets.getStrings()["multiplayer.server-list.run-a-server"], assets.getStyles().label.small).apply {
         setAlignment(Align.left)
     })
     addActor(
-        makeSmallButton("Learn How", styles) {
+        makeSmallButton(assets.getStrings()["multiplayer.server-list.btn.learn-how-to-help"], assets.getStyles()) {
             Gdx.net.openURI("https://github.com/retrowars/retrowars-servers/#contributing")
         }
     )

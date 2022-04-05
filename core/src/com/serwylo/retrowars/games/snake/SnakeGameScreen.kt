@@ -12,7 +12,7 @@ import com.serwylo.retrowars.input.SnakeSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "Eat the fruit", "Avoid your tail", 400f, 400f) {
+class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, "game.snake.intro-message.positive", "game.snake.intro-message.negative", 400f, 400f) {
 
     companion object {
         @Suppress("unused")

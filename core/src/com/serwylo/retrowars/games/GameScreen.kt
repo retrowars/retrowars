@@ -102,7 +102,8 @@ abstract class GameScreen(
             addGameOverlayToHUD(controller.getActor())
         }
 
-        hud.showMessage(positiveDescription, negativeDescription)
+        val strings = game.uiAssets.getStrings()
+        hud.showMessage(strings[positiveDescription], strings[negativeDescription])
 
         client?.listen(
             networkCloseListener = { code, message -> game.showNetworkError(code, message) },
@@ -282,10 +283,10 @@ abstract class GameScreen(
         hud.addGameOverlay(
             Table().apply {
 
-                add(withBackground(Label("Game Over", styles.label.huge), skin)).fillX()
+                add(withBackground(Label(strings["game.misc.game-over"], styles.label.huge), skin)).fillX()
                 row()
 
-                val label = withBackground(Label("Insert coin\nto continue", styles.label.large), skin)
+                val label = withBackground(Label(strings["game.misc.insert-coins"], styles.label.large), skin)
 
                 add(label).fillX()
 
