@@ -71,7 +71,7 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
     private fun showNoRoomsAvailable(styles: UiAssets.Styles) = VerticalGroup().apply {
         space(UI_SPACE * 2)
         addActor(makeTitle("Maximum number of players for this server has been reached.\nPlease try again later or join another server.", styles))
-        addActor(makeContributeServerInfo(styles))
+        addActor(makeContributeServerInfo(game.uiAssets))
         val reconnect = makeReconnectButton(styles, "Try again")
         if (reconnect != null) {
             addActor(reconnect)
