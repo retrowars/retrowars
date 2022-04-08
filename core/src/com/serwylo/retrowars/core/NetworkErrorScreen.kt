@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Button
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
+import com.badlogic.gdx.utils.I18NBundle
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.beatgame.ui.makeButton
 import com.serwylo.beatgame.ui.makeHeading
@@ -40,7 +41,7 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
                 makeHeading(strings["network-error.title"], styles, strings)
             )
 
-            addActor(makeErrorInfo(code, message, styles))
+            addActor(makeErrorInfo(code, message, styles, strings))
 
             addActor(
                 makeButton(strings["btn.main-menu"], styles) {
@@ -53,11 +54,11 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
 
     }
 
-    private fun makeErrorInfo(code: Int, message: String, styles: UiAssets.Styles): Actor = when (code) {
-        Network.ErrorCodes.NO_ROOMS_AVAILABLE -> showNoRoomsAvailable(styles)
-        Network.ErrorCodes.CLIENT_CLOSED_APP -> showClientClosedApp(styles)
-        Network.ErrorCodes.PLAYER_ID_IN_USE -> showPlayerIdInUse(styles)
-        Network.ErrorCodes.SERVER_SHUTDOWN -> showServerShutdown(styles)
+    private fun makeErrorInfo(code: Int, message: String, styles: UiAssets.Styles, strings: I18NBundle): Actor = when (code) {
+        Network.ErrorCodes.NO_ROOMS_AVAILABLE -> showNoRoomsAvailable(styles, strings)
+        Network.ErrorCodes.CLIENT_CLOSED_APP -> showClientClosedApp(styles, strings)
+        Network.ErrorCodes.PLAYER_ID_IN_USE -> showPlayerIdInUse(styles, strings)
+        Network.ErrorCodes.SERVER_SHUTDOWN -> showServerShutdown(styles, strings)
         else -> makeTitle(message, styles)
     }
 
@@ -68,38 +69,35 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
         }
     }
 
-    private fun showNoRoomsAvailable(styles: UiAssets.Styles) = VerticalGroup().apply {
+    private fun showNoRoomsAvailable(styles: UiAssets.Styles, strings: I18NBundle) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle("Maximum number of players for this server has been reached.\nPlease try again later or join another server.", styles))
+        addActor(makeTitle(strings["network-error.server-full.title"], styles))
         addActor(makeContributeServerInfo(game.uiAssets))
-        val reconnect = makeReconnectButton(styles, "Try again")
-        if (reconnect != null) {
+        makeReconnectButton(styles, strings["network-error.btn.try-again"])?.also { reconnect ->
             addActor(reconnect)
         }
     }
 
-    private fun showClientClosedApp(styles: UiAssets.Styles) = VerticalGroup().apply {
+    private fun showClientClosedApp(styles: UiAssets.Styles, strings: I18NBundle) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle("Game must remain open while connected to the server.\nPlease rejoin to continue playing.", styles))
-        val reconnect = makeReconnectButton(styles, "Rejoin")
-        if (reconnect != null) {
+        addActor(makeTitle(strings["network-error.remain-open.title"], styles))
+        makeReconnectButton(styles, strings["network-error.btn.rejoin"])?.also { reconnect ->
             addActor(reconnect)
         }
     }
 
-    private fun showPlayerIdInUse(styles: UiAssets.Styles) = VerticalGroup().apply {
+    private fun showPlayerIdInUse(styles: UiAssets.Styles, strings: I18NBundle) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle("Someone is already using your avatar... What are the odds?\nPlease either change your avatar, or wait until they leave.", styles))
-        addActor(makeDetails("By the way: the odds of this happening randomly are 1 in 18446744073709551614...", styles))
-        val reconnect = makeReconnectButton(styles, "Try again")
-        if (reconnect != null) {
+        addActor(makeTitle(strings["network-error.avatar-in-use.title"], styles))
+        addActor(makeDetails(strings["network-error.avatar-in-use.details"], styles))
+        makeReconnectButton(styles, strings["network-error.btn.try-again"])?.also { reconnect ->
             addActor(reconnect)
         }
     }
 
-    private fun showServerShutdown(styles: UiAssets.Styles) = VerticalGroup().apply {
+    private fun showServerShutdown(styles: UiAssets.Styles, strings: I18NBundle) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle("The server has been shutdown", styles))
+        addActor(makeTitle(Replace with strings "The server has been shutdown", styles))
         addActor(makeDetails("This may be for scheduled maintenance, or it could have crashed.\nHopefully it will be back up again soon.\n\nPlease join another server to continue playing.", styles))
     }
 
