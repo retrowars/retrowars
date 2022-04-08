@@ -40,6 +40,14 @@ If you wish to support the development financially, donations are welcome via:
 
 Please report any issues or suggest features on the [issue tracker](https://github.com/retrowars/retrowars/issues).
 
+### Translating
+
+We use [Weblate](https://hosted.weblate.org/engage/retrowars/) to manage translations. Please see [these instructions for using Weblate](https://hosted.weblate.org/engage/retrowars/) to translate BabyDots.
+
+|Game strings|F-Droid metadata|
+|------------|----------------|
+|[![Translation status](https://hosted.weblate.org/widgets/retrowars/-/game-strings/multi-auto.svg)](https://hosted.weblate.org/engage/retrowars/)|[![Translation status](https://hosted.weblate.org/widgets/retrowars/-/app-metadata/multi-auto.svg)](https://hosted.weblate.org/engage/retrowars/)|
+
 ### Submitting changes
 
 Pull requests will be warmly received at [https://github.com/retrowars/retrowars](https://github.com/retrowars/retrowars).
