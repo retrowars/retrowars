@@ -194,10 +194,11 @@ class UiAssets(private val locale: Locale) {
          * accomplish unfortunately.
          */
         private val supportedLocales = setOf(
-            "de",
+            // "de",
             "en",
-            "fr",
-            "nb",
+            // "fr",
+            // "nb",
+            // "ru",
         )
 
         private fun isLocaleSupported(locale: Locale): Boolean {
