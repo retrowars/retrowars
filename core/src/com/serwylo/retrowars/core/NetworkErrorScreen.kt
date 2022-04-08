@@ -97,8 +97,8 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
 
     private fun showServerShutdown(styles: UiAssets.Styles, strings: I18NBundle) = VerticalGroup().apply {
         space(UI_SPACE * 2)
-        addActor(makeTitle(Replace with strings "The server has been shutdown", styles))
-        addActor(makeDetails("This may be for scheduled maintenance, or it could have crashed.\nHopefully it will be back up again soon.\n\nPlease join another server to continue playing.", styles))
+        addActor(makeTitle(strings["network-error.server-shutdown.title"], styles))
+        addActor(makeDetails(strings["network-error.server-shutdown.details"], styles))
     }
 
     private fun makeTitle(errorMessage: String, styles: UiAssets.Styles) =
