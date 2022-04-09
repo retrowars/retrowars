@@ -1,0 +1,3 @@
+New icon.
+
+Wanted to make it very obvious that this is more than just a single asteroids game. Perhaps a little too chaotic, but lets use it for a few releases and see if it feels right. If not, we can always revert.

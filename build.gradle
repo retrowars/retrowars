@@ -23,11 +23,12 @@ allprojects {
         // Generally just used for Android app versioning, but we also use it in our networking to
         // report back to users if they are using an unsupported version.
         //
-        // The format here must remain consistent in order for the F-Droid checkupdates bot to pick
-        // them up. Normally it just checks the android apps build.gradle or AndroidManifest, but
-        // we dynamically inject them via these properties.
-        appVersionCode = 35
-        appVersionName = "0.21.1"
+        // The formatting here must remain as is (equals sign followed by spaces, double quotes, etc)
+        // in order for the F-Droid checkupdates bot to pick them up. Normally it just checks the
+        // android apps build.gradle or AndroidManifest, but we dynamically inject them via these
+        // properties so that both the server and the client have access to the same information.
+        appVersionCode = 36
+        appVersionName = "0.21.2"
 
         gdxVersion = '1.10.0'
         kotlinCoroutinesVersion = '1.4.2'
