@@ -175,17 +175,34 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     /**
-     * Try to spawn in the lowest row, unless that is a little bit too low, in which case we set
-     * a minimum height near the barriers.
+     * Try to spawn in the lowest row with any enemies, unless that is a little bit too low,
+     * in which case we set a minimum height near the barriers.
      *
      * Obviously can only spawn in rows with empty cells. If the lowest eligible row doesn't have
      * empty cells, move up.
+     *
+     * Prefer to spawn as horizontally close to pre-existing enemies as possible (i.e. fill in the
+     * gaps before moving further away from the edges).
      *
      * If there are no eligible rows, then spawn a new one above the top row. If it goes off the top
      * of the screen then that is fine, we'll just keep respawning them higher and higher off the
      * screen.
      */
     private fun spawnNetworkEnemy() {
+
+        // Prefer to spawn within the bounds of what aliens are left on the screen.
+        // Otherwise, for example, if there is only one column remaining, we don't want to spawn
+        // the next enemy way off in the distance in a place that is potentially far outside
+        // the bounds of the screen. Technically it will work (the row will drop, turn around, and
+        // continue moving until the enemy ends up on screen), but it is unintuitive, because the
+        // player can't see the newly spawned enemy and may think the game is buggy.
+        val minX = state.enemies
+            .mapNotNull { row -> row.cells.firstOrNull { it.hasEnemy }?.x }
+            .minOrNull() ?: state.padding
+
+        val maxX = state.enemies
+            .mapNotNull { row -> row.cells.lastOrNull { it.hasEnemy }?.x }
+            .maxOrNull() ?: viewport.worldWidth - state.padding - state.cellWidth
 
         // This is approximately in the middle of a barrier - don't spawn into rows below this or
         // the player may die almost instantly without any opportunity to defend themselves.
@@ -213,29 +230,11 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             lastRowWithEmptySpace
         }
 
+        val preferredCells = state.enemies
+            .filter { it.y > minSpawnHeight }
+            .map { row -> row.cells.filter { cell -> !cell.hasEnemy && cell.x >= minX && cell.x <= maxX } }
+            .lastOrNull { it.isNotEmpty() } ?: emptyList()
 
-        val emptySpaces = rowToSpawnEnemy.cells.filter { !it.hasEnemy }
-
-        // Shouldn't really happen due to our checks above, but just make sure we don't crash if it does.
-        if (emptySpaces.isEmpty()) {
-            return
-        }
-
-        // Prefer to spawn within the bounds of what aliens are left on the screen.
-        // Otherwise, for example, if there is only one column remaining, we don't want to spawn
-        // the next enemy way off in the distance in a place that is potentially far outside
-        // the bounds of the screen. Technically it will work (the row will drop, turn around, and
-        // continue moving until the enemy ends up on screen), but it is unintuitive, because the
-        // player can't see the newly spawned enemy and may think the game is buggy.
-        val minX = state.enemies
-            .mapNotNull { row -> row.cells.firstOrNull { it.hasEnemy }?.x }
-            .minOrNull() ?: state.padding
-
-        val maxX = state.enemies
-            .mapNotNull { row -> row.cells.lastOrNull { it.hasEnemy }?.x }
-            .maxOrNull() ?: viewport.worldWidth - state.padding - state.cellWidth
-
-        val preferredCells = emptySpaces.filter { it.x in minX..maxX }
         val cell = if (preferredCells.isNotEmpty()) {
             preferredCells.random()
         } else {
@@ -243,13 +242,15 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             // If we can't find a preferred cell within the bounds of existing enemies on screen,
             // then pick a cell that is closest to the existing cohort of aliens to minimize the
             // change of appearing well off screen.
-            emptySpaces.minByOrNull { cell ->
-                when {
-                    cell.x <= minX -> minX - cell.x
-                    cell.x >= maxX -> cell.x - maxX
-                    else -> Float.MAX_VALUE
-                }
-            } ?: return // Should never be null, but safely stop if it is.
+            rowToSpawnEnemy.cells
+                .filter { !it.hasEnemy }
+                .minByOrNull { cell ->
+                    when {
+                        cell.x <= minX -> minX - cell.x
+                        cell.x >= maxX -> cell.x - maxX
+                        else -> Float.MAX_VALUE
+                    }
+                } ?: return // Should never be null, but safely stop if it is.
         }
 
         cell.hasEnemy = true
