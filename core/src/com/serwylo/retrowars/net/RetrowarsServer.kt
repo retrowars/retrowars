@@ -188,6 +188,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
          * reporting to users how often this server is used.
          */
         var lastGame: Date? = null
+        var lastPlayer: Date? = null
 
         fun sendToAll(obj: Any, allConnections: Collection<NetworkServer.Connection>) {
             sendToAllExcept(obj, allConnections, null)
@@ -237,6 +238,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     private var server: NetworkServer
     private var connections = mutableSetOf<NetworkServer.Connection>()
     private var lastGame: Date? = null
+    private var lastPlayer: Date? = null
 
     init {
 
@@ -279,6 +281,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     fun getRoomCount() = rooms.getRoomCount()
     fun getPlayerCount() = rooms.getPlayerCount()
     fun getLastGameTime() = lastGame
+    fun getLastPlayerTime() = lastPlayer
 
     private var returnToLobbyTask: Job? = null
 
@@ -452,6 +455,8 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             return
         }
 
+        lastPlayer = Date()
+
         val room = rooms.getOrCreateRoom(roomId)
         if (room == null) {
             logger.warn("Request to join room denied, likely because we already have a maximum number of rooms.")
@@ -460,7 +465,6 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             return
         }
 
-        // TODO: Ensure this ID doesn't already exist on the server.
         if (preferredPlayerId > 0 && room.players.any { it.id == preferredPlayerId }) {
             logger.warn("Request to join room denied. Player with requested ID of $preferredPlayerId already exists in the room.")
             logStats()
@@ -629,6 +633,7 @@ class WebSocketNetworkServer(
                             currentRoomCount = retrowarsServer.getRoomCount(),
                             currentPlayerCount = retrowarsServer.getPlayerCount(),
                             lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: -1,
+                            lastPlayerTimestamp = retrowarsServer.getLastPlayerTime()?.time ?: ServerInfoDTO.LAST_PLAYER_TIMESTAMP_NEVER,
                         ))
                     }
                 }

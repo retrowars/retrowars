@@ -76,7 +76,14 @@ data class ServerInfoDTO(
     @Since(9.0)
     val lastGameTimestamp: Long,
 
-)
+    @Since(37.0)
+    val lastPlayerTimestamp: Long = LAST_PLAYER_TIMESTAMP_NEVER,
+
+) {
+    companion object {
+        const val LAST_PLAYER_TIMESTAMP_NEVER = -1L
+    }
+}
 
 /**
  * After fetching the hostname and port from the global server directory, and then using that to
@@ -97,6 +104,7 @@ data class ServerDetails(
     val currentRoomCount: Int,
     val currentPlayerCount: Int,
     val lastGameTimestamp: Long,
+    val lastPlayerTimestamp: Long,
 
     /**
      * Approx ping time - the time it took to ask the server for its details.

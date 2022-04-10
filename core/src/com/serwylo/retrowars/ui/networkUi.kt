@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
+import com.badlogic.gdx.utils.I18NBundle
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.Games
@@ -128,9 +129,12 @@ fun makeContributeServerInfo(assets: UiAssets) = HorizontalGroup().apply {
     )
 }
 
-fun roughTimeAgo(timestamp: Long): String {
+fun playerActivityMessage(strings: I18NBundle, numPlayers: Int, timestamp: Long): String {
+    if (numPlayers > 0) {
+        return strings.format("multiplayer.server-list.num-players", numPlayers)
+    }
     if (timestamp <= 0) {
-        return "A long time ago"
+        return strings["multiplayer.server-list.last-player-seen.a-long-time-ago"]
     }
 
     val seconds = (System.currentTimeMillis() - timestamp) / 1000
@@ -138,12 +142,13 @@ fun roughTimeAgo(timestamp: Long): String {
     val hours = minutes / 60
     val days = hours / 24
 
-    return when {
-        seconds < 60 -> "Seconds ago"
-        minutes < 60 -> "Minutes ago"
-        hours < 24 -> "Hours ago"
-        days < 30 -> "Days ago"
-        days < 365 -> "Months ago"
-        else -> "Years ago"
-    }
+    return strings[
+        when {
+            seconds < 60 -> "multiplayer.server-list.last-player-seen.seconds-ago"
+            minutes < 60 -> "multiplayer.server-list.last-player-seen.minutes-ago"
+            hours < 24 -> "multiplayer.server-list.last-player-seen.hours-ago"
+            days < 30 -> "multiplayer.server-list.last-player-seen.days-ago"
+            else -> "multiplayer.server-list.last-player-seen.a-long-time-ago"
+        }
+    ]
 }
