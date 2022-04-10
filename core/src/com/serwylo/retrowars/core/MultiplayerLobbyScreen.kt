@@ -15,7 +15,7 @@ import com.serwylo.retrowars.net.*
 import com.serwylo.retrowars.ui.createPlayerSummaries
 import com.serwylo.retrowars.ui.filterActivePlayers
 import com.serwylo.retrowars.ui.makeContributeServerInfo
-import com.serwylo.retrowars.ui.roughTimeAgo
+import com.serwylo.retrowars.ui.playerActivityMessage
 import com.serwylo.retrowars.utils.AppProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -304,7 +304,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                     )
                 )
 
-                summary = Label("${server.currentPlayerCount} player${if (server.currentPlayerCount == 1) "" else "s"}", styles.label.small)
+                summary = Label(playerActivityMessage(strings, server.currentPlayerCount, server.lastPlayerTimestamp), styles.label.small)
 
                 addActor(summary)
 
@@ -336,16 +336,14 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
             val metadata = Table()
 
-            metadata.add(Label("Last game:", styles.label.small)).left()
-            metadata.add(Label(roughTimeAgo(server.lastGameTimestamp), styles.label.small)).left().padLeft(UI_SPACE)
+            metadata.add(Label(
+                playerActivityMessage(strings, server.currentPlayerCount, server.lastPlayerTimestamp),
+                styles.label.small)
+            ).left().colspan(2)
             metadata.row()
 
             metadata.add(Label("Rooms:", styles.label.small)).left()
             metadata.add(Label("${server.currentRoomCount}/${server.maxRooms}", styles.label.small)).left().padLeft(UI_SPACE)
-            metadata.row()
-
-            metadata.add(Label("Players:", styles.label.small)).left()
-            metadata.add(Label(server.currentPlayerCount.toString(), styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
             metadata.add(Label("Version:", styles.label.small)).left()
@@ -599,6 +597,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                         info.currentRoomCount,
                         info.currentPlayerCount,
                         info.lastGameTimestamp,
+                        info.lastPlayerTimestamp,
                         pingTime.toInt(),
                     ))
                 } catch (e: Exception) {
@@ -624,6 +623,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                         info.currentRoomCount,
                         info.currentPlayerCount,
                         info.lastGameTimestamp,
+                        info.lastPlayerTimestamp,
                         pingTime.toInt(),
                     )).sortedBy { serverDetails ->
                         // We could sort by ping time, but it just isn't the only relevant metric here.

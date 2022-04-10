@@ -1,0 +1,5 @@
+Improve feedback about the last time a player tried to play on a server.
+
+There are only a few people playing this game and it is common to join then leave when seeing no other players. Therefore, servers almost always report a "last game" of days or hours ago.
+
+Servers will now the last time a player *tried* to play on the server to let players decide whether to hang around in the lobby or not.
