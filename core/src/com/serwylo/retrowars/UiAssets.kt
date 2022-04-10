@@ -194,11 +194,11 @@ class UiAssets(private val locale: Locale) {
          * accomplish unfortunately.
          */
         private val supportedLocales = setOf(
-            // "de",
+            "de",
             "en",
-            // "fr",
-            // "nb",
-            // "ru",
+            "fr",
+            "nb",
+            // "ru", // Requires Noto fonts rather than Kenney fonts.
         )
 
         private fun isLocaleSupported(locale: Locale): Boolean {
