@@ -1,0 +1,4 @@
+Space invaders: Improve enemy spawning. Prefer to fill in all blank spaces between the alien flanks before extending further out.
+
+Prior to this, players who were successfully containing the flanks (an important strategy in succeeding in space invaders according to some)
+would quickly have this advantage wiped out from the smallest of enemy attacks.
