@@ -98,7 +98,13 @@ abstract class GameScreen(
             }
         }
 
-        hud = HUD(game.uiAssets, if (client != null) { null } else { { pause() } })
+        val menuCallback: (() -> Unit) = if (client != null) {
+            { showMultiplayerMenu() }
+        } else {
+            { pause() }
+        }
+
+        hud = HUD(game.uiAssets, menuCallback)
 
         if (controller != null) {
             addGameOverlayToHUD(controller.getActor())
@@ -460,6 +466,29 @@ abstract class GameScreen(
 
     private var isPaused = false
 
+    private fun showMultiplayerMenu() {
+
+        val pauseGameInfo = MultiplayerInGameMenuActor(
+            game.uiAssets,
+            { hideMultiplayerMenu() },
+            {
+                client?.listen({ _, _ -> })
+                RetrowarsClient.disconnect()
+                game.showMultiplayerLobby()
+            }
+        )
+
+        val scrollView = ScrollPane(pauseGameInfo)
+        scrollView.setFillParent(true)
+        scrollView.setScrollingDisabled(true, false)
+        hud.pushGameOverlay(scrollView)
+
+    }
+
+    private fun hideMultiplayerMenu() {
+        hud.popGameOverlay()
+    }
+
     final override fun pause() {
         client.also { client ->
             if (client != null) {
@@ -470,7 +499,7 @@ abstract class GameScreen(
 
                 isPaused = true
 
-                val pauseGameInfo = PauseGameActor(
+                val pauseGameInfo = SingleplayerInGameMenuActor(
                     game.uiAssets,
                     { resume() },
                     { game.launchGame(gameDetails) },
@@ -485,7 +514,6 @@ abstract class GameScreen(
 
             }
         }
-
     }
 
     override fun resume() {
