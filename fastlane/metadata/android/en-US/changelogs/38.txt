@@ -1,0 +1,6 @@
+Translations!
+
+ * Super Retro Mega Wars is now partially translated in Norwegian (thanks kingu), French and German (thanks Edanas).
+ * Help translate the game into your language at https://hosted.weblate.org/engage/retrowars.
+
+Support further development via GitHub Sponsors or Liberapay.
