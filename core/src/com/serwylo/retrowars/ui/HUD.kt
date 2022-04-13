@@ -8,13 +8,15 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.net.RetrowarsClient
+import java.util.*
 
-class HUD(private val assets: UiAssets) {
+class HUD(private val assets: UiAssets, onMenu: (() -> Unit)?) {
 
     companion object {
         private const val TAG = "HUD"
@@ -30,6 +32,7 @@ class HUD(private val assets: UiAssets) {
     private val avatarCell: Cell<WidgetGroup>?
     private val avatars: Map<Player, Avatar>
     private val styles = assets.getStyles()
+    private val strings = assets.getStrings()
 
     private val stage = makeStage()
     private val scoreLabel = Label("", styles.label.large)
@@ -103,6 +106,12 @@ class HUD(private val assets: UiAssets) {
             avatarCell = if (client == null) null else add(makeAvatarTiles(client, avatars)).expandX().left().pad(UI_SPACE)
 
             gameScore = add().right().expandX().pad(UI_SPACE)
+
+            if (onMenu != null) {
+                add(
+                    makeSmallButton(strings["btn.menu"], styles, onMenu)
+                )
+            }
         }
 
         val windowManager = Table().apply {
@@ -130,8 +139,26 @@ class HUD(private val assets: UiAssets) {
 
     }
 
-    fun addGameOverlay(overlay: Actor) {
-        gameOverlay.setActor(overlay)
+    private val overlays = LinkedList<Actor>()
+
+    fun setGameOverlay(overlay: Actor) {
+        gameOverlay.actor = overlay
+        overlays.clear()
+        overlays.push(overlay)
+    }
+
+    fun pushGameOverlay(overlay: Actor) {
+        gameOverlay.actor = overlay
+        overlays.push(overlay)
+    }
+
+    fun popGameOverlay() {
+        overlays.pop()
+        if (overlays.isEmpty()) {
+            gameOverlay.clear()
+        } else {
+            gameOverlay.actor = overlays.last
+        }
     }
 
     fun addGameScore(overlay: Actor) {
