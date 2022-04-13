@@ -1,0 +1,11 @@
+In game menus.
+
+Single player games:
+ * Pauses the game.
+ * Allows restarting the game, selecting another game, or returning to the main menu.
+
+Multiplayer games:
+ * Doesn't pause the game (for obvious reasons).
+ * Allows leaving the game more gracefully than before.
+
+Thanks to those who recommended this via GitHub. Please feel free to contribute any other ideas to make this game as good as can be.
