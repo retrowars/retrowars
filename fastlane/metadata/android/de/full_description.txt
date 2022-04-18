@@ -1,0 +1,18 @@
+Mögen Sie Retrospiele? Mögen Sie Mehrspieler-Spiele? Wollten Sie schon immer mal ein Retrospiel gegen ein anderes Spiel in Echtzeit spielen?
+
+Willkommen bei Super-Retro-Megakriege!
+
+Spielen Sie gegen Ihre Freunde, wobei jeder von Ihnen mit einem anderen Spiel antreten kann. Wenn du in deinem Spiel Punkte sammelst, wird jedes andere Spiel auf seine eigene Art und Weise benachteiligt. Aber pass auf, je mehr Punkte andere machen, desto schwieriger wird auch dein Spiel.
+
+Sechs verschiedene Einzel- und Mehrspieler-Versionen von Spielen, die auf klassischen Retro-Titeln basieren, und weitere sind in Vorbereitung!
+
+Keine Werbung. Keine In-Game-Käufe. Nur Retro-Spiele und gute Zeiten.
+
+Jedes Feedback ist auf GitHub sehr willkommen.
+
+Bekannte Einschränkungen:
+
+* Gründliche Spieltests erforderlich, um die Spiele auszubalancieren und Fehler auf dem Server zu identifizieren und zu entfernen.
+* Ungetestet auf mehreren Bildschirmgrößen.
+
+Bitte unterstützen Sie die weitere Entwicklung bei GitHub Sponsoren oder Liberapay.
