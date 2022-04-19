@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
@@ -64,7 +65,7 @@ abstract class GameScreen(
 
     private val startTime = System.currentTimeMillis()
 
-    protected val client = RetrowarsClient.get()
+    private val client = RetrowarsClient.get()
 
     private var score = 0L
 
@@ -96,7 +97,14 @@ abstract class GameScreen(
                 update()
             }
         }
-        hud = HUD(game.uiAssets)
+
+        val menuCallback: (() -> Unit) = if (client != null) {
+            { showMultiplayerMenu() }
+        } else {
+            { pause() }
+        }
+
+        hud = HUD(game.uiAssets, menuCallback)
 
         if (controller != null) {
             addGameOverlayToHUD(controller.getActor())
@@ -280,7 +288,7 @@ abstract class GameScreen(
     private fun showEndGameScreen() {
         val styles = game.uiAssets.getStyles()
         val skin = game.uiAssets.getSkin()
-        hud.addGameOverlay(
+        hud.setGameOverlay(
             Table().apply {
 
                 add(withBackground(Label(strings["game.misc.game-over"], styles.label.huge), skin)).fillX()
@@ -398,7 +406,10 @@ abstract class GameScreen(
 
         maybeReceiveDamage()
         shakeCamera(delta)
-        updateGame(delta)
+
+        if (!isPaused) {
+            updateGame(delta)
+        }
 
         game.uiAssets.getEffects().render {
             viewport.renderIn {
@@ -418,7 +429,7 @@ abstract class GameScreen(
      * responsible for showing the game contents.
      */
     protected fun addGameOverlayToHUD(overlay: Actor) {
-        hud.addGameOverlay(overlay)
+        hud.setGameOverlay(overlay)
     }
 
     protected fun addGameScoreToHUD(score: Actor) {
@@ -453,17 +464,61 @@ abstract class GameScreen(
     open fun resizeViewport(viewportWidth: Float, viewportHeight: Float) {
     }
 
-    override fun pause() {
-        with(client) {
-            if (this != null) {
-                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game must remain active while connected to the server.\nPlease rejoin to continue playing.")
-                listen({ _, _ -> })
+    private var isPaused = false
+
+    private fun showMultiplayerMenu() {
+
+        val pauseGameInfo = MultiplayerInGameMenuActor(
+            game.uiAssets,
+            { hideMultiplayerMenu() },
+            {
+                client?.listen({ _, _ -> })
                 RetrowarsClient.disconnect()
+                game.showMultiplayerLobby()
+            }
+        )
+
+        val scrollView = ScrollPane(pauseGameInfo)
+        scrollView.setFillParent(true)
+        scrollView.setScrollingDisabled(true, false)
+        hud.pushGameOverlay(scrollView)
+
+    }
+
+    private fun hideMultiplayerMenu() {
+        hud.popGameOverlay()
+    }
+
+    final override fun pause() {
+        client.also { client ->
+            if (client != null) {
+                game.showNetworkError(Network.ErrorCodes.CLIENT_CLOSED_APP, "Game must remain active while connected to the server.\nPlease rejoin to continue playing.")
+                client.listen({ _, _ -> })
+                RetrowarsClient.disconnect()
+            } else {
+
+                isPaused = true
+
+                val pauseGameInfo = SingleplayerInGameMenuActor(
+                    game.uiAssets,
+                    { resume() },
+                    { game.launchGame(gameDetails) },
+                    { game.showGameSelectMenu() },
+                    { game.showMainMenu() }
+                )
+
+                val scrollView = ScrollPane(pauseGameInfo)
+                scrollView.setFillParent(true)
+                scrollView.setScrollingDisabled(true, false)
+                hud.pushGameOverlay(scrollView)
+
             }
         }
     }
 
     override fun resume() {
+        isPaused = false
+        hud.popGameOverlay()
     }
 
     override fun hide() {
