@@ -68,24 +68,8 @@ class MainMenuScreen(private val game: RetrowarsGame): ScreenAdapter() {
 
         stage.addActor(container)
 
-        makeToggleAudioButton(game.uiAssets.getSprites()) { mute ->
-            setupMusicState(mute)
-        }.also { btn ->
-            btn.x = UI_SPACE * 2
-            btn.y = UI_SPACE * 2
-            stage.addActor(btn)
-        }
+        addToggleAudioButtonToMenuStage(game, stage)
 
-        setupMusicState(Options.isMute())
-
-    }
-
-    private fun setupMusicState(mute: Boolean) {
-        if (!mute) {
-            game.unmute()
-        } else {
-            game.mute()
-        }
     }
 
     override fun resize(width: Int, height: Int) {

@@ -34,7 +34,9 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
         uiAssets = UiAssets(UiAssets.getLocale())
         uiAssets.initSync()
 
-        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/splash.mp3"))
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/splash.mp3")).apply {
+            isLooping = true
+        }
 
         if (Options.isMute()) {
             mute()

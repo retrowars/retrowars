@@ -64,6 +64,8 @@ class BetaGameScreen(game: RetrowarsGame, gameDetails: GameDetails, betaInfo: Be
 
         stage.addActor(container)
 
+        addToggleAudioButtonToMenuStage(game, stage)
+
     }
 
 }

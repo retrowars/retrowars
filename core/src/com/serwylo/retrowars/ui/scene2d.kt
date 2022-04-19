@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
 import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.Player
@@ -206,6 +207,26 @@ fun makeToggleAudioButton(sprites: UiAssets.Sprites, onToggle: (isMute: Boolean)
                 onToggle(newMuteVal)
             }
         })
+    }
+}
+
+fun addToggleAudioButtonToMenuStage(game: RetrowarsGame, stage: Stage) {
+    makeToggleAudioButton(game.uiAssets.getSprites()) { mute ->
+        if (!mute) {
+            game.unmute()
+        } else {
+            game.mute()
+        }
+    }.also { btn ->
+        btn.x = UI_SPACE * 2
+        btn.y = UI_SPACE * 2
+        stage.addActor(btn)
+    }
+
+    if (!Options.isMute()) {
+        game.unmute()
+    } else {
+        game.mute()
     }
 }
 

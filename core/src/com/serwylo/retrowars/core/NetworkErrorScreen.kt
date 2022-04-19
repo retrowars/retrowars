@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.I18NBundle
 import com.serwylo.beatgame.ui.UI_SPACE
+import com.serwylo.beatgame.ui.addToggleAudioButtonToMenuStage
 import com.serwylo.beatgame.ui.makeButton
 import com.serwylo.beatgame.ui.makeHeading
 import com.serwylo.retrowars.RetrowarsGame
@@ -51,6 +52,8 @@ class NetworkErrorScreen(game: RetrowarsGame, code: Int, message: String): Scene
         }
 
         stage.addActor(container)
+
+        addToggleAudioButtonToMenuStage(game, stage)
 
     }
 
