@@ -22,8 +22,6 @@ import kotlin.random.Random
 class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     game,
     Games.tempest,
-    "game.tempest.intro-message.positive",
-    "game.tempest.intro-message.negative",
     40f,
     40f,
     isOrthographic = false,

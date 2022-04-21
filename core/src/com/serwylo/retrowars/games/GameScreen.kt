@@ -3,6 +3,7 @@ package com.serwylo.retrowars.games
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.audio.Music
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.PerspectiveCamera
@@ -33,8 +34,6 @@ import kotlinx.coroutines.launch
 abstract class GameScreen(
     protected val game: RetrowarsGame,
     private val gameDetails: GameDetails,
-    positiveDescription: String,
-    negativeDescription: String,
     minWorldWidth: Float,
     maxWorldWidth: Float,
     isOrthographic: Boolean = true,
@@ -85,6 +84,8 @@ abstract class GameScreen(
      */
     private var queuedAttacks = mutableMapOf<Player, Int>()
 
+    private val music: Music
+
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
         viewport.apply(true)
@@ -111,7 +112,13 @@ abstract class GameScreen(
         }
 
         val strings = game.uiAssets.getStrings()
-        hud.showMessage(strings[positiveDescription], strings[negativeDescription])
+        hud.showMessage(strings[gameDetails.positiveDescription], strings[gameDetails.negativeDescription])
+
+        music = Gdx.audio.newMusic(Gdx.files.internal(gameDetails.songAsset)).apply {
+            play()
+            isLooping = true
+            volume = if (Options.isMute()) 0f else 1f
+        }
 
         client?.listen(
             networkCloseListener = { code, message -> game.showNetworkError(code, message) },
@@ -119,6 +126,10 @@ abstract class GameScreen(
             scoreChangedListener = { _, _ -> handleScoreChange() },
             scoreBreakpointListener = { player, strength -> handleBreakpointChange(player, strength) }
         )
+    }
+
+    private fun playQuietMenuMusic() {
+        music.volume = 0.5f
     }
 
     protected fun getState() = state
@@ -470,23 +481,35 @@ abstract class GameScreen(
 
         val pauseGameInfo = MultiplayerInGameMenuActor(
             game.uiAssets,
-            { hideMultiplayerMenu() },
+            { hideInGameMenu() },
             {
                 client?.listen({ _, _ -> })
                 RetrowarsClient.disconnect()
                 game.showMultiplayerLobby()
-            }
+            },
+            { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
         )
 
-        val scrollView = ScrollPane(pauseGameInfo)
+        showInGameMenu(pauseGameInfo)
+
+    }
+
+    private fun showInGameMenu(actor: Actor) {
+        val scrollView = ScrollPane(actor)
         scrollView.setFillParent(true)
         scrollView.setScrollingDisabled(true, false)
         hud.pushGameOverlay(scrollView)
 
+        if (!Options.isMute()) {
+            playQuietMenuMusic()
+        }
     }
 
-    private fun hideMultiplayerMenu() {
+    private fun hideInGameMenu() {
         hud.popGameOverlay()
+        if (!Options.isMute()) {
+            music.volume = 1f
+        }
     }
 
     final override fun pause() {
@@ -504,13 +527,11 @@ abstract class GameScreen(
                     { resume() },
                     { game.launchGame(gameDetails) },
                     { game.showGameSelectMenu() },
-                    { game.showMainMenu() }
+                    { game.showMainMenu() },
+                    { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
                 )
 
-                val scrollView = ScrollPane(pauseGameInfo)
-                scrollView.setFillParent(true)
-                scrollView.setScrollingDisabled(true, false)
-                hud.pushGameOverlay(scrollView)
+                showInGameMenu(pauseGameInfo)
 
             }
         }
@@ -518,12 +539,15 @@ abstract class GameScreen(
 
     override fun resume() {
         isPaused = false
-        hud.popGameOverlay()
+        hideInGameMenu()
     }
 
     override fun hide() {
+        music.pause()
     }
 
     override fun dispose() {
+        music.stop()
+        music.dispose()
     }
 }

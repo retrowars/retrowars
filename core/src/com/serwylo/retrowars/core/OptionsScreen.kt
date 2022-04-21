@@ -106,6 +106,8 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
 
         stage.addActor(container)
 
+        addToggleAudioButtonToMenuStage(game, stage)
+
     }
 
 }

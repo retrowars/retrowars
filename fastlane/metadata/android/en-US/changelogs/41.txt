@@ -1,0 +1,6 @@
+Music!
+
+Each game now has a unique and fun chiptune track from the wonderful SpaceJacked soundtrack.
+
+Known limitations:
+ * No sound effects yet. These will be added later.

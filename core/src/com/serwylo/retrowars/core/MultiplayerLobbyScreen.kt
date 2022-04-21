@@ -70,6 +70,8 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
     init {
         stage.addActor(makeStageDecoration())
 
+        addToggleAudioButtonToMenuStage(game, stage)
+
         val client = RetrowarsClient.get()
 
         currentState = if (client != null) {

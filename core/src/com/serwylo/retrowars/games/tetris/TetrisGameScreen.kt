@@ -17,7 +17,7 @@ import com.serwylo.retrowars.input.TetrisSoftController
 import com.serwylo.retrowars.ui.ENEMY_ATTACK_COLOUR
 import com.serwylo.retrowars.utils.Options
 
-class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, "game.tetris.intro-message.positive", "game.tetris.intro-message.negative", 400f, 400f) {
+class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400f, 400f) {
 
     companion object {
         @Suppress("unused")

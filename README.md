@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./images/github-banner.png" width="805" />
+<img src="./assets/github-banner.png" width="805" />
 
 [
 ![License GPL v3.0 badge](https://img.shields.io/badge/license-GPL%20v3.0-green?style=flat-square)](https://github.com/retrowars/retrowars/blob/master/LICENSE) [
@@ -87,3 +87,10 @@ To [avoid this issue, run the command above](https://devcenter.heroku.com/articl
 This app uses a the libgdx library and Kotlin. It is recommended to read the [libgdx documentation to get a dev environment setup](https://libgdx.com/dev/setup/).
 
 Alternatively, you can import the project into Android Studio and build from there.
+
+# Attribution
+
+* Various graphic assets - [Kenney](https://kenney.nl/)
+* Music - Space Jacked Soundtrack - [Steam](https://store.steampowered.com/app/461060/Spacejacked__Soundtrack/) / [Free Music Archive](https://freemusicarchive.org/music/sawsquarenoise/RottenMage_SpaceJacked)
+
+More detail on which specific free license is used for each asset can be found in the `./assets/` directory.
