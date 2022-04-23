@@ -199,6 +199,7 @@ class UiAssets(private val locale: Locale) {
             "de",
             "en",
             "fr",
+            "it",
             "nb",
             // "ru", // Requires Noto fonts rather than Kenney fonts.
         )

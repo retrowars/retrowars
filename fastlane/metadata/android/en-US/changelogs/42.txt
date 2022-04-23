@@ -1,0 +1,5 @@
+Translations:
+ * Added Italian (thanks @Edanas)
+ * Updated German and French translations
+
+Able to contribute translations? Please visit https://hosted.weblate.org/engage/retrowars to help out.
