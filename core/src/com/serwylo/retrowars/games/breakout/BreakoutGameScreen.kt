@@ -39,6 +39,19 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         r.color = Color.WHITE
         r.rect(state.paddleX - state.paddleWidth / 2, state.blockHeight, state.paddleWidth, state.blockHeight)
 
+        state.cells.forEachIndexed { y, row ->
+            row.forEachIndexed { x, cell ->
+                if (cell.hasBlock) {
+                    r.rect(
+                        ((x + 1) * state.space) + (x * state.blockWidth),
+                        viewport.worldHeight - (((y + 1) * state.space) + ((y + 1) * state.blockHeight)),
+                        state.blockWidth,
+                        state.blockHeight,
+                    )
+                }
+            }
+        }
+
         r.end()
     }
 
