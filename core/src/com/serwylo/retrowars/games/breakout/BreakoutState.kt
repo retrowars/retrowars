@@ -1,5 +1,7 @@
 package com.serwylo.retrowars.games.breakout
 
+import com.badlogic.gdx.math.Vector2
+
 class BreakoutState(worldWidth: Float, worldHeight: Float) {
 
     companion object {
@@ -18,15 +20,25 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     val paddleSpeed = worldWidth
 
     val cells = (0..NUM_BRICK_ROWS).map { row ->
+        val rowY = worldHeight - ((NUM_BRICK_ROWS - row) * space) - ((NUM_BRICK_ROWS - row) * blockHeight)
         (0..NUM_BRICK_COLS).map { col ->
-            Cell(col, row, true)
+            Cell(col * blockWidth + col * space, rowY, true)
         }
     }
 
+    val ballSpeed =  worldWidth / 2
+    val ballPos = Vector2(worldWidth / 2, space * 2 + blockHeight)
+    val ballPosPrevoius = ballPos.cpy()
+    val ballVel = Vector2(0f, ballSpeed).rotateDeg(45f)
+
 }
 
+/**
+ * @param x X-Position in world coordinates.
+ * @param y Y-Position in world coordinates.
+ */
 data class Cell(
-    val x: Int,
-    val y: Int,
-    val hasBlock: Boolean,
+    val x: Float,
+    val y: Float,
+    var hasBlock: Boolean,
 )
