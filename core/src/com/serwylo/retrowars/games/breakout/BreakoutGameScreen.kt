@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
@@ -22,8 +25,74 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
     private val state = BreakoutState(viewport.worldWidth, viewport.worldHeight)
 
+    private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
+    init {
+        addGameScoreToHUD(lifeContainer)
+    }
+
+    private fun redrawLives() {
+        lifeContainer.clear()
+        for (i in 0 until state.lives) {
+            lifeContainer.addActor(Label("x", game.uiAssets.getStyles().label.large))
+        }
+    }
+
     override fun updateGame(delta: Float) {
 
+        state.timer += delta
+
+        if (getState() == State.Playing) {
+            movePaddle(delta)
+        }
+
+        maybeRespawn()
+
+        moveBall(delta)
+
+        bounceOffWalls()
+        bounceOffPaddle()
+
+        breakBricks()
+
+        if (getState() == State.Playing && maybeDie()) {
+            endGame()
+        }
+
+    }
+
+    private fun maybeRespawn() {
+        if (state.playerRespawnTime >= 0 && state.timer > state.playerRespawnTime) {
+
+            state.ballPos.set(viewport.worldWidth / 2, state.space * 2 + state.paddleHeight)
+            state.ballPosPrevious.set(state.ballPos)
+            state.ballVel.set(0f, state.ballSpeed).rotateDeg(45f)
+
+            state.playerRespawnTime = -1f
+
+        }
+    }
+
+    private fun maybeDie(): Boolean {
+        return if (state.playerRespawnTime >= 0f || state.ballPos.y >= 0f) {
+
+            false
+
+        } else if (state.lives == 1) {
+
+            state.lives = 0
+            true
+
+        } else {
+
+            state.lives --
+            state.playerRespawnTime = state.timer + BreakoutState.PAUSE_AFTER_DEATH
+            false
+
+        }
+    }
+
+    private fun movePaddle(delta: Float) {
         state.targetX?.also { targetX ->
             if (state.paddleX < targetX) {
                 state.paddleX = (state.paddleX + state.paddleSpeed * delta).coerceAtMost(targetX).coerceAtMost(viewport.worldWidth - state.paddleWidth / 2)
@@ -31,18 +100,16 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
                 state.paddleX = (state.paddleX - state.paddleSpeed * delta).coerceAtLeast(targetX).coerceAtLeast(state.paddleWidth / 2)
             }
         }
+    }
 
-        state.ballPosPrevoius.set(state.ballPos)
+    private fun moveBall(delta: Float) {
+        state.ballPosPrevious.set(state.ballPos)
         state.ballPos.mulAdd(state.ballVel, delta)
-
-        bounceOffWalls()
-        breakBricks()
-
     }
 
     private fun breakBricks() {
         val pos = state.ballPos
-        val size = state.blockHeight
+        val size = state.ballSize
         state.cells.forEach { row ->
             val y = row.first().y
             if (pos.y + size > y && pos.y < y + size) {
@@ -52,10 +119,10 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
                         // TODO: Make this take the more dominant overlap rather than preferring the y axis.
                         //       Sometimes it flips downwards when it feels like it should have flipped horizontally instead.
-                        val prev = state.ballPosPrevoius
+                        val prev = state.ballPosPrevious
                         val vel = state.ballVel
                         when {
-                            prev.y + size < cell.y || prev.y > cell.y + size ->
+                            prev.y + size < cell.y || prev.y > cell.y + state.blockHeight ->
                                 vel.y = -vel.y
 
                             prev.x + state.blockWidth < cell.x || prev.x > cell.x + state.blockWidth ->
@@ -71,11 +138,44 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             }
         }
     }
+
+    private fun bounceOffPaddle() {
+        if (state.ballPos.y > state.space + state.paddleHeight || state.ballPos.y + state.paddleHeight < state.space) {
+            return
+        }
+
+        val left = state.paddleLeft()
+        val right = state.paddleRight()
+
+        if (state.ballPos.x > right || state.ballPos.x + state.ballSize < left) {
+            return
+        }
+
+        when {
+            // Coming in from the right, will bounce off in that direction and continue to fall to
+            // the ground :(
+            state.ballPosPrevious.x > right -> {
+                state.ballVel.x = -state.ballVel.x
+                state.ballPos.x = right
+            }
+
+            // As above, but for the left :(
+            state.ballPosPrevious.x + state.ballSize < left -> {
+                state.ballVel.x = -state.ballVel.x
+                state.ballPos.x = left
+            }
+
+            else -> {
+                state.ballVel.y = -state.ballVel.y
+                state.ballPos.y = state.space + state.ballSize
+            }
+        }
+    }
     
     private fun bounceOffWalls() {
         val pos = state.ballPos
         val vel = state.ballVel
-        val size = state.blockHeight
+        val size = state.ballSize
 
         if (vel.x > 0 && pos.x + size > viewport.worldWidth) {
             vel.x = -vel.x
@@ -88,9 +188,6 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         if (vel.y > 0 && pos.y + size > viewport.worldHeight) {
             vel.y = -vel.y
             pos.y = viewport.worldHeight - size
-        } else if (vel.y < 0 && pos.y < state.space * 2 + size) {
-            vel.y = -vel.y
-            pos.y = state.space * 2 + size
         }
     }
 
@@ -100,29 +197,23 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         r.begin(ShapeRenderer.ShapeType.Filled)
 
         r.color = Color.WHITE
-        r.rect(state.paddleX - state.paddleWidth / 2, state.blockHeight, state.paddleWidth, state.blockHeight)
+        r.rect(state.paddleLeft(), state.space, state.paddleWidth, state.paddleHeight)
 
         state.cells.forEachIndexed { y, row ->
             row.forEachIndexed { x, cell ->
                 if (cell.hasBlock) {
-                    r.rect(
-                        cell.x,
-                        cell.y,
-                        state.blockWidth,
-                        state.blockHeight,
-                    )
+                    r.rect(cell.x, cell.y, state.blockWidth, state.blockHeight)
                 }
             }
         }
 
-        r.rect(
-            state.ballPos.x,
-            state.ballPos.y,
-            state.blockHeight,
-            state.blockHeight,
-        )
+        r.rect(state.ballPos.x, state.ballPos.y, state.ballSize, state.ballSize)
 
         r.end()
+
+        if (lifeContainer.children.size != state.lives) {
+            redrawLives()
+        }
     }
 
     override fun onReceiveDamage(strength: Int) {

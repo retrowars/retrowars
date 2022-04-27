@@ -7,6 +7,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     companion object {
         const val NUM_BRICK_ROWS = 5
         const val NUM_BRICK_COLS = 12
+        const val PAUSE_AFTER_DEATH = 2f
     }
 
     var targetX: Float? = null
@@ -14,9 +15,11 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
 
     val blockWidth = worldWidth / (NUM_BRICK_COLS + 1)
     val blockHeight = blockWidth / 4f
+    val ballSize = blockHeight
     val space = (worldWidth - (blockWidth * NUM_BRICK_COLS)) / (NUM_BRICK_COLS + 1)
 
     var paddleWidth = blockWidth * 2f
+    val paddleHeight = blockHeight
     val paddleSpeed = worldWidth
 
     val cells = (0..NUM_BRICK_ROWS).map { row ->
@@ -28,8 +31,16 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
 
     val ballSpeed =  worldWidth / 2
     val ballPos = Vector2(worldWidth / 2, space * 2 + blockHeight)
-    val ballPosPrevoius = ballPos.cpy()
-    val ballVel = Vector2(0f, ballSpeed).rotateDeg(45f)
+    val ballPosPrevious: Vector2 = ballPos.cpy()
+    val ballVel: Vector2 = Vector2(0f, ballSpeed).rotateDeg(45f)
+
+    fun paddleLeft(): Float = paddleX - paddleWidth / 2
+    fun paddleRight(): Float = paddleX + paddleWidth / 2
+
+    var lives = 3
+
+    var timer: Float = 0f
+    var playerRespawnTime: Float = -1f
 
 }
 
