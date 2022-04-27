@@ -8,6 +8,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
         const val NUM_BRICK_ROWS = 5
         const val NUM_BRICK_COLS = 12
         const val PAUSE_AFTER_DEATH = 2f
+        const val MAX_BALL_ANGLE_OFF_PADDLE = 60f // where "0" means directly up, and "90" means directly to the right.
     }
 
     var targetX: Float? = null

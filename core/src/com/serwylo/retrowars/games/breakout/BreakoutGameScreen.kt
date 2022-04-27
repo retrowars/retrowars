@@ -14,6 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import kotlin.math.abs
+import kotlin.math.withSign
 
 class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
     game,
@@ -166,7 +167,11 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             }
 
             else -> {
-                state.ballVel.y = -state.ballVel.y
+                val distanceFromCentre = state.paddleX - (state.ballPos.x + state.ballSize / 2)
+                val percentageDistance = distanceFromCentre / (state.paddleWidth / 2)
+                val angle = percentageDistance * BreakoutState.MAX_BALL_ANGLE_OFF_PADDLE
+
+                state.ballVel.set(0f, state.ballSpeed).rotateDeg(angle)
                 state.ballPos.y = state.space + state.ballSize
             }
         }
