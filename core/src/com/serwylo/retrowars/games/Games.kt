@@ -111,8 +111,10 @@ object Games {
             breakout,
             "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Breakout,Beta%20Feedback&template=&title=",
             """
-            Although in early development, the future roadmap includes:
+            Future roadmap includes:
              - Multiplayer support
+             - Play testing and feedback to ensure the scoring is fair
+               and the physics are accurate
             """.trimIndent()
         )
     )
