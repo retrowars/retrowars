@@ -153,6 +153,7 @@ class UiAssets(private val locale: Locale) {
         inner class Icons {
             val retrowars = atlas.findRegion("icon_app")!!
             val asteroids = atlas.findRegion("icon_asteroids")!!
+            val breakout = atlas.findRegion("icon_breakout")!!
             val missileCommand = atlas.findRegion("icon_missile_command")!!
             val snake = atlas.findRegion("icon_snake")!!
             val spaceInvaders = atlas.findRegion("icon_space_invaders")!!

@@ -54,7 +54,21 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         bounceOffWalls()
         bounceOffPaddle()
 
-        breakBricks()
+        if (breakBricks()) {
+            increaseScore(BreakoutState.SCORE_PER_BRICK)
+
+            state.currentHandicapScore += BreakoutState.SCORE_PER_BRICK
+
+            val factor = (state.currentHandicapScore.toFloat() / BreakoutState.MAX_HANDICAP_SCORE).coerceAtMost(1f)
+
+            val minPaddleSize = state.initialPaddleWidth * BreakoutState.MAX_HANDICAP_PADDLE_SIZE_FACTOR
+            val diffPaddleSize = state.initialPaddleWidth - minPaddleSize
+            state.paddleWidth = state.initialPaddleWidth - (diffPaddleSize * factor)
+
+            val maxBallSpeed = state.initialBallSpeed * BreakoutState.MAX_HANDICAP_BALL_SPEED_FACTOR
+            val diffBallSpeed = maxBallSpeed - state.initialBallSpeed
+            state.ballSpeed = state.initialBallSpeed + (diffBallSpeed * factor)
+        }
 
         if (getState() == State.Playing && maybeDie()) {
             endGame()
@@ -87,6 +101,9 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         } else {
 
             state.lives --
+            state.paddleWidth = state.initialPaddleWidth
+            state.ballSpeed = state.initialBallSpeed
+            state.currentHandicapScore = 0
             state.playerRespawnTime = state.timer + BreakoutState.PAUSE_AFTER_DEATH
             false
 
@@ -108,7 +125,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         state.ballPos.mulAdd(state.ballVel, delta)
     }
 
-    private fun breakBricks() {
+    private fun breakBricks(): Boolean {
         val pos = state.ballPos
         val size = state.ballSize
         state.cells.forEach { row ->
@@ -134,10 +151,14 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
                                 // the ball head back down toward the paddle.
                                 vel.y = - abs(vel.y)
                         }
+
+                        return true
                     }
                 }
             }
         }
+
+        return false
     }
 
     private fun bounceOffPaddle() {

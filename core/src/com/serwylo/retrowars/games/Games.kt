@@ -34,7 +34,7 @@ object Games {
         "music/go_go_faster.mp3", // TODO: Choose a new song.
         "game.breakout.intro-message.positive",
         "game.breakout.intro-message.negative",
-        { s -> s.icons.unknown },
+        { s -> s.icons.breakout },
         { app -> BreakoutGameScreen(app) }
     )
 
