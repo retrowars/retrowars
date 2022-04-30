@@ -31,7 +31,7 @@ object Games {
         "breakout",
         isAvailable = true,
         null,
-        "music/go_go_faster.mp3", // TODO: Choose a new song.
+        "music/where_am_i.mp3",
         "game.breakout.intro-message.positive",
         "game.breakout.intro-message.negative",
         { s -> s.icons.breakout },
