@@ -49,31 +49,46 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
         maybeRespawn()
 
-        moveBall(delta)
+        // Not waiting to respawn, move all the things.
+        if (state.playerRespawnTime < 0) {
+            moveBall(delta)
 
-        bounceOffWalls()
-        bounceOffPaddle()
+            bounceOffWalls()
+            bounceOffPaddle()
 
-        if (breakBricks()) {
-            increaseScore(BreakoutState.SCORE_PER_BRICK)
+            if (breakBricks()) {
+                increaseScore(BreakoutState.SCORE_PER_BRICK)
 
-            state.currentHandicapScore += BreakoutState.SCORE_PER_BRICK
+                state.currentHandicapScore += BreakoutState.SCORE_PER_BRICK
 
-            val factor = (state.currentHandicapScore.toFloat() / BreakoutState.MAX_HANDICAP_SCORE).coerceAtMost(1f)
+                val factor = (state.currentHandicapScore.toFloat() / BreakoutState.MAX_HANDICAP_SCORE).coerceAtMost(1f)
 
-            val minPaddleSize = state.initialPaddleWidth * BreakoutState.MAX_HANDICAP_PADDLE_SIZE_FACTOR
-            val diffPaddleSize = state.initialPaddleWidth - minPaddleSize
-            state.paddleWidth = state.initialPaddleWidth - (diffPaddleSize * factor)
+                val minPaddleSize = state.initialPaddleWidth * BreakoutState.MAX_HANDICAP_PADDLE_SIZE_FACTOR
+                val diffPaddleSize = state.initialPaddleWidth - minPaddleSize
+                state.paddleWidth = state.initialPaddleWidth - (diffPaddleSize * factor)
 
-            val maxBallSpeed = state.initialBallSpeed * BreakoutState.MAX_HANDICAP_BALL_SPEED_FACTOR
-            val diffBallSpeed = maxBallSpeed - state.initialBallSpeed
-            state.ballSpeed = state.initialBallSpeed + (diffBallSpeed * factor)
+                val maxBallSpeed = state.initialBallSpeed * BreakoutState.MAX_HANDICAP_BALL_SPEED_FACTOR
+                val diffBallSpeed = maxBallSpeed - state.initialBallSpeed
+                state.ballSpeed = state.initialBallSpeed + (diffBallSpeed * factor)
+
+                if (state.cells.all { row -> row.all { cell -> !cell.hasBlock } }) {
+                    restartLevel()
+                }
+            }
         }
 
         if (getState() == State.Playing && maybeDie()) {
             endGame()
         }
 
+    }
+
+    private fun restartLevel() {
+        state.cells.forEach { row ->
+            row.forEach { cell -> cell.hasBlock = true }
+        }
+
+        resetPlay()
     }
 
     private fun maybeRespawn() {
@@ -101,13 +116,17 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         } else {
 
             state.lives --
-            state.paddleWidth = state.initialPaddleWidth
-            state.ballSpeed = state.initialBallSpeed
-            state.currentHandicapScore = 0
-            state.playerRespawnTime = state.timer + BreakoutState.PAUSE_AFTER_DEATH
+            resetPlay()
             false
 
         }
+    }
+
+    private fun resetPlay() {
+        state.paddleWidth = state.initialPaddleWidth
+        state.ballSpeed = state.initialBallSpeed
+        state.currentHandicapScore = 0
+        state.playerRespawnTime = state.timer + BreakoutState.PAUSE_AFTER_DEATH
     }
 
     private fun movePaddle(delta: Float) {
@@ -222,6 +241,11 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         r.projectionMatrix = camera.combined
         r.begin(ShapeRenderer.ShapeType.Filled)
 
+        /* TODO: Experiment with the UX of this. The finger obstructs the paddle making it hard/impossible to see. This projects the position upward.
+        r.color = Color.DARK_GRAY
+        r.rect(state.paddleLeft(), 0f, state.paddleWidth, viewport.worldHeight)
+         */
+
         r.color = Color.WHITE
         r.rect(state.paddleLeft(), state.space, state.paddleWidth, state.paddleHeight)
 
@@ -233,7 +257,9 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             }
         }
 
-        r.rect(state.ballPos.x, state.ballPos.y, state.ballSize, state.ballSize)
+        if (state.playerRespawnTime < 0) {
+            r.rect(state.ballPos.x, state.ballPos.y, state.ballSize, state.ballSize)
+        }
 
         r.end()
 

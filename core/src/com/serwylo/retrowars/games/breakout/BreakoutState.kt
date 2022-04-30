@@ -37,7 +37,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     val cells = (0 until NUM_BRICK_ROWS).map { row ->
         val rowY = worldHeight - ((NUM_BRICK_ROWS - row) * space) - ((NUM_BRICK_ROWS - row) * blockHeight)
         (0 until NUM_BRICK_COLS).map { col ->
-            Cell(col * blockWidth + col * space, rowY, true)
+            Cell(space + col * blockWidth + col * space, rowY, true)
         }
     }
 
