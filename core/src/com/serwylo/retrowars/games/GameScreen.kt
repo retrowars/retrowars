@@ -27,15 +27,11 @@ import com.serwylo.retrowars.utils.Options
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-/**
- * @param positiveDescription One line message to explain how to get points in as few words as possible. Shown in large text when the game starts.
- * @param negativeDescription One line message to explain how to avoid losing the game. Shown in smaller text when the game starts.
- */
 abstract class GameScreen(
     protected val game: RetrowarsGame,
     private val gameDetails: GameDetails,
     minWorldWidth: Float,
-    maxWorldWidth: Float,
+    minWorldHeight: Float,
     isOrthographic: Boolean = true,
 ) : Screen {
 
@@ -51,7 +47,7 @@ abstract class GameScreen(
     private val camera = if (isOrthographic) { OrthographicCamera() } else {
         PerspectiveCamera(67f, 1f, 1f)
     }
-    protected val viewport = GameViewport(minWorldWidth, maxWorldWidth, camera)
+    protected val viewport = GameViewport(minWorldWidth, minWorldHeight, camera)
     protected val strings = game.uiAssets.getStrings()
 
     private val hud: HUD

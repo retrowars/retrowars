@@ -6,6 +6,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.core.UnimplementedGameScreen
 import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
+import com.serwylo.retrowars.games.breakout.BreakoutGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
 import com.serwylo.retrowars.games.spaceinvaders.SpaceInvadersGameScreen
@@ -24,6 +25,17 @@ object Games {
         "game.asteroids.intro-message.negative",
         { s -> s.icons.asteroids },
         { app -> AsteroidsGameScreen(app) }
+    )
+
+    val breakout = GameDetails(
+        "breakout",
+        isAvailable = true,
+        null,
+        "music/where_am_i.mp3",
+        "game.breakout.intro-message.positive",
+        "game.breakout.intro-message.negative",
+        { s -> s.icons.breakout },
+        { app -> BreakoutGameScreen(app) }
     )
 
     val missileCommand = GameDetails(
@@ -85,6 +97,7 @@ object Games {
 
     val all = listOf(
         asteroids,
+        breakout,
         missileCommand,
         snake,
         spaceInvaders,
@@ -93,7 +106,18 @@ object Games {
         other,
     )
 
-    val betaInfo = listOf<BetaInfo>()
+    val betaInfo = listOf(
+        BetaInfo(
+            breakout,
+            "https://github.com/retrowars/retrowars/issues/new?assignees=&labels=Game:%20Breakout,Beta%20Feedback&template=&title=",
+            """
+            Future roadmap includes:
+             - Multiplayer support
+             - Play testing and feedback to ensure the scoring is fair
+               and the physics are accurate
+            """.trimIndent()
+        )
+    )
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }
