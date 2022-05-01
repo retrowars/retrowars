@@ -18,20 +18,21 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
          */
         const val MAX_HANDICAP_SCORE = SCORE_PER_BRICK * 20
         const val MAX_HANDICAP_PADDLE_SIZE_FACTOR = 0.6f
-        const val MAX_HANDICAP_BALL_SPEED_FACTOR = 1.5f
+        const val MAX_HANDICAP_BALL_SPEED_FACTOR = 1.3f
     }
 
     var targetX: Float? = null
     var paddleX: Float = worldWidth / 2f
 
-    val blockWidth = worldWidth / (NUM_BRICK_COLS + 1)
-    val blockHeight = blockWidth / 4f
+    val blockWidth = worldWidth / (NUM_BRICK_COLS + 0.75f)
+    val blockHeight = blockWidth / 5f
     val ballSize = blockHeight
-    val space = (worldWidth - (blockWidth * NUM_BRICK_COLS)) / (NUM_BRICK_COLS + 1)
+    val space = ((worldWidth - (blockWidth * NUM_BRICK_COLS)) / (NUM_BRICK_COLS + 0.75f))
 
     var initialPaddleWidth = blockWidth * 2f
     var paddleWidth = blockWidth * 2f
     val paddleHeight = blockHeight
+    val paddleY = space * 10
     val paddleSpeed = worldWidth
 
     val cells = (0 until NUM_BRICK_ROWS).map { row ->
@@ -43,7 +44,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
 
     val initialBallSpeed = worldWidth / 2
     var ballSpeed =  worldWidth / 2
-    val ballPos = Vector2(worldWidth / 2, space * 2 + blockHeight)
+    val ballPos = Vector2(worldWidth / 2, paddleY + paddleHeight + space)
     val ballPosPrevious: Vector2 = ballPos.cpy()
     val ballVel: Vector2 = Vector2(0f, ballSpeed).rotateDeg(45f)
 
