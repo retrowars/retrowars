@@ -94,7 +94,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
     private fun maybeRespawn() {
         if (state.playerRespawnTime >= 0 && state.timer > state.playerRespawnTime) {
 
-            state.ballPos.set(viewport.worldWidth / 2, state.space * 2 + state.paddleHeight)
+            state.ballPos.set(viewport.worldWidth / 2, state.paddleHeight + state.space + state.paddleHeight)
             state.ballPosPrevious.set(state.ballPos)
             state.ballVel.set(0f, state.ballSpeed).rotateDeg(45f)
 
@@ -181,7 +181,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
     }
 
     private fun bounceOffPaddle() {
-        if (state.ballPos.y > state.space + state.paddleHeight || state.ballPos.y + state.paddleHeight < state.space) {
+        if (state.ballPos.y > state.paddleY + state.paddleHeight || state.ballPos.y + state.paddleHeight < state.paddleY) {
             return
         }
 
@@ -212,7 +212,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
                 val angle = percentageDistance * BreakoutState.MAX_BALL_ANGLE_OFF_PADDLE
 
                 state.ballVel.set(0f, state.ballSpeed).rotateDeg(angle)
-                state.ballPos.y = state.space + state.ballSize
+                state.ballPos.y = state.paddleY + state.paddleHeight
             }
         }
     }
@@ -247,7 +247,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
          */
 
         r.color = Color.WHITE
-        r.rect(state.paddleLeft(), state.space, state.paddleWidth, state.paddleHeight)
+        r.rect(state.paddleLeft(), state.paddleY, state.paddleWidth, state.paddleHeight)
 
         state.cells.forEachIndexed { y, row ->
             row.forEachIndexed { x, cell ->
