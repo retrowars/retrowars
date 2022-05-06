@@ -31,7 +31,8 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     data class Config(
         val rooms: Rooms,
         val port: Int,
-        val finalScoreDelay: Int,
+        val finalScoreDelayMillis: Int,
+        val inactivePlayerTimeoutMillis: Int,
         val includeBetaGames: Boolean = false,
     )
 
@@ -164,7 +165,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 9000))
+            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500, 90000))
             server = newServer
             return newServer
         }
@@ -240,6 +241,9 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     private var lastGame: Date? = null
     private var lastPlayer: Date? = null
 
+    private val cleanupInactiveConnectionsJob = Job()
+    private val cleanupInactiveConnectionsScope = CoroutineScope(Dispatchers.IO + cleanupInactiveConnectionsJob)
+
     init {
 
         when (rooms) {
@@ -266,6 +270,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
                 when (obj) {
                     is Network.Server.RegisterPlayer -> newPlayer(connection, obj.roomId, obj.playerId)
+                    is Network.Server.NetworkKeepAlive -> registerKeepAlive(connection)
                     is Network.Server.StartGame -> startGame(connection.room)
                     is Network.Server.UnregisterPlayer -> removePlayer(connection)
                     is Network.Server.UpdateScore -> updateScore(connection, obj.score)
@@ -274,8 +279,29 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
             },
         )
 
+        cleanupInactiveConnectionsScope.launch {
+            while (true) {
+                delay(10000)
+                cleanupInactiveConnections()
+            }
+        }
+
         Gdx.app.log(TAG, "Starting ${rooms.getName()} server on TCP port ${config.port}")
         server.connect(platform, config.port, rooms)
+    }
+
+    private fun cleanupInactiveConnections() {
+        connections.removeAll { connection ->
+            val timeSinceKeepAlive = System.currentTimeMillis() - connection.lastKeepAlive
+            if (timeSinceKeepAlive > config.inactivePlayerTimeoutMillis) {
+                logger.warn("Removing inactive player ${connection.player?.id} from room ${connection.room?.id} due to ${timeSinceKeepAlive}ms since last keep alive (timeout set to ${config.inactivePlayerTimeoutMillis}).")
+                removePlayer(connection)
+                true
+            } else {
+                logger.debug("Keeping player ${connection.player?.id} from room ${connection.room?.id} as it is only ${timeSinceKeepAlive}ms since last keep alive")
+                false
+            }
+        }
     }
 
     fun getRoomCount() = rooms.getRoomCount()
@@ -387,8 +413,8 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         }
 
         returnToLobbyTask = GlobalScope.launch {
-            Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelay}ms seconds before telling each player to return to the main lobby for this room.")
-            delay(config.finalScoreDelay.toLong())
+            Gdx.app.debug(TAG, "Waiting for ${config.finalScoreDelayMillis}ms seconds before telling each player to return to the main lobby for this room.")
+            delay(config.finalScoreDelayMillis.toLong())
 
             room.players.onEach { player ->
                 player.game = randomGame()
@@ -447,6 +473,12 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
     private fun logStats() {
         logger.info("Stats: numPlayers=${rooms.getPlayerCount()} numRooms=${rooms.getRoomCount()}")
+    }
+
+    private fun registerKeepAlive(connection: NetworkServer.Connection) {
+        val timeSinceLast = System.currentTimeMillis() - connection.lastKeepAlive
+        Gdx.app.debug(TAG, "Registering keep alive for ${connection.player?.id} ${timeSinceLast}ms after previous keep alive.")
+        connection.lastKeepAlive = System.currentTimeMillis()
     }
 
     private fun newPlayer(connection: NetworkServer.Connection, roomId: Long = 0, preferredPlayerId: Long = 0) {
@@ -520,6 +552,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         val message = Network.Client.OnFatalError(Network.ErrorCodes.SERVER_SHUTDOWN, "Server has been shutdown.")
         connections.onEach { it.sendMessage(message) }
         server.disconnect(platform)
+        cleanupInactiveConnectionsJob.cancel()
     }
 
     private fun startGame(room: Room?) {
@@ -546,6 +579,7 @@ interface NetworkServer {
     interface Connection {
         var player: Player?
         var room: RetrowarsServer.Room?
+        var lastKeepAlive: Long
 
         fun sendMessage(obj: Any)
     }
@@ -592,6 +626,7 @@ class WebSocketNetworkServer(
     internal class PlayerConnection(private val session: DefaultWebSocketSession): NetworkServer.Connection {
         override var player: Player? = null
         override var room: RetrowarsServer.Room? = null
+        override var lastKeepAlive: Long = System.currentTimeMillis()
 
         override fun sendMessage(obj: Any) {
             runBlocking {

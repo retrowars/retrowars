@@ -14,13 +14,15 @@ object ServerLauncher {
         val port = getIntArg("PORT", "port", args) ?: Network.defaultPort
         val maxRooms = getIntArg("MAX_ROOMS", "max-rooms", args) ?: 20
         val roomSize = getIntArg("ROOM_SIZE", "room-size", args) ?: 4
-        val finalScoreDuration = getIntArg("FINAL_SCORE_DURATION", "final-score-duration", args) ?: 7500
+        val finalScoreDurationMillis = getIntArg("FINAL_SCORE_DURATION", "final-score-duration", args) ?: 7500
+        val inactivePlayerTimeoutMillis = getIntArg("INACTIVE_PLAYER_TIMEOUT", "inactive-player-timeout", args) ?: 90000
         val betaGames = getBoolArg("BETA_GAMES", "--beta-games", args)
 
         val serverConfig = RetrowarsServer.Config(
             rooms = RetrowarsServer.Rooms.PublicRandomRooms(roomSize, maxRooms),
             port,
-            finalScoreDuration,
+            finalScoreDurationMillis,
+            inactivePlayerTimeoutMillis,
             includeBetaGames = betaGames,
         )
 
