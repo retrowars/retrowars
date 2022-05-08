@@ -1,7 +1,6 @@
 package com.serwylo.retrowars.games.asteroids
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
@@ -27,11 +26,14 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
+    private val sounds = AsteroidsSoundLibrary()
+
     init {
 
         state.ship.onShoot {
             it.setWorldSize(viewport.worldWidth, viewport.worldHeight)
             state.bullets.add(it)
+            sounds.fire()
         }
 
         addGameScoreToHUD(lifeContainer)
@@ -51,12 +53,15 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
             state.ship.left = controller.trigger(AsteroidsSoftController.Buttons.LEFT)
             state.ship.right = controller.trigger(AsteroidsSoftController.Buttons.RIGHT)
             state.ship.shooting = controller.trigger(AsteroidsSoftController.Buttons.FIRE)
+
+            state.ship.wasThrusting = state.ship.thrust
             state.ship.thrust = controller.trigger(AsteroidsSoftController.Buttons.THRUST)
         }
 
         updateEntities(delta)
 
         if (getState() == State.Playing && state.numLives <= 0) {
+            sounds.stopThrust()
             endGame()
         }
     }
@@ -70,11 +75,20 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 // If we have not died (i.e. we are not in the mandatory waiting period for respawning the ship).
                 state.ship.update(delta)
 
-            } else if (state.isShipReadyToRespawn()) {
+                if (state.ship.wasThrusting != state.ship.thrust) {
+                    if (state.ship.thrust) {
+                        sounds.startThrust()
+                    } else {
+                        sounds.stopThrust()
+                    }
+                }
 
-                // If we have died, waited the minimum amount of time, and are now ready to respawn...
-                respawnShipIfSafe()
-
+            } else {
+                sounds.stopThrust()
+                if (state.isShipReadyToRespawn()) {
+                    // If we have died, waited the minimum amount of time, and are now ready to respawn...
+                    respawnShipIfSafe()
+                }
             }
 
         }
@@ -138,6 +152,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 asteroidsToBreak.add(asteroid)
 
                 shipHit()
+                sounds.hitShip()
 
             } else {
 
@@ -146,6 +161,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
+                    sounds.hitShip()
                     increaseScore(asteroid.size.points)
                 }
 

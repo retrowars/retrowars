@@ -26,6 +26,8 @@ task dist(type: Jar) {
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
+    baseName 'retrowars'
+    version project.ext.appVersionName
     dependsOn configurations.runtimeClasspath
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }

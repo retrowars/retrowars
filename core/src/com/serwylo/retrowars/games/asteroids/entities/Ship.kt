@@ -30,7 +30,14 @@ class Ship(initialPosition: Vector2 = Vector2(0f, 0f)): WrapsWorld, HasBoundingS
 
     var left = false
     var right = false
+
+    /**
+     * Record whether or not it was thrusting the frame prior, so that we can start + stop the sound
+     * effects accordingly.
+     */
+    var wasThrusting = false
     var thrust = false
+
     var shooting = false
         set(value) {
             if (field != value) {
