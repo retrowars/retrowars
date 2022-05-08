@@ -23,12 +23,12 @@ abstract class SoundLibrary {
     }
 
     private fun getOrLoadSound(soundName: String): Sound {
-        val soundFile = soundDefinitions[soundName] ?: error("Could not find sound with name: $soundName")
+        val soundFileName = soundDefinitions[soundName] ?: error("Could not find sound with name: $soundName")
 
-        val file = theme?.file(soundFile) ?: Gdx.files.internal("sounds/$soundFile")
-        return sounds[soundFile] ?: Gdx.audio.newSound(file).also { sound ->
-            Gdx.app.log("SoundLibrary", "Loading sound $soundFile")
-            sounds[soundFile] = sound
+        val file = theme?.file(soundName) ?: Gdx.files.internal("sounds/$soundFileName")
+        return sounds[soundName] ?: Gdx.audio.newSound(file).also { sound ->
+            Gdx.app.log("SoundLibrary", "Loading sound $soundName")
+            sounds[soundName] = sound
         }
     }
 
