@@ -161,7 +161,7 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
-                    sounds.hitShip()
+                    sounds.hitAsteroid()
                     increaseScore(asteroid.size.points)
                 }
 
