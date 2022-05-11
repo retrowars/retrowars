@@ -84,7 +84,10 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 }
 
             } else {
-                sounds.stopThrust()
+                if (state.ship.wasThrusting) {
+                    sounds.stopThrust()
+                }
+
                 if (state.isShipReadyToRespawn()) {
                     // If we have died, waited the minimum amount of time, and are now ready to respawn...
                     respawnShipIfSafe()
@@ -161,7 +164,12 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
                 if (bullet != null) {
                     asteroidsToBreak.add(asteroid)
                     state.bullets.remove(bullet)
-                    sounds.hitAsteroid()
+                    when (asteroid.size) {
+                        Asteroid.Size.tiny -> sounds.hitTinyAsteroid()
+                        Asteroid.Size.small -> sounds.hitSmallAsteroid()
+                        Asteroid.Size.medium -> sounds.hitMediumAsteroid()
+                        Asteroid.Size.large -> sounds.hitLargeAsteroid()
+                    }
                     increaseScore(asteroid.size.points)
                 }
 
