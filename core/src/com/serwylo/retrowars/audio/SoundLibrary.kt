@@ -4,17 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.files.FileHandle
 
-abstract class SoundLibrary {
-
-    private val soundDefinitions = mapOf(
-        "asteroids_fire" to "asteroids_fire.ogg",
-        "asteroids_hit_asteroid_tiny" to "asteroids_hit_asteroid_tiny.ogg",
-        "asteroids_hit_asteroid_small" to "asteroids_hit_asteroid_small.ogg",
-        "asteroids_hit_asteroid_medium" to "asteroids_hit_asteroid_medium.ogg",
-        "asteroids_hit_asteroid_large" to "asteroids_hit_asteroid_large.ogg",
-        "asteroids_hit_ship" to "asteroids_hit_ship.ogg",
-        "asteroids_thrust" to "asteroids_thrust.ogg",
-    )
+abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
     private val foundSoundFiles = mutableMapOf<String, List<FileHandle>>()
     private val loadedSounds = mutableMapOf<String, Sound>()

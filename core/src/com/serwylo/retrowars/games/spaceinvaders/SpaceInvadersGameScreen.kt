@@ -13,6 +13,7 @@ import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
+import com.serwylo.retrowars.games.asteroids.AsteroidsSoundLibrary
 import com.serwylo.retrowars.input.SpaceInvadersSoftController
 import kotlin.math.roundToInt
 
@@ -27,6 +28,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     private val state = SpaceInvadersGameState(viewport.worldWidth, viewport.worldHeight, game.uiAssets.getSprites().gameSprites.space_invaders_barrier)
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
+
+    private val sounds = SpaceInvadersSoundLibrary()
 
     private val barrierTextures: MutableMap<Barrier, Texture> = state.barriers.associateWith { Texture(it.pixmap) }.toMutableMap()
 
@@ -460,6 +463,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         if (state.movingRow == -1) {
+
+            sounds.tick()
 
             if (!shouldEnemiesDrop()) {
                 state.movingRow = state.enemies.indexOfLast { it.isNotEmpty() }
