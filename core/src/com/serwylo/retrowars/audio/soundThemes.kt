@@ -6,29 +6,80 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.io.File
 
-class SoundTheme(val metadata: SoundThemeMetadata, private val soundFiles: List<FileHandle>) {
+class SoundTheme(val metadata: SoundThemeMetadata, val soundFiles: List<FileHandle>) {
+    override fun toString() = "SoundTheme: ${metadata.dirName}, soundFiles: [${soundFiles.joinToString(", ") { it.name() }}]"
+}
 
-    private val soundNamesToFiles = soundFiles.associateBy { it.nameWithoutExtension() }
-
-    fun file(soundFile: String): FileHandle? {
-        val alternateSound = metadata.alternateSoundNames[soundFile]
-        if (alternateSound != null) {
-            Gdx.app.log("SoundThemes", "Loading sound $soundFile from sound theme ${metadata.dirName} from the alternate named ${alternateSound.name()}.")
-            return alternateSound
-        }
-
-        val sound = soundNamesToFiles[soundFile]
-        if (sound != null) {
-            Gdx.app.log("SoundThemes", "Loading sound $soundFile from sound theme ${metadata.dirName} from ${sound.name()}.")
-            return sound
-        }
-
-        Gdx.app.log("SoundThemes", "Sound $soundFile not found in theme ${metadata.dirName}, will use game default.")
-        return null
+fun getSoundFileHandlesFromTheme(soundName: String, theme: SoundTheme): List<FileHandle> {
+    val alternateSound = theme.metadata.alternateSoundNames[soundName]
+    if (alternateSound != null) {
+        Gdx.app.debug("SoundThemes", "Loading sound $soundName from sound theme ${theme.metadata.dirName} from the alternate named ${alternateSound.name()}.")
+        return listOf(alternateSound)
     }
 
-    override fun toString() = "SoundTheme: ${metadata.dirName}, soundFiles: [${soundFiles.map { it.name() }.joinToString(", ")}]"
+    val sounds = theme.soundFiles.filter {
+        Regex("$soundName\\.\\d+\\.(${supportedSoundExtensions.joinToString("|")})").matches(it.name())
+    }
 
+    if (sounds.isNotEmpty()) {
+        Gdx.app.debug("SoundThemes", "Loading ${sounds.size} versions of $soundName sounds from theme ${theme.metadata.dirName}: [${sounds.joinToString(", ") { it.name() }}]")
+        return sounds
+    }
+
+    val sound = theme.soundFiles.firstOrNull {
+        it.nameWithoutExtension() == soundName
+    }
+
+    if (sound != null) {
+        Gdx.app.debug("SoundThemes", "Loading sound $soundName from sound theme ${theme.metadata.dirName} from ${sound.name()}.")
+        return listOf(sound)
+    }
+
+    return emptyList()
+}
+
+private fun appendNumericSuffix(fileName: String, n: Int): String {
+    val file = File(fileName)
+    val name = file.nameWithoutExtension
+    val ext = file.extension
+
+    return "$name.$n.$ext"
+}
+
+private fun internalIndexedFile(filename: String, n: Int): FileHandle? {
+    val name = appendNumericSuffix(filename, n)
+    val file = Gdx.files.internal("sounds/$name")
+
+    return if (file.exists()) file else null
+}
+
+fun getDefaultSoundFileHandles(defaultSoundFileName: String): List<FileHandle> {
+    var index = 1
+    val firstFile = internalIndexedFile(defaultSoundFileName, index ++)
+        ?: return listOf(Gdx.files.internal("sounds/$defaultSoundFileName"))
+
+    val files = mutableListOf(firstFile)
+    while (true) {
+        val file = internalIndexedFile(defaultSoundFileName, index ++) ?: break
+        files.add(file)
+    }
+
+    return files.toList()
+}
+
+fun getSoundFileHandles(soundName: String, theme: SoundTheme?, defaultSoundFileName: String): List<FileHandle> {
+    if (theme != null) {
+        val sounds = getSoundFileHandlesFromTheme(soundName, theme)
+        if (sounds.isNotEmpty()) {
+            return sounds
+        }
+
+        Gdx.app.debug("SoundThemes", "Sound $soundName not found in theme ${theme.metadata.dirName}, will use game default.")
+    } else {
+        Gdx.app.debug("SoundThemes", "Sound theme doesn't exist, so fetching $soundName from the game default: $defaultSoundFileName.")
+    }
+
+    return getDefaultSoundFileHandles(defaultSoundFileName)
 }
 
 /**
@@ -88,8 +139,6 @@ private fun findSounds(themeDir: FileHandle): List<FileHandle> =
         .list()
         .filter { supportedSoundExtensions.contains( it.extension() ) }
 
-// TODO: Make this more robust so that it skips broken things but still provides as much as possible in case of error
-//       (e.g. single file missing from alternateSoundNames should not crash the whole thing, just skip that one).
 private fun loadThemeMetadata(themeDir: FileHandle): SoundThemeMetadata {
     val file = File(themeDir.file(), "metadata.json")
     if (file.exists()) {
@@ -110,11 +159,7 @@ private fun loadThemeMetadata(themeDir: FileHandle): SoundThemeMetadata {
 
 private fun loadAlternativeSounds(themeDir: FileHandle, metadataJson: JsonObject): Map<String, FileHandle> {
 
-    val soundsData = metadataJson["alternateSoundNames"]?.asJsonObject
-
-    if (soundsData == null) {
-        return emptyMap()
-    }
+    val soundsData = metadataJson["alternateSoundNames"]?.asJsonObject ?: return emptyMap()
 
     return soundsData
         .keySet()
