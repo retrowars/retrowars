@@ -35,6 +35,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     init {
         addGameScoreToHUD(lifeContainer)
+        sounds.tick()
     }
 
     override fun updateGame(delta: Float) {
