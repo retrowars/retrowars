@@ -20,6 +20,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
     }
 
     private val state = SnakeGameState()
+    private val sounds = SnakeSoundLibrary()
 
     override fun show() {
         Gdx.input.inputProcessor = getInputProcessor()
@@ -77,6 +78,8 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
             endGame()
             return
         }
+
+        sounds.tick()
 
         state.snake.addFirst(newHead)
 
