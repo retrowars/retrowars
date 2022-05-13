@@ -75,6 +75,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
         val newHead = moveTo(state.currentDirection, currentHead)
 
         if (newHead == null || state.snake.contains(newHead)) {
+            sounds.hit()
             endGame()
             return
         }
@@ -85,6 +86,7 @@ class SnakeGameScreen(game: RetrowarsGame) : GameScreen(game, Games.snake, 400f,
 
         if (newHead == state.food) {
 
+            sounds.eat()
             increaseSpeed()
             spawnFood()
 

@@ -25,6 +25,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
     }
 
     private val state = TetrisGameState()
+    private val sounds = TetrisSoundLibrary()
 
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 
@@ -156,6 +157,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         if (isLegalMove(state.currentPiece, state.currentX, state.currentY + 1)) {
 
             state.currentY ++
+            sounds.tick()
 
         } else {
 
