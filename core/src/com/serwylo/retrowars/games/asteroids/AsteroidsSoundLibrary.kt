@@ -21,6 +21,6 @@ class AsteroidsSoundLibrary: SoundLibrary(
     fun hitMediumAsteroid() = play("asteroids_hit_asteroid_medium")
     fun hitLargeAsteroid() = play("asteroids_hit_asteroid_large")
     fun startThrust() = startLoop("asteroids_thrust")
-    fun stopThrust() = stopLoop("asteroids_thrust")
+    fun stopThrust() = stopLoop("asteroids_thrust", StopType.FadeFast)
 
 }
