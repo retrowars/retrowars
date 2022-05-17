@@ -102,10 +102,12 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
             newY ++
         }
 
+        sounds.dropPiece()
         storeTetronimoInGrid(state.currentPiece, state.currentX, newY - 1)
         chooseNewTetronimo()
 
         if (!isLegalMove(state.currentPiece, state.currentX, state.currentY)) {
+            sounds.screenFull()
             endGame()
             return false
         }
@@ -161,10 +163,12 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
         } else {
 
+            sounds.dropPiece()
             storeTetronimoInGrid(state.currentPiece, state.currentX, state.currentY)
             chooseNewTetronimo()
 
             if (!isLegalMove(state.currentPiece, state.currentX, state.currentY)) {
+                sounds.screenFull()
                 endGame()
                 return false
             }
@@ -204,6 +208,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
         }
 
         if (numLines > 0) {
+            sounds.clearLines()
             increaseScore(TetrisGameState.score(numLines))
             state.lines += numLines
             linesLabel.setText("${state.lines} lines")
@@ -215,6 +220,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
         // If the last row has any pieces, it is game over...
         if (state.cells.first().any { it != CellState.Empty }) {
+            sounds.screenFull()
             endGame()
             return false
         }
