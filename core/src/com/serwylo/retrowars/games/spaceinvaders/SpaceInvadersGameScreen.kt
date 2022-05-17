@@ -76,6 +76,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
             if (isLowestRowAtTheBottom()) {
                 if (getState() == State.Playing) {
+                    sounds.aliensLand()
                     endGame()
                 }
             } else {
