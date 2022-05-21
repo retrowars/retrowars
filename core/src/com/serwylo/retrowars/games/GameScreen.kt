@@ -82,7 +82,7 @@ abstract class GameScreen(
      */
     private var queuedAttacks = mutableMapOf<Player, Int>()
 
-    private val music: Music
+    private var music: Music
 
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
@@ -277,10 +277,20 @@ abstract class GameScreen(
 
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
+
             GlobalScope.launch {
                 launch { saveHighScore(gameDetails, score) }
                 launch { recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id)) }
+                launch {
+                    music.stop()
+                    music.dispose()
+
+                    music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg"))
+                    music.play()
+                    music.isLooping = true
+                }
             }
+
             showEndGameScreen()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
