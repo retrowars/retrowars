@@ -1,0 +1,12 @@
+New game - Breakout!
+
+As voted by the community, this was the next most popular game to be implemented.
+
+Limitations:
+ - No multiplayer support (yet)
+ - Needs play testing
+
+v0.28.1: Move paddle (no longer obstructed by fingers)
+v0.28.2: Slower ball, room for combos above bricks
+
+Be sure to note any feedback on GitHub, and support further development via donations on Liberapay or GitHub Sponsors.

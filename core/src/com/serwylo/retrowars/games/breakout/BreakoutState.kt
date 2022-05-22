@@ -5,11 +5,16 @@ import com.badlogic.gdx.math.Vector2
 class BreakoutState(worldWidth: Float, worldHeight: Float) {
 
     companion object {
+        /**
+         * Drop the first row this many rows from the top of the screen to allow the ball to bounce
+         * around the top of the screen once a player breaks through: https://youtu.be/Cr6z3AyhRr8?t=114
+         */
+        const val FIRST_ROW_OFFSET = 4
         const val NUM_BRICK_ROWS = 6
         const val NUM_BRICK_COLS = 12
         const val PAUSE_AFTER_DEATH = 1f
         const val MAX_BALL_ANGLE_OFF_PADDLE = 60f // where "0" means directly up, and "90" means directly to the right.
-        const val SCORE_PER_BRICK = 4000
+        const val SCORE_PER_BRICK = 3000
 
         /**
          * After starting a new life, accumulating this much score will result in:
@@ -36,14 +41,14 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     val paddleSpeed = worldWidth
 
     val cells = (0 until NUM_BRICK_ROWS).map { row ->
-        val rowY = worldHeight - ((NUM_BRICK_ROWS - row) * space) - ((NUM_BRICK_ROWS - row) * blockHeight)
+        val rowY = worldHeight - ((NUM_BRICK_ROWS - row) * space) - ((FIRST_ROW_OFFSET + NUM_BRICK_ROWS - row) * blockHeight)
         (0 until NUM_BRICK_COLS).map { col ->
             Cell(space + col * blockWidth + col * space, rowY, true)
         }
     }
 
-    val initialBallSpeed = worldWidth / 2
-    var ballSpeed =  worldWidth / 2
+    val initialBallSpeed = worldWidth * 0.4f
+    var ballSpeed =  initialBallSpeed
     val ballPos = Vector2(worldWidth / 2, paddleY + paddleHeight + space)
     val ballPosPrevious: Vector2 = ballPos.cpy()
     val ballVel: Vector2 = Vector2(0f, ballSpeed).rotateDeg(45f)
