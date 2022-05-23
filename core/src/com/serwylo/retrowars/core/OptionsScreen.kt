@@ -240,7 +240,7 @@ class ControllerSelectScreen(
         container.add(
             makeHeading(
                 gameDetails.icon(game.uiAssets.getSprites()),
-                "Controller",
+                game.uiAssets.getStrings()["options.controller-select.title"],
                 game.uiAssets.getStyles(),
                 game.uiAssets.getStrings()
             ) {
@@ -276,11 +276,23 @@ class ControllerSelectScreen(
     }
 
     private fun setSelection(index: Int) {
-        heading.setText("Layout ${index + 1}")
+        val strings = game.uiAssets.getStrings()
+        heading.setText(strings.format("options.controller-select.layout-number", index + 1))
         currentIndex = index
         Options.setSoftController(gameDetails, index)
         wrapper.clear()
-        wrapper.add(SoftController(game.uiAssets, controller, index).getActor()).expand().fill()
+
+        val softController = SoftController(game.uiAssets, controller, index)
+        if (softController.noButtonsDescription == null) {
+            wrapper.add(softController.getActor()).expand().fill()
+        } else {
+            wrapper.add(
+                Label(strings[softController.noButtonsDescription], game.uiAssets.getStyles().label.medium).apply {
+                    wrap = true
+                    setAlignment(Align.center)
+                }
+            ).expand().fill().center().pad(UI_SPACE * 2)
+        }
     }
 
 }

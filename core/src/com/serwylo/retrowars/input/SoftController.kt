@@ -12,10 +12,18 @@ import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.ui.IconButton
 
 abstract class SoftControllerLayout {
-    abstract fun getLayouts(): List<String>
+    abstract fun getLayouts(): List<String?>
     open fun getButtons(): List<ButtonDefinition> {
         return listOf()
     }
+
+    /**
+     * Games like Breakout support both on screen buttons (left and right) or a complete absence of
+     * buttons (drag your finger anywhere on the screen to move the paddle). For the later, you
+     * must return null from one (and only one) of the [getLayouts] function, and provide a non-empty
+     * [String] from this function.
+     */
+    open fun describeNoButtonsMessage(): String? = null
 }
 
 class ButtonDefinition(
@@ -38,6 +46,7 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
     private val buttonDefs = layout.getButtons()
     private val buttonStates = buttonDefs.associateBy({ it.name }, { it.makeButton() })
     private val buttonActors: Map<String, IconButton>
+    val noButtonsDescription: String?
 
     companion object {
         private const val TAG = "SoftController"
@@ -45,83 +54,95 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
     init {
 
-        val cellContents = getLayout(layout.getLayouts(), index)
-            .split("\n")
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .map { line ->
-                line.trimStart('[').trimEnd(']').split("][").map { cell ->
-                    cell.trim()
+        val serialized = getLayout(layout.getLayouts(), index)
+
+        if (serialized == null) {
+            buttonActors = emptyMap()
+            noButtonsDescription = layout.describeNoButtonsMessage()
+
+            if (noButtonsDescription == null) {
+                error("If you have a controller layout with no buttons, you must provide a 'description' to explain how it works (to be shown to the user).")
+            }
+        } else {
+            val cellContents = serialized
+                .split("\n")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .map { line ->
+                    line.trimStart('[').trimEnd(']').split("][").map { cell ->
+                        cell.trim()
+                    }
                 }
+
+            val expectedButtons = buttonDefs.map { it.name }
+
+            val missingButtons = expectedButtons.filter { buttonName ->
+                val found = cellContents.any { row ->
+                    row.any { cell -> cell == buttonName }
+                }
+
+                !found
             }
 
-        val expectedButtons = buttonDefs.map { it.name }
-
-        val missingButtons = expectedButtons.filter { buttonName ->
-            val found = cellContents.any { row ->
-                row.any { cell -> cell == buttonName }
+            if (missingButtons.isNotEmpty()) {
+                error("Incorrect controller layout specified. Missing buttons: ${missingButtons.joinToString(", ")}.")
             }
 
-            !found
-        }
+            val buttonSize = UI_SPACE * 15
 
-        if (missingButtons.isNotEmpty()) {
-            error("Incorrect controller layout specified. Missing buttons: ${missingButtons.joinToString(", ")}.")
-        }
+            table.bottom().pad(UI_SPACE * 4)
 
-        val buttonSize = UI_SPACE * 15
+            val actors = mutableMapOf<String, IconButton>()
 
-        table.bottom().pad(UI_SPACE * 4)
+            cellContents.onEach { row ->
 
-        val actors = mutableMapOf<String, IconButton>()
+                table.row()
 
-        cellContents.onEach { row ->
+                row.onEach { buttonContent ->
 
-            table.row()
+                    if (buttonContent.isBlank()) {
 
-            row.onEach { buttonContent ->
+                        table.add()
 
-                if (buttonContent.isBlank()) {
+                    } else if (buttonContent.matches(Regex("<-.*>"))) {
 
-                    table.add()
+                        table.add().expandX()
 
-                } else if (buttonContent.matches(Regex("<-.*>"))) {
+                    } else {
 
-                    table.add().expandX()
+                        val buttonDef = buttonDefs.find { it.name == buttonContent } ?: error("Could not find button \"$buttonContent\" in controller layout.")
+                        val button = IconButton(uiAssets.getSkin(), buttonDef.icon(uiAssets.getSprites()))
+                        button.addAction(Actions.alpha(0.4f))
+                        table.add(button).space(UI_SPACE * 2).size(buttonSize)
+                        actors[buttonContent] = button
 
-                } else {
+                        val listener = object: ClickListener() {
 
-                    val buttonDef = buttonDefs.find { it.name == buttonContent } ?: error("Could not find button \"$buttonContent\" in controller layout.")
-                    val button = IconButton(uiAssets.getSkin(), buttonDef.icon(uiAssets.getSprites()))
-                    button.addAction(Actions.alpha(0.4f))
-                    table.add(button).space(UI_SPACE * 2).size(buttonSize)
-                    actors[buttonContent] = button
+                            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                                buttonStates[buttonContent]?.softKeyPress()
+                                return true
+                            }
 
-                    val listener = object: ClickListener() {
+                            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                                buttonStates[buttonContent]?.softKeyRelease()
+                            }
 
-                        override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                            buttonStates[buttonContent]?.softKeyPress()
-                            return true
                         }
 
-                        override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                            buttonStates[buttonContent]?.softKeyRelease()
-                        }
+                        button.addListener(listener)
 
                     }
 
-                    button.addListener(listener)
-
                 }
 
             }
 
+            buttonActors = actors.toMap()
+            noButtonsDescription = null
         }
-
-        this.buttonActors = actors.toMap()
     }
 
-    private fun getLayout(layouts: List<String>, index: Int): String = if (layouts.size >= index) {
+    private fun getLayout(layouts: List<String?>, index: Int): String? = if (layouts.size >= index) {
         layouts[index]
     } else {
         Gdx.app.error(TAG, "Tried to use layout ${index}, but there are only ${layouts.size} available. Defaulting to 0.")
@@ -168,7 +189,7 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
         }
 
-        buttonActors[button]!!.addListener(listener)
+        buttonActors[button]?.addListener(listener)
 
     }
 
@@ -430,6 +451,37 @@ class AsteroidsSoftController: SoftControllerLayout() {
     object Buttons {
         const val THRUST = "thrust"
         const val FIRE = "fire"
+        const val LEFT = "left"
+        const val RIGHT = "right"
+    }
+}
+
+class BreakoutSoftController: SoftControllerLayout() {
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { ContinuousPressButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { ContinuousPressButton() },
+        ),
+    )
+
+    override fun getLayouts() = listOf(
+        null,
+        "[ left ][<---->][ right  ]",
+        "[ left ][ right ][<----->]",
+        "[<---->][ left  ][ right ]",
+    )
+
+    override fun describeNoButtonsMessage(): String = "options.controller-select.breakout-no-buttons"
+
+    object Buttons {
         const val LEFT = "left"
         const val RIGHT = "right"
     }
