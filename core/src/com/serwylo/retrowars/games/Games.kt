@@ -30,7 +30,7 @@ object Games {
     val breakout = GameDetails(
         "breakout",
         isAvailable = true,
-        null,
+        BreakoutSoftController(),
         "music/where_am_i.mp3",
         "game.breakout.intro-message.positive",
         "game.breakout.intro-message.negative",

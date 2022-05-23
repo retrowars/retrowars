@@ -24,9 +24,20 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
         const val MAX_HANDICAP_SCORE = SCORE_PER_BRICK * 20
         const val MAX_HANDICAP_PADDLE_SIZE_FACTOR = 0.6f
         const val MAX_HANDICAP_BALL_SPEED_FACTOR = 1.3f
+
+        /**
+         * When using soft controllers, the paddle moves a little slower to make it more manageable.
+         * When dragging a finger, it is easier to move very quickly to the final destination, because
+         * your finger is literally there. However when using soft buttons, you kind of have to guess
+         * when your paddle is in the right spot and hope you release at the right time. Slowing down
+         * the movement helps to deal with this.
+         */
+        const val SOFT_BUTTON_PADDLE_SPEED_FACTOR = 0.8f
     }
 
     var targetX: Float? = null
+    var isMovingLeft = false
+    var isMovingRight = false
     var paddleX: Float = worldWidth / 2f
 
     val blockWidth = worldWidth / (NUM_BRICK_COLS + 0.75f)

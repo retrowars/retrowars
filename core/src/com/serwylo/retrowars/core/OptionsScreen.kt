@@ -280,7 +280,18 @@ class ControllerSelectScreen(
         currentIndex = index
         Options.setSoftController(gameDetails, index)
         wrapper.clear()
-        wrapper.add(SoftController(game.uiAssets, controller, index).getActor()).expand().fill()
+
+        val softController = SoftController(game.uiAssets, controller, index)
+        if (softController.noButtonsDescription == null) {
+            wrapper.add(softController.getActor()).expand().fill()
+        } else {
+            wrapper.add(
+                Label(softController.noButtonsDescription, game.uiAssets.getStyles().label.medium).apply {
+                    wrap = true
+                    setAlignment(Align.center)
+                }
+            ).expand().fill().center().pad(UI_SPACE * 2)
+        }
     }
 
 }
