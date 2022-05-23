@@ -23,7 +23,7 @@ abstract class SoftControllerLayout {
      * must return null from one (and only one) of the [getLayouts] function, and provide a non-empty
      * [String] from this function.
      */
-    open fun describeNoButtons(): String? = null
+    open fun describeNoButtonsMessage(): String? = null
 }
 
 class ButtonDefinition(
@@ -58,7 +58,7 @@ class SoftController(uiAssets: UiAssets, layout: SoftControllerLayout, index: In
 
         if (serialized == null) {
             buttonActors = emptyMap()
-            noButtonsDescription = layout.describeNoButtons()
+            noButtonsDescription = layout.describeNoButtonsMessage()
 
             if (noButtonsDescription == null) {
                 error("If you have a controller layout with no buttons, you must provide a 'description' to explain how it works (to be shown to the user).")
@@ -479,7 +479,7 @@ class BreakoutSoftController: SoftControllerLayout() {
         "[<---->][ left  ][ right ]",
     )
 
-    override fun describeNoButtons(): String = "Drag your finger anywhere on the screen to move the paddle"
+    override fun describeNoButtonsMessage(): String = "options.controller-select.breakout-no-buttons"
 
     object Buttons {
         const val LEFT = "left"
