@@ -33,6 +33,12 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
          * the movement helps to deal with this.
          */
         const val SOFT_BUTTON_PADDLE_SPEED_FACTOR = 0.8f
+
+        /**
+         * This is measured as a factor of the [maxPaddleSpeed] (which in turn is determined by the
+         * viewport width).
+         */
+        const val PADDLE_ACCELERATION = 2000f
     }
 
     var targetX: Float? = null
@@ -49,7 +55,8 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     var paddleWidth = blockWidth * 2f
     val paddleHeight = blockHeight
     val paddleY = space * 10
-    val paddleSpeed = worldWidth
+    val maxPaddleSpeed = worldWidth
+    var paddleVelocity = 0f
 
     val cells = (0 until NUM_BRICK_ROWS).map { row ->
         val rowY = worldHeight - ((NUM_BRICK_ROWS - row) * space) - ((FIRST_ROW_OFFSET + NUM_BRICK_ROWS - row) * blockHeight)
