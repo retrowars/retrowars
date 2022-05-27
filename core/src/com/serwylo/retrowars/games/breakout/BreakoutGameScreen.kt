@@ -164,6 +164,8 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
                 }
             }
         }
+
+        state.paddleX = state.paddleX.coerceIn(state.paddleWidth / 2f, viewport.worldWidth - state.paddleWidth / 2f)
     }
 
     private fun moveBall(delta: Float) {
