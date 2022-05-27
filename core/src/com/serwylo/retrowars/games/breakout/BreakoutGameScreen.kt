@@ -97,7 +97,11 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             row.forEach { cell -> cell.hasBlock = true }
         }
 
-        resetPlay()
+        // Intentionally don't "resetPlay()" here, because the game is just a little too easy to make
+        // last forever if you continually start each level fresh. If instead, you start with a little
+        // pace on the ball and a smaller paddle, then it is more challenging while the blocks hang
+        // nice and low, forcing you to move the paddle more to prevent impending doom.
+        respawnSoon()
     }
 
     private fun maybeRespawn() {
@@ -125,16 +129,20 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         } else {
 
             state.lives --
-            resetPlay()
+            resetHandicap()
+            respawnSoon()
             false
 
         }
     }
 
-    private fun resetPlay() {
+    private fun resetHandicap() {
         state.paddleWidth = state.initialPaddleWidth
         state.ballSpeed = state.initialBallSpeed
         state.currentHandicapScore = 0
+    }
+
+    private fun respawnSoon() {
         state.playerRespawnTime = state.timer + BreakoutState.PAUSE_AFTER_DEATH
     }
 
@@ -156,6 +164,8 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
                 }
             }
         }
+
+        state.paddleX = state.paddleX.coerceIn(state.paddleWidth / 2f, viewport.worldWidth - state.paddleWidth / 2f)
     }
 
     private fun moveBall(delta: Float) {

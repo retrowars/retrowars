@@ -22,7 +22,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
          *  - The smallest paddle
          */
         const val MAX_HANDICAP_SCORE = SCORE_PER_BRICK * 20
-        const val MAX_HANDICAP_PADDLE_SIZE_FACTOR = 0.6f
+        const val MAX_HANDICAP_PADDLE_SIZE_FACTOR = 0.55f
         const val MAX_HANDICAP_BALL_SPEED_FACTOR = 1.3f
 
         /**
@@ -41,7 +41,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
     var paddleX: Float = worldWidth / 2f
 
     val blockWidth = worldWidth / (NUM_BRICK_COLS + 0.75f)
-    val blockHeight = blockWidth / 5f
+    val blockHeight = worldHeight / 30f
     val ballSize = blockHeight
     val space = ((worldWidth - (blockWidth * NUM_BRICK_COLS)) / (NUM_BRICK_COLS + 0.75f))
 
@@ -58,7 +58,7 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
         }
     }
 
-    val initialBallSpeed = worldWidth * 0.4f
+    val initialBallSpeed = worldHeight * 0.75f
     var ballSpeed =  initialBallSpeed
     val ballPos = Vector2(worldWidth / 2, paddleY + paddleHeight + space)
     val ballPosPrevious: Vector2 = ballPos.cpy()
