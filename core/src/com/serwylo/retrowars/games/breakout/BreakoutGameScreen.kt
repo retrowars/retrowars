@@ -14,9 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.input.BreakoutSoftController
-import com.serwylo.retrowars.input.SpaceInvadersSoftController
 import kotlin.math.abs
-import kotlin.math.withSign
 
 class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
     game,
@@ -148,19 +146,38 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
     private fun movePaddle(delta: Float) {
         if (state.isMovingLeft) {
-            state.paddleX -= delta * state.paddleSpeed * BreakoutState.SOFT_BUTTON_PADDLE_SPEED_FACTOR
+            if (state.paddleVelocity > 0f) {
+                state.paddleVelocity = 0f
+            }
+            state.paddleVelocity = (state.paddleVelocity - delta * BreakoutState.PADDLE_ACCELERATION).coerceAtLeast(-state.maxPaddleSpeed * BreakoutState.SOFT_BUTTON_PADDLE_SPEED_FACTOR)
         }
 
         if (state.isMovingRight) {
-            state.paddleX += delta * state.paddleSpeed * BreakoutState.SOFT_BUTTON_PADDLE_SPEED_FACTOR
+            if (state.paddleVelocity < 0f) {
+                state.paddleVelocity = 0f
+            }
+            state.paddleVelocity = (state.paddleVelocity + delta * BreakoutState.PADDLE_ACCELERATION).coerceAtMost(state.maxPaddleSpeed * BreakoutState.SOFT_BUTTON_PADDLE_SPEED_FACTOR)
+        }
+
+        if (state.paddleVelocity != 0f) {
+
+            if (!state.isMovingLeft && !state.isMovingRight) {
+                state.paddleVelocity = if (state.paddleVelocity < 0f) {
+                    (state.paddleVelocity + delta * BreakoutState.PADDLE_ACCELERATION).coerceAtMost(0f)
+                } else {
+                    (state.paddleVelocity - delta * BreakoutState.PADDLE_ACCELERATION).coerceAtLeast(0f)
+                }
+            }
+
+            state.paddleX += delta * state.paddleVelocity
         }
 
         if (controller?.noButtonsDescription != null) {
             state.targetX?.also { targetX ->
                 if (state.paddleX < targetX) {
-                    state.paddleX = (state.paddleX + state.paddleSpeed * delta).coerceAtMost(targetX).coerceAtMost(viewport.worldWidth - state.paddleWidth / 2)
+                    state.paddleX = (state.paddleX + state.maxPaddleSpeed * delta).coerceAtMost(targetX).coerceAtMost(viewport.worldWidth - state.paddleWidth / 2)
                 } else {
-                    state.paddleX = (state.paddleX - state.paddleSpeed * delta).coerceAtLeast(targetX).coerceAtLeast(state.paddleWidth / 2)
+                    state.paddleX = (state.paddleX - state.maxPaddleSpeed * delta).coerceAtLeast(targetX).coerceAtLeast(state.paddleWidth / 2)
                 }
             }
         }
