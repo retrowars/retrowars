@@ -25,6 +25,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 ) {
 
     private val state = BreakoutState(viewport.worldWidth, viewport.worldHeight)
+    private val sounds = BreakoutSoundLibrary()
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
@@ -64,6 +65,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             bounceOffPaddle()
 
             if (breakBricks()) {
+                sounds.hitBrick()
                 increaseScore(BreakoutState.SCORE_PER_BRICK)
 
                 state.currentHandicapScore += BreakoutState.SCORE_PER_BRICK
@@ -121,11 +123,13 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
         } else if (state.lives == 1) {
 
+            sounds.finalLifeLost()
             state.lives = 0
             true
 
         } else {
 
+            sounds.hitFloor()
             state.lives --
             resetHandicap()
             respawnSoon()
@@ -238,6 +242,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
             return
         }
 
+        sounds.hitPaddle()
         when {
             // Coming in from the right, will bounce off in that direction and continue to fall to
             // the ground :(
@@ -271,14 +276,17 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         if (vel.x > 0 && pos.x + size > viewport.worldWidth) {
             vel.x = -vel.x
             pos.x = viewport.worldWidth - size
+            sounds.hitPaddle()
         } else if (vel.x < 0 && pos.x < 0) {
             vel.x = -vel.x
             pos.x = 0f
+            sounds.hitPaddle()
         }
 
         if (vel.y > 0 && pos.y + size > viewport.worldHeight) {
             vel.y = -vel.y
             pos.y = viewport.worldHeight - size
+            sounds.hitPaddle()
         }
     }
 
