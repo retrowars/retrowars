@@ -170,6 +170,13 @@ class Flipper(
     var timeUntilNextFlip: Float,
 
     var direction: Direction = randomDirection(segment),
+
+    /**
+     * Used only to the purpose of initiating a sound when the flipping starts. Not actually
+     * used to figure out if we are flipping or not because that can trivially be done by
+     * consulting [timeUntilNextFlip] and comparing it to [TempestGameState.enemyFlipWaitTime].
+     */
+    var isFlipping: Boolean = false,
 ): Enemy(segment, zPosition) {
 
     init {
