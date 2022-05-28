@@ -33,6 +33,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     }
 
     private val state = TempestGameState(viewport.worldWidth, viewport.worldHeight)
+    private val sounds = TempestSoundLibrary()
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
@@ -178,6 +179,10 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             }
         }
 
+        if (hitEnemies.isNotEmpty()) {
+            sounds.enemyHit()
+        }
+
         onEnemiesRemoved(hitEnemies)
     }
 
@@ -219,6 +224,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
         state.enemies += newEnemy
         state.enemies += EnemyBullet(newEnemy.segment, newEnemy.zPosition)
 
+        sounds.enemySpawn()
+
         return newEnemy
     }
 
@@ -258,6 +265,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             state.enemies.none { it !is Spike && it !is EnemyBullet }
         ) {
             state.nextLevelTime = state.timer + TempestGameState.TOTAL_TIME_BETWEEN_LEVELS
+            sounds.levelWarp()
         }
     }
 
@@ -287,6 +295,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
     private fun maybeAdvanceLevel() {
         if (state.timer > state.nextLevelTime) {
             Gdx.app.log(TAG, "Advancing to next level.")
+
             val currentLevelIndex = state.allLevels.indexOf(state.level)
             state.level = state.allLevels[(currentLevelIndex + 1) % state.allLevels.size]
 
@@ -527,6 +536,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
+        sounds.playerHit()
         state.numLives --
         state.nextLevelTime = 0f
         queueExplosion(state.playerSegment.centre, state.playerDepth)
@@ -565,6 +575,8 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             return
         }
 
+        sounds.playerFire()
+
         val flippersToHit = mutableListOf<Flipper>()
         for (enemy in state.enemies) {
             if (enemy is Flipper && enemy.zPosition <= 0 && apparentSegment(enemy) === state.playerSegment) {
@@ -575,6 +587,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
         if (flippersToHit.isNotEmpty()) {
             // Just kill it directly without even showing the bullet. We are right on top of this enemy.
+            sounds.enemyHit()
             state.enemies.remove(flippersToHit[0])
             increaseScore(TempestGameState.SCORE_PER_FLIPPER)
             queueExplosion(exactEnemyPosition(flippersToHit[0]), 0f)
@@ -796,7 +809,13 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
             renderOnAngle(shapeRenderer, enemy.segment.centre, -enemy.zPosition, enemy.segment.angle) {
                 it.polygon(flipperShape)
             }
+            enemy.isFlipping = false
         } else {
+            if (!enemy.isFlipping) {
+                sounds.enemyFlip()
+                enemy.isFlipping = true
+            }
+
             val flipPercent = 1f - enemy.timeUntilNextFlip / state.enemyFlipTransitionTime
 
             // When we assigned the direction in the past, we ensured the next segment is not null
