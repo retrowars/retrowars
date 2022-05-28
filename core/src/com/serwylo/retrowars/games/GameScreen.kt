@@ -285,9 +285,11 @@ abstract class GameScreen(
                     music.stop()
                     music.dispose()
 
-                    music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg"))
-                    music.play()
-                    music.isLooping = true
+                    music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg")).apply {
+                        play()
+                        isLooping = true
+                        volume = if (Options.isMute()) 0f else 1f
+                    }
                 }
             }
 
