@@ -1,0 +1,5 @@
+New game - Breakout!
+
+Includes multiplayer support, so make sure to upgrade the app and then connect to a new server to play.
+
+Please donate to support further development.
