@@ -1,0 +1,18 @@
+Hou je van retrospellen? Geniet je van multiplayer spellen? Ooit een retro spel tegen een ander spel in real time willen spelen?
+
+Welkom bij Super Retro Mega Wars!
+
+Speel tegen je vrienden, waarbij ieder van jullie het tegen elkaar op kan nemen door een ander spel te spelen. Scoor punten in jouw spel en elk ander spel zal op zijn eigen unieke manier worden benadeeld. Maar kijk uit, als anderen scoren, zal jouw spel ook moeilijker worden.
+
+Zes verschillende single en multi-player versies van games gebaseerd op klassieke retro titels, met meer in de pijplijn!
+
+Geen advertenties. Geen in game aankopen. Gewoon retro games en goede tijden.
+
+Alle feedback is zeer welkom op GitHub.
+
+Bekende beperkingen:
+
+* Grondige speltesten nodig om de spellen in balans te brengen en bugs te identificeren en verwijderen van de server.
+* Niet getest op meerdere schermgroottes.
+
+Steun verdere ontwikkeling op GitHub sponsors of Liberapay.
