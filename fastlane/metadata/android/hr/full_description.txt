@@ -1,0 +1,18 @@
+Jel uživate u retro igrama? Jel uživate u igrama za više igrača? Jeste li ikada htjeli igrati jednu retro igru protiv druge igre u stvarnom vremenu?
+
+Dobrodošli u Super Retro Mega Ratovi!
+
+Igrajte protiv svojih prijatelja, a svaki se od vas može natjecati igrajući drugu igru. Osvojite poene u svojoj igri i svaka druga igra će bit hendikepirana na svoj jedinstven način. Ali pazite, kako drugi postižu, i vaša će igra postajati teža.
+
+Šest različitih verzija igara za jednog i više igrača temeljenih na klasičnim retro naslovima, s još u pripremi!
+
+Bez reklama. Nema kupnje u igricama. Samo retro igrice i dobar provod.
+
+Svaka povratna informacija je vrlo dobrodošla na GitHub.
+
+Poznata ograničenja:
+
+* Potrebno je temeljito testiranje igranja kako bi se uravnotežile igre te identificirale i uklonile greške s servera.
+* Nije testirano na više veličina zaslona.
+
+Molimo vas da podržite daljnji razvoj preko GitHub sponzora ili Liberapaya.
