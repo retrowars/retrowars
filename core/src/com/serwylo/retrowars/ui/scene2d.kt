@@ -8,18 +8,15 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
-import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.I18NBundle
-import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails
-import com.serwylo.retrowars.net.Player
 import com.serwylo.retrowars.utils.Options
 import kotlin.random.Random
 
@@ -190,6 +187,13 @@ fun makeGameIcon(gameDetails: GameDetails, uiAssets: UiAssets): Image {
 
 }
 
+private fun soundIcon(sprites: UiAssets.Sprites, isMute: Boolean): TextureRegion =
+        if (isMute) {
+            sprites.buttonIcons.audio_off_b
+        } else {
+            sprites.buttonIcons.audio_on
+        }
+
 private fun musicIcon(sprites: UiAssets.Sprites, isMute: Boolean): TextureRegion =
     if (isMute) {
         sprites.buttonIcons.music_off
@@ -197,33 +201,48 @@ private fun musicIcon(sprites: UiAssets.Sprites, isMute: Boolean): TextureRegion
         sprites.buttonIcons.music_on
     }
 
-fun makeToggleAudioButton(sprites: UiAssets.Sprites, onToggle: (isMute: Boolean) -> Unit): Image {
-    return Image(musicIcon(sprites, Options.isMute())).also { btn ->
-        btn.addListener(object: ClickListener() {
-            override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                val newMuteVal = !Options.isMute()
-                Options.setMute(newMuteVal)
-                btn.drawable = TextureRegionDrawable(musicIcon(sprites, newMuteVal))
-                onToggle(newMuteVal)
+fun makeToggleAudioButtons(sprites: UiAssets.Sprites, onToggleMusic: (volume: Float) -> Unit, onToggleSound: (volume: Float) -> Unit): Actor {
+    return HorizontalGroup().also { wrapper ->
+        wrapper.addActor(
+            Image(musicIcon(sprites, Options.isMusicMuted())).also { btn ->
+                btn.addListener(object : ClickListener() {
+                    override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                        val newMuteVal = !Options.isMusicMuted()
+                        Options.setMusicMuted(newMuteVal)
+                        btn.drawable = TextureRegionDrawable(musicIcon(sprites, newMuteVal))
+                        onToggleMusic(Options.getMusicVolume())
+                    }
+                })
             }
-        })
+        )
+
+        wrapper.addActor(
+                Image(soundIcon(sprites, Options.isSoundMuted())).also { btn ->
+                    btn.addListener(object : ClickListener() {
+                        override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                            val newMuteVal = !Options.isSoundMuted()
+                            Options.setSoundMuted(newMuteVal)
+                            btn.drawable = TextureRegionDrawable(soundIcon(sprites, newMuteVal))
+                            onToggleSound(Options.getSoundVolume())
+                        }
+                    })
+                }
+        )
     }
 }
 
 fun addToggleAudioButtonToMenuStage(game: RetrowarsGame, stage: Stage) {
-    makeToggleAudioButton(game.uiAssets.getSprites()) { mute ->
-        if (!mute) {
-            game.unmute()
-        } else {
-            game.mute()
-        }
-    }.also { btn ->
+    makeToggleAudioButtons(
+        game.uiAssets.getSprites(),
+        { volume -> game.setMusicVolume(volume) },
+        { },
+    ).also { btn ->
         btn.x = UI_SPACE * 2
         btn.y = UI_SPACE * 2
         stage.addActor(btn)
     }
 
-    if (!Options.isMute()) {
+    if (!Options.isMusicMuted()) {
         game.unmute()
     } else {
         game.mute()

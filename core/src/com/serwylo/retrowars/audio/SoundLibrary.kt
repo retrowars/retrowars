@@ -3,6 +3,7 @@ package com.serwylo.retrowars.audio
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.files.FileHandle
+import com.serwylo.retrowars.utils.Options
 import io.ktor.server.engine.*
 import kotlinx.coroutines.*
 
@@ -21,7 +22,7 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
     private val soundScope = CoroutineScope(Dispatchers.IO + soundJob)
 
     protected fun play(soundName: String) {
-        getOrLoadSound(soundName).play()
+        getOrLoadSound(soundName).play(if (Options.isSoundMuted()) 0f else Options.getSoundVolume())
     }
 
     private fun getOrLoadSound(soundName: String): Sound {
@@ -59,7 +60,7 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
             getOrLoadSound(soundName).also { sound ->
                 loopingSounds[soundName] = sound
 
-                val id = sound.loop()
+                val id = sound.loop(if (Options.isSoundMuted()) 0f else Options.getSoundVolume())
                 loopingSoundIds[soundName] = id
             }
         }
