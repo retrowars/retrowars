@@ -115,7 +115,7 @@ abstract class GameScreen(
         music = Gdx.audio.newMusic(Gdx.files.internal(gameDetails.songAsset)).apply {
             play()
             isLooping = true
-            volume = if (Options.isMute()) 0f else 1f
+            volume = Options.getRealMusicVolume()
         }
 
         client?.listen(
@@ -127,7 +127,7 @@ abstract class GameScreen(
     }
 
     private fun playQuietMenuMusic() {
-        music.volume = 0.5f
+        music.volume = Options.getRealMusicVolume() * 0.5f
     }
 
     protected fun getState() = state
@@ -288,7 +288,7 @@ abstract class GameScreen(
                     music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg")).apply {
                         play()
                         isLooping = true
-                        volume = if (Options.isMute()) 0f else 1f
+                        volume = Options.getRealMusicVolume()
                     }
                 }
             }
@@ -499,7 +499,7 @@ abstract class GameScreen(
                 RetrowarsClient.disconnect()
                 game.showMultiplayerLobby()
             },
-            { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
+            { isMute -> playQuietMenuMusic() },
         )
 
         showInGameMenu(pauseGameInfo)
@@ -512,15 +512,15 @@ abstract class GameScreen(
         scrollView.setScrollingDisabled(true, false)
         hud.pushGameOverlay(scrollView)
 
-        if (!Options.isMute()) {
+        if (!Options.isMusicMuted()) {
             playQuietMenuMusic()
         }
     }
 
     private fun hideInGameMenu() {
         hud.popGameOverlay()
-        if (!Options.isMute()) {
-            music.volume = 1f
+        if (!Options.isMusicMuted()) {
+            music.volume = Options.getRealMusicVolume()
         }
     }
 
@@ -540,7 +540,7 @@ abstract class GameScreen(
                     { game.launchGame(gameDetails) },
                     { game.showGameSelectMenu() },
                     { game.showMainMenu() },
-                    { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
+                    { _ -> playQuietMenuMusic() },
                 )
 
                 showInGameMenu(pauseGameInfo)

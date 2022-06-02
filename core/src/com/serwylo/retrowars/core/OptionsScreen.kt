@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
 import com.serwylo.beatgame.ui.UI_SPACE
@@ -27,6 +28,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
     private val skin = game.uiAssets.getSkin()
     private val strings = game.uiAssets.getStrings()
     private val sprites = game.uiAssets.getSprites()
+    private val soundCheck = Gdx.audio.newSound(Gdx.files.internal("sounds/sound_check.ogg"))
 
     init {
         val stage = this.stage
@@ -44,26 +46,37 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                 }
             ).colspan(2).expandY()
 
-            row().pad(UI_SPACE)
+            row()
 
             add(
                 Table().also { wrapper ->
+                    pad(UI_SPACE)
 
                     wrapper.row().pad(UI_SPACE)
                     wrapper.add(Label(strings["options.controller-layouts"], styles.label.medium))
                     wrapper.row().pad(UI_SPACE)
                     wrapper.add(makeControllerSelectButtons())
+
+                }
+            ).width((stage.viewport.worldWidth - UI_SPACE * 3) * 2 / 5f).space(UI_SPACE).top()
+
+            add(
+                Table().also { wrapper ->
+                    pad(UI_SPACE)
+
+                    wrapper.row().pad(UI_SPACE)
+                    wrapper.add(Label("Audio / Visual", styles.label.medium))
+                    wrapper.row()
+                    wrapper.add(makeMusicToggle()).growX()
+                    wrapper.row()
+                    wrapper.add(makeSoundToggle()).growX()
+                    wrapper.row().pad(UI_SPACE)
+                    wrapper.add(makeVisualEffectsToggle()).growX().colspan(2)
                     wrapper.row().pad(UI_SPACE)
                     wrapper.add(makeChooseAvatarButton())
 
                 }
-            ).width(stage.viewport.worldWidth / 2f).pad(UI_SPACE).top()
-
-            add(
-                Table().also { wrapper ->
-                    wrapper.add(makeVisualEffectsToggle()).growX()
-                }
-            ).width(stage.viewport.worldWidth / 2f).pad(UI_SPACE).top()
+            ).width((stage.viewport.worldWidth - UI_SPACE * 3) * 3 / 5f).space(UI_SPACE).top()
 
             row()
             add().expandY() // Used to centre the content above (as the heading also expandY()'s the top space)
@@ -71,10 +84,6 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
         }
 
         stage.addActor(container)
-
-        stage.isDebugAll = true
-
-        addToggleAudioButtonToMenuStage(game, stage)
 
     }
 
@@ -116,6 +125,84 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
         }
     }
 
+    private fun makeMusicToggle() = Table().also { row ->
+
+        val drawable = { TextureRegionDrawable(if (Options.isMusicMuted()) sprites.buttonIcons.music_off else sprites.buttonIcons.music_on) }
+
+        val slider = Slider(0f, 1f, 0.01f, false, skin)
+
+        val img = Image(drawable()).also { img ->
+            img.addListener(object: ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    Options.setMusicMuted(!Options.isMusicMuted())
+                    slider.value = if (Options.isMusicMuted()) 0f else {
+                        val vol = Options.getMusicVolume()
+                        if (vol == 0f) {
+                            Options.setMusicVolume(0.5f)
+                            0.5f
+                        } else {
+                            vol
+                        }
+                    }
+                    img.drawable = drawable()
+                    game.setMusicVolume(slider.value)
+                }
+            })
+        }
+
+        slider.setProgrammaticChangeEvents(false)
+        slider.value = Options.getRealMusicVolume()
+        slider.addListener(object: ChangeListener() {
+            override fun changed(event: ChangeEvent?, actor: Actor?) {
+                Options.setMusicVolume(slider.value)
+                img.drawable = drawable()
+                game.setMusicVolume(slider.value)
+            }
+        })
+
+        row.add(img)
+        row.add(slider).growX().spaceLeft(UI_SPACE).spaceRight(UI_SPACE)
+    }
+
+    private fun makeSoundToggle() = Table().also { row ->
+
+        val drawable = { TextureRegionDrawable(if (Options.isSoundMuted()) sprites.buttonIcons.audio_off_b else sprites.buttonIcons.audio_on) }
+
+        val slider = Slider(0f, 1f, 0.01f, false, skin)
+
+        val img = Image(drawable()).also { img ->
+            img.addListener(object: ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    Options.setSoundMuted(!Options.isSoundMuted())
+                    slider.value = if (Options.isSoundMuted()) 0f else {
+                        val vol = Options.getSoundVolume()
+                        if (vol == 0f) {
+                            Options.setSoundVolume(0.5f)
+                            0.5f
+                        } else {
+                            vol
+                        }
+                    }
+                    img.drawable = drawable()
+                    soundCheck.play(slider.value)
+                }
+            })
+        }
+
+        slider.setProgrammaticChangeEvents(false)
+        slider.value = Options.getRealSoundVolume()
+        slider.addListener(object: ChangeListener() {
+            override fun changed(event: ChangeEvent?, actor: Actor?) {
+                Options.setSoundVolume(slider.value)
+                img.drawable = drawable()
+                soundCheck.play(slider.value)
+            }
+        })
+
+        row.add(img)
+        row.add(slider).growX().spaceLeft(UI_SPACE).spaceRight(UI_SPACE)
+    }
+
     /**
      * This consists of a hack where I make my own checkbox (label + checkable box thing) because too much time was
      * spent trying to get the text in the actual [CheckBox] to wrap properly.
@@ -132,7 +219,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
             })
         }
 
-        wrapper.add(checkbox).top()
+        wrapper.add(checkbox).top().padRight(UI_SPACE)
 
         wrapper.add(Label(strings["options.visual-effects"], styles.label.medium).also { label ->
             label.touchable = Touchable.enabled
@@ -147,6 +234,11 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
             })
         }).growX()
 
+    }
+
+    override fun dispose() {
+        super.dispose()
+        soundCheck.dispose()
     }
 
 }
