@@ -14,6 +14,7 @@ import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.input.BreakoutSoftController
+import java.util.*
 import kotlin.math.abs
 
 class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
@@ -94,6 +95,8 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         state.cells.forEach { row ->
             row.forEach { cell -> cell.hasBlock = true }
         }
+
+        state.networkEnemyCells.clear()
 
         // Intentionally don't "resetPlay()" here, because the game is just a little too easy to make
         // last forever if you continually start each level fresh. If instead, you start with a little
@@ -282,15 +285,16 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         }
     }
 
+    private val shadowColour = Color(0.5f, 0.5f, 0.5f, 0.15f)
     override fun renderGame(camera: Camera) {
         val r = game.uiAssets.shapeRenderer
         r.projectionMatrix = camera.combined
         r.begin(ShapeRenderer.ShapeType.Filled)
 
-        /* TODO: Experiment with the UX of this. The finger obstructs the paddle making it hard/impossible to see. This projects the position upward.
-        r.color = Color.DARK_GRAY
-        r.rect(state.paddleLeft(), 0f, state.paddleWidth, viewport.worldHeight)
-         */
+        if (controller?.noButtonsDescription != null) {
+            r.color = shadowColour
+            r.rect(state.paddleLeft(), 0f, state.paddleWidth, viewport.worldHeight)
+        }
 
         r.color = Color.WHITE
         r.rect(state.paddleLeft(), state.paddleY, state.paddleWidth, state.paddleHeight)
@@ -298,12 +302,14 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
         state.cells.forEachIndexed { y, row ->
             row.forEachIndexed { x, cell ->
                 if (cell.hasBlock) {
+                    r.color = if (state.networkEnemyCells.contains(cell)) Color.RED else Color.WHITE
                     r.rect(cell.x, cell.y, state.blockWidth, state.blockHeight)
                 }
             }
         }
 
         if (state.playerRespawnTime < 0) {
+            r.color = Color.WHITE
             r.rect(state.ballPos.x, state.ballPos.y, state.ballSize, state.ballSize)
         }
 
@@ -315,6 +321,35 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
     }
 
     override fun onReceiveDamage(strength: Int) {
+        for (i in 0 until strength) {
+            spawnNetworkEnemies()
+        }
+    }
+
+    /**
+     * Spawn randomly across all empty cells. Tried earlier just spawning in the bottom row first,
+     * but resulted in a strange feeling. The randomness of any cell seems to make it feel more
+     * organic and fun.
+     *
+     * TODO: If there are no eligible rows, then shall we consider spawning them closer to the player?
+     */
+    private fun spawnNetworkEnemies() {
+
+        val cells = state.cells
+            .fold(emptyList<Cell>()) { acc, row -> acc + row.filter { !it.hasBlock } }
+            .toMutableList()
+
+        for (j in 0 until 4) {
+
+            if (cells.isEmpty()) {
+                return
+            }
+
+            val index = Random().nextInt(cells.size)
+            val cell = cells.removeAt(index)
+            cell.hasBlock = true
+            state.networkEnemyCells.add(cell)
+        }
 
     }
 

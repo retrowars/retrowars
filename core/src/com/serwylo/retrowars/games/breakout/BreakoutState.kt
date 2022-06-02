@@ -65,6 +65,8 @@ class BreakoutState(worldWidth: Float, worldHeight: Float) {
         }
     }
 
+    val networkEnemyCells = mutableSetOf<Cell>()
+
     val initialBallSpeed = worldHeight * 0.75f
     var ballSpeed =  initialBallSpeed
     val ballPos = Vector2(worldWidth / 2, paddleY + paddleHeight + space)

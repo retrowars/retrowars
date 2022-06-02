@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.games
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.audio.Music
@@ -37,6 +38,7 @@ abstract class GameScreen(
 
     companion object {
         const val TAG = "GameScreen"
+        private const val ALLOW_SIMULATED_ATTACK = false
     }
 
     enum class State {
@@ -416,6 +418,8 @@ abstract class GameScreen(
 
         if (!isPaused) {
             updateGame(delta)
+
+            maybeSimulateAttack()
         }
 
         game.uiAssets.getEffects().render {
@@ -546,4 +550,37 @@ abstract class GameScreen(
         music.stop()
         music.dispose()
     }
+
+    /**
+     * Helper method for debugging, allowing players to simulate attacks by shaking the phone.
+     * Useful for testing multiplayer scenarios when adding new games or working on old games.
+     * Only if the []ALLOW_SIMULATED_ATTACKS] const is true.
+     */
+    private fun maybeSimulateAttack() {
+        if (!ALLOW_SIMULATED_ATTACK) {
+            return
+        }
+
+        if (!Gdx.input.isPeripheralAvailable(Input.Peripheral.Accelerometer)) {
+            return
+        }
+
+        if (System.currentTimeMillis() < nextSimulatedAttackWindow) {
+            return
+        }
+
+        if (Gdx.input.accelerometerZ < 15) {
+            return
+        }
+
+        nextSimulatedAttackWindow = System.currentTimeMillis() + 1000
+        hud.logMessage(strings["game-message.incoming-attack"])
+        startCameraShake()
+        onReceiveDamage(1)
+    }
+
+    /**
+     * See [maybeSimulateAttack].
+     */
+    private var nextSimulatedAttackWindow = 0L
 }
