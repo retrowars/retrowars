@@ -617,9 +617,10 @@ class WebSocketNetworkServer(
          *  - Version 0.7.0 (9): first version with true multiplayer support at all.
          *  - Version 0.14.0 (25): addition of Tempest game.
          *  - Version 0.20.0 (32): addition of Space Invaders game.
+         *  - Version 0.29.0 (49): addition of Breakout game.
          */
-        private const val MIN_SUPPORTED_CLIENT_VERSION_CODE = 32
-        private const val MIN_SUPPORTED_CLIENT_VERSION_NAME = "0.20.0"
+        private const val MIN_SUPPORTED_CLIENT_VERSION_CODE = 49
+        private const val MIN_SUPPORTED_CLIENT_VERSION_NAME = "0.29.0"
 
     }
 
