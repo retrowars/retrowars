@@ -58,7 +58,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                     wrapper.add(makeControllerSelectButtons())
 
                 }
-            ).width((stage.viewport.worldWidth - UI_SPACE * 3) * 2 / 5f).space(UI_SPACE).top()
+            ).space(UI_SPACE).spaceLeft(UI_SPACE * 3).top()
 
             add(
                 Table().also { wrapper ->
@@ -76,7 +76,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                     wrapper.add(makeChooseAvatarButton())
 
                 }
-            ).width((stage.viewport.worldWidth - UI_SPACE * 3) * 3 / 5f).space(UI_SPACE).top()
+            ).space(UI_SPACE).width((stage.viewport.worldWidth - UI_SPACE * 3) * 0.5f).spaceLeft(UI_SPACE * 3).top()
 
             row()
             add().expandY() // Used to centre the content above (as the heading also expandY()'s the top space)

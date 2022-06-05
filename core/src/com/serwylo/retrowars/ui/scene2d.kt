@@ -203,7 +203,6 @@ private fun musicIcon(sprites: UiAssets.Sprites, isMute: Boolean): TextureRegion
 
 fun makeToggleAudioButtons(sprites: UiAssets.Sprites, onToggleMusic: (volume: Float) -> Unit, onToggleSound: (volume: Float) -> Unit): Actor {
     return HorizontalGroup().also { wrapper ->
-        wrapper.pad(UI_SPACE * 2)
         wrapper.addActor(
             Image(musicIcon(sprites, Options.isMusicMuted())).also { btn ->
                 btn.addListener(object : ClickListener() {
@@ -237,10 +236,10 @@ fun addToggleAudioButtonToMenuStage(game: RetrowarsGame, stage: Stage) {
         game.uiAssets.getSprites(),
         { volume -> game.setMusicVolume(volume) },
         { },
-    ).also { btn ->
-        btn.x = UI_SPACE * 2
-        btn.y = UI_SPACE * 2
-        stage.addActor(btn)
+    ).also { wrapper ->
+        wrapper.x = UI_SPACE * 2
+        wrapper.y = UI_SPACE * 4
+        stage.addActor(wrapper)
     }
 
     if (!Options.isMusicMuted()) {
