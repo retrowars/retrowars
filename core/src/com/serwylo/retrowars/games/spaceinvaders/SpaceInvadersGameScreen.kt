@@ -28,10 +28,13 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
+    private val sounds = SpaceInvadersSoundLibrary()
+
     private val barrierTextures: MutableMap<Barrier, Texture> = state.barriers.associateWith { Texture(it.pixmap) }.toMutableMap()
 
     init {
         addGameScoreToHUD(lifeContainer)
+        sounds.tick()
     }
 
     override fun updateGame(delta: Float) {
@@ -73,6 +76,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
             if (isLowestRowAtTheBottom()) {
                 if (getState() == State.Playing) {
+                    sounds.aliensLand()
                     endGame()
                 }
             } else {
@@ -267,6 +271,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             }
 
             if (checkPlayerBulletCollision(bullet)) {
+                sounds.hitAlien()
                 state.playerBullet = null
                 if (countEnemies() == 0) {
                     state.nextLevelTime = state.timer + SpaceInvadersGameState.TIME_BETWEEN_LEVELS
@@ -325,6 +330,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
             // Use barrier.height - y because a value of 0 is at the *top* not the bottom like we expect.
             if (barrier.pixmap.getPixel(bulletX, (barrier.pixmap.height - y)) == 0xFFFFFFFF.toInt()) {
 
+                sounds.hitBarrier()
                 applyBarrierDamage(
                     barrier,
                     if (isEnemyBullet) SpaceInvadersGameState.enemyBulletExplosion else SpaceInvadersGameState.playerBulletExplosion,
@@ -391,6 +397,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     private fun onPlayerHit() {
         state.numLives --
+        sounds.hitShip()
 
         if (state.numLives <= 0) {
             endGame()
@@ -412,6 +419,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         state.timeUntilEnemyFire = SpaceInvadersGameState.DELAY_AFTER_ENEMY_FIRE
+        sounds.alienFire()
 
         val bottomMostCells: List<Pair<EnemyRow, EnemyCell>> = (0 until state.enemies.first().cells.size).map { i ->
             val row = state.enemies.lastOrNull { it.cells[i].hasEnemy }
@@ -460,6 +468,8 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         }
 
         if (state.movingRow == -1) {
+
+            sounds.tick()
 
             if (!shouldEnemiesDrop()) {
                 state.movingRow = state.enemies.indexOfLast { it.isNotEmpty() }
@@ -512,6 +522,7 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     private fun updatePlayer(delta: Float) {
 
         if (state.isFiring && state.playerBullet == null) {
+            sounds.shipFire()
             state.playerBullet = Bullet(state.playerX, state.padding + state.cellHeight)
             state.isFiring = false
         }

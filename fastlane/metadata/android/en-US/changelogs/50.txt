@@ -1,0 +1,6 @@
+Sound effects!
+
+Huge thanks to @ig9000 for (continued) contributions, input, feedback, and ideas to make this work.
+We will continue to tweak and improve the sound effects for all aspects of the game, so keep an eye on future releases.
+
+Sound and music volume can be adjusted via the options menu.

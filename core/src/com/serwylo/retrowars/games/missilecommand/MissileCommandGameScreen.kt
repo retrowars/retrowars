@@ -21,6 +21,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
     }
 
     private val state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
+    private val sounds = MissileCommandSoundLibrary()
 
     init {
         queueEnemyMissile()
@@ -42,7 +43,9 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
                 if (closest == null) {
                     // TODO: Show feedback that we are completely out of ammunition
+                    sounds.fireNoAmmunition()
                 } else {
+                    sounds.firePlayer()
                     fire(closest, Vector2(worldPos.x, worldPos.y))
                 }
 
@@ -64,6 +67,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
         updateEntities(delta)
 
         if (getState() == State.Playing && !state.anyCitiesAlive()) {
+            sounds.allCitiesHit()
             endGame()
         }
     }
@@ -94,6 +98,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
                 while (enemyMissiles.hasNext()) {
                     val missile = enemyMissiles.next()
                     if (missile.isColliding(explosion)) {
+                        sounds.hitMissile()
                         enemyMissiles.remove()
                         state.networkMissiles.remove(missile)
                         increaseScore(Missile.POINTS)
@@ -108,6 +113,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
             missile.update(delta)
 
             if (missile.hasReachedDestination()) {
+                sounds.hitNothing()
                 state.explosions.add(Explosion(missile.target))
                 friendlyMissiles.remove()
             }
@@ -119,6 +125,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
             missile.update(delta)
 
             if (missile.hasReachedDestination()) {
+                sounds.hitCity()
                 enemyMissiles.remove()
                 state.networkMissiles.remove(missile)
 
@@ -131,6 +138,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
                 completeLevel()
             }
         } else if (state.shouldFireEnemyMissile()) {
+            sounds.fireEnemy()
             fireEnemyMissile()
             queueEnemyMissile()
         }

@@ -34,11 +34,12 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
         uiAssets = UiAssets(UiAssets.getLocale())
         uiAssets.initSync()
 
-        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/splash.mp3")).apply {
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/splash.ogg")).apply {
+            volume = Options.getRealMusicVolume()
             isLooping = true
         }
 
-        if (Options.isMute()) {
+        if (Options.isMusicMuted()) {
             mute()
         }
 
@@ -59,7 +60,11 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
     }
 
     fun unmute() {
-        menuMusic.volume = 1f
+        menuMusic.volume = Options.getRealMusicVolume()
+    }
+
+    fun setMusicVolume(volume: Float) {
+        menuMusic.volume = volume
     }
 
     fun showGameSelectMenu() {

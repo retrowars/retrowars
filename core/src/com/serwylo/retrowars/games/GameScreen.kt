@@ -82,7 +82,7 @@ abstract class GameScreen(
      */
     private var queuedAttacks = mutableMapOf<Player, Int>()
 
-    private val music: Music
+    private var music: Music
 
     init {
         viewport.update(Gdx.graphics.width, Gdx.graphics.height)
@@ -115,7 +115,7 @@ abstract class GameScreen(
         music = Gdx.audio.newMusic(Gdx.files.internal(gameDetails.songAsset)).apply {
             play()
             isLooping = true
-            volume = if (Options.isMute()) 0f else 1f
+            volume = Options.getRealMusicVolume()
         }
 
         client?.listen(
@@ -127,7 +127,7 @@ abstract class GameScreen(
     }
 
     private fun playQuietMenuMusic() {
-        music.volume = 0.5f
+        music.volume = Options.getRealMusicVolume() * 0.5f
     }
 
     protected fun getState() = state
@@ -277,10 +277,22 @@ abstract class GameScreen(
 
         if (client == null) {
             Gdx.app.log(RetrowarsGame.TAG, "Ending single player game... Recording high score and then loading game select menu.")
+
             GlobalScope.launch {
                 launch { saveHighScore(gameDetails, score) }
                 launch { recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id)) }
+                launch {
+                    music.stop()
+                    music.dispose()
+
+                    music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg")).apply {
+                        play()
+                        isLooping = true
+                        volume = Options.getRealMusicVolume()
+                    }
+                }
             }
+
             showEndGameScreen()
         } else {
             Gdx.app.log(RetrowarsGame.TAG, "Ending multiplayer game... Off to the end-game lobby.")
@@ -487,7 +499,7 @@ abstract class GameScreen(
                 RetrowarsClient.disconnect()
                 game.showMultiplayerLobby()
             },
-            { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
+            { isMute -> playQuietMenuMusic() },
         )
 
         showInGameMenu(pauseGameInfo)
@@ -500,15 +512,15 @@ abstract class GameScreen(
         scrollView.setScrollingDisabled(true, false)
         hud.pushGameOverlay(scrollView)
 
-        if (!Options.isMute()) {
+        if (!Options.isMusicMuted()) {
             playQuietMenuMusic()
         }
     }
 
     private fun hideInGameMenu() {
         hud.popGameOverlay()
-        if (!Options.isMute()) {
-            music.volume = 1f
+        if (!Options.isMusicMuted()) {
+            music.volume = Options.getRealMusicVolume()
         }
     }
 
@@ -528,7 +540,7 @@ abstract class GameScreen(
                     { game.launchGame(gameDetails) },
                     { game.showGameSelectMenu() },
                     { game.showMainMenu() },
-                    { isMute -> if (isMute) music.volume = 0f else playQuietMenuMusic() },
+                    { _ -> playQuietMenuMusic() },
                 )
 
                 showInGameMenu(pauseGameInfo)
