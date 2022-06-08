@@ -22,10 +22,12 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
     private val soundScope = CoroutineScope(Dispatchers.IO + soundJob)
 
     protected fun play(soundName: String) {
-        getOrLoadSound(soundName).play(Options.getRealSoundVolume())
+        soundScope.launch {
+            getOrLoadSound(soundName).play(Options.getRealSoundVolume())
+        }
     }
 
-    private fun getOrLoadSound(soundName: String): Sound {
+    private suspend fun getOrLoadSound(soundName: String): Sound = withContext(Dispatchers.IO) {
         val soundFileName = soundDefinitions[soundName] ?: error("Could not find sound with name: $soundName")
 
         val cachedFiles = foundSoundFiles[soundName]
@@ -39,13 +41,13 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
         val cachedSound = loadedSounds[file.path()]
         if (cachedSound != null) {
-            return cachedSound
+            cachedSound
+        } else {
+            Gdx.app.log("SoundLibrary", "Loading sound $soundName from $file")
+            val sound = Gdx.audio.newSound(file)
+            loadedSounds[file.path()] = sound
+            sound
         }
-
-        Gdx.app.log("SoundLibrary", "Loading sound $soundName from $file")
-        val sound = Gdx.audio.newSound(file)
-        loadedSounds[file.path()] = sound
-        return sound
     }
 
     protected fun startLoop(soundName: String) {
@@ -57,11 +59,13 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
                 job.cancel()
             }
 
-            getOrLoadSound(soundName).also { sound ->
-                loopingSounds[soundName] = sound
+            soundScope.launch {
+                getOrLoadSound(soundName).also { sound ->
+                    loopingSounds[soundName] = sound
 
-                val id = sound.loop(Options.getRealSoundVolume())
-                loopingSoundIds[soundName] = id
+                    val id = sound.loop(Options.getRealSoundVolume())
+                    loopingSoundIds[soundName] = id
+                }
             }
         }
     }
