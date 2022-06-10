@@ -49,7 +49,7 @@ class UiAssets(private val locale: Locale) {
         sprites = Sprites(manager.get("sprites.atlas"))
         effects = Effects()
 
-        styles = Styles(skin)
+        styles = Styles(skin, locale)
 
         Gdx.app.debug(TAG, "Finished loading assets (${System.currentTimeMillis() - startTime}ms)")
 
@@ -111,7 +111,16 @@ class UiAssets(private val locale: Locale) {
 
     }
 
-    class Styles(private val skin: Skin) {
+    /**
+     * Depending on the [locale], we may need to use some different fonts.
+     * The default font set is based on Kenney's great pixel fonts. However, they are only able to
+     * maintain a character set that is so large. Therefore, to cater for a broader range of
+     * characters beyond the bulk of the ASCII set, we fall back to using the Google Noto font family.
+     */
+    class Styles(private val skin: Skin, private val locale: Locale) {
+
+        private val useNoto = localeRequiresNotoFonts(locale)
+
         val label = Labels()
         val textButton = TextButtons()
 
@@ -120,6 +129,20 @@ class UiAssets(private val locale: Locale) {
             val medium = skin.get("default", Label.LabelStyle::class.java)
             val large = skin.get("large", Label.LabelStyle::class.java)
             val huge = skin.get("huge", Label.LabelStyle::class.java)
+
+            init {
+                if (useNoto) {
+                    val smallNoto = skin.get("small-noto", Label.LabelStyle::class.java)
+                    val mediumNoto = skin.get("default-noto", Label.LabelStyle::class.java)
+                    val largeNoto = skin.get("large-noto", Label.LabelStyle::class.java)
+                    val hugeNoto = skin.get("huge-noto", Label.LabelStyle::class.java)
+
+                    huge.font = hugeNoto.font
+                    large.font = largeNoto.font
+                    medium.font = mediumNoto.font
+                    small.font = smallNoto.font
+                }
+            }
         }
 
         inner class TextButtons {
@@ -127,6 +150,20 @@ class UiAssets(private val locale: Locale) {
             val medium = skin.get("default", TextButton.TextButtonStyle::class.java)
             val large = skin.get("large", TextButton.TextButtonStyle::class.java)
             val huge = skin.get("huge", TextButton.TextButtonStyle::class.java)
+
+            init {
+                if (useNoto) {
+                    val smallNoto = skin.get("small-noto", TextButton.TextButtonStyle::class.java)
+                    val mediumNoto = skin.get("default-noto", TextButton.TextButtonStyle::class.java)
+                    val largeNoto = skin.get("large-noto", TextButton.TextButtonStyle::class.java)
+                    val hugeNoto = skin.get("huge-noto", TextButton.TextButtonStyle::class.java)
+
+                    huge.font = hugeNoto.font
+                    large.font = largeNoto.font
+                    medium.font = mediumNoto.font
+                    small.font = smallNoto.font
+                }
+            }
         }
     }
 
@@ -201,17 +238,35 @@ class UiAssets(private val locale: Locale) {
          * accomplish unfortunately.
          */
         private val supportedLocales = setOf(
+            "bs",
             "de",
             "en",
             "fr",
+            "hr",
+            "id",
+            "in", // Java and Weblate disagree on the language code for Indonesian. Java uses "in", weblate uses "id", so we symlink them together.
             "it",
             "nb",
-            // "ru", // Requires Noto fonts rather than Kenney fonts.
+            "nl",
+            "ru",
+            "sr",
+        )
+
+        private val notoLocales = setOf(
+            "bs", // ž and other characters not represented by Kenney.
+            "hr", // ž and other characters not represented by Kenney.
+            "ru",
+            "sr",
         )
 
         private fun isLocaleSupported(locale: Locale): Boolean {
             val country = locale.language.toLowerCase(Locale.ENGLISH)
             return supportedLocales.contains(country)
+        }
+
+        private fun localeRequiresNotoFonts(locale: Locale): Boolean {
+            val country = locale.language.toLowerCase(Locale.ENGLISH)
+            return notoLocales.contains(country)
         }
 
         fun getLocale(): Locale {
