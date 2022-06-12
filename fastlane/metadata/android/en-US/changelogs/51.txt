@@ -1,0 +1,12 @@
+More translations!
+
+* Bosnian (thanks @Issa1553)
+* Croation (thanks @Issa1553)
+* Dutch (thanks @Issa1553)
+* Indonesian (thanks @novores)
+* Russian (thanks @AHOHNMYC)
+* Serbian (thanks @Issa1553)
+
+Non-Latin alphabets are rendered using the Google Noto monospace font.
+
+Want to see this game in your language? Please join us on Weblate to contribute a translation.
