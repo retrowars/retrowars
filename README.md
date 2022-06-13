@@ -92,6 +92,7 @@ Alternatively, you can import the project into Android Studio and build from the
 
 * Various graphic assets - [Kenney](https://kenney.nl/)
 * Music - Space Jacked Soundtrack - [Steam](https://store.steampowered.com/app/461060/Spacejacked__Soundtrack/) / [Free Music Archive](https://freemusicarchive.org/music/sawsquarenoise/RottenMage_SpaceJacked)
+* Music - SynthKid - Last Breath - [BandCamp](https://synthkid.bandcamp.com/album/elsewhere) - [<img src="https://licensebuttons.net/l/by-sa/3.0/80x15.png" />](http://creativecommons.org/licenses/by-sa/3.0/)
 * End game music: [Awakening - Old Clock](https://ds10forum.bandcamp.com/album/awakenings) - [<img src="https://licensebuttons.net/l/by-sa/3.0/80x15.png" />](http://creativecommons.org/licenses/by-sa/3.0/)
 
 More detail on which specific free license is used for each asset can be found in the `./assets/` directory.
