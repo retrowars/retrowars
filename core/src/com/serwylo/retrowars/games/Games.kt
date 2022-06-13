@@ -42,7 +42,7 @@ object Games {
         "missile-command",
         isAvailable = true,
         controllerLayout = null,
-        "music/go_go_faster.ogg",
+        "music/last_breath.ogg",
         "game.missile-command.intro-message.positive",
         "game.missile-command.intro-message.negative",
         { s -> s.icons.missileCommand },
