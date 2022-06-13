@@ -1,0 +1,6 @@
+Audio improvements:
+
+ * Music: Missile command music changed to Synth Kid: Last Chance. Slower pace song to match the slower pace of the game.
+ * Sound: Improved sound effects for Snake.
+
+Recommendations for new songs/sounds always welcome via GitHub.
