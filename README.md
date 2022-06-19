@@ -56,7 +56,7 @@ Please report any issues or suggest features on the [issue tracker](https://gith
 
 ## Translating
 
-We use [Weblate](https://hosted.weblate.org/engage/retrowars/) to manage translations. Please see [these instructions for using Weblate](https://hosted.weblate.org/engage/retrowars/) to translate BabyDots.
+We use [Weblate](https://hosted.weblate.org/engage/retrowars/) to manage translations. Please see [these instructions for using Weblate](https://hosted.weblate.org/engage/retrowars/) to translate retrowars.
 
 |Game strings|F-Droid metadata|
 |------------|----------------|
