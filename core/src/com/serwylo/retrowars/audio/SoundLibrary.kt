@@ -89,6 +89,11 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
             return
         }
 
+        if (Options.getRealSoundVolume() <= 0f) {
+            looping.stop(previousId)
+            return
+        }
+
         when (stopType) {
             StopType.Immediately -> looping.stop(previousId)
             StopType.FadeFast -> {
