@@ -1,0 +1,1 @@
+Bugfix: Respect the mute setting when playing Asteroids.
