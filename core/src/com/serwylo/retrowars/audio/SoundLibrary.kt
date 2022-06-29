@@ -1,6 +1,9 @@
 package com.serwylo.retrowars.audio
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.assets.AssetManager
+import com.badlogic.gdx.assets.loaders.FileHandleResolver
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.files.FileHandle
 import com.serwylo.retrowars.utils.Options
@@ -10,7 +13,6 @@ import kotlinx.coroutines.*
 abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
     private val foundSoundFiles = mutableMapOf<String, List<FileHandle>>()
-    private val loadedSounds = mutableMapOf<String, Sound>()
 
     private val loopingSounds = mutableMapOf<String, Sound>()
     private val loopingSoundIds = mutableMapOf<String, Long>()
@@ -22,12 +24,10 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
     private val soundScope = CoroutineScope(Dispatchers.IO + soundJob)
 
     protected fun play(soundName: String) {
-        soundScope.launch {
-            getOrLoadSound(soundName).play(Options.getRealSoundVolume())
-        }
+        getOrLoadSound(soundName).play(Options.getRealSoundVolume())
     }
 
-    private suspend fun getOrLoadSound(soundName: String): Sound = withContext(Dispatchers.IO) {
+    private fun getOrLoadSound(soundName: String): Sound {
         val soundFileName = soundDefinitions[soundName] ?: error("Could not find sound with name: $soundName")
 
         val cachedFiles = foundSoundFiles[soundName]
@@ -39,15 +39,7 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
             files.random()
         }
 
-        val cachedSound = loadedSounds[file.path()]
-        if (cachedSound != null) {
-            cachedSound
-        } else {
-            Gdx.app.log("SoundLibrary", "Loading sound $soundName from $file")
-            val sound = Gdx.audio.newSound(file)
-            loadedSounds[file.path()] = sound
-            sound
-        }
+        return assetManager.get(file.path(), Sound::class.java)
     }
 
     protected fun startLoop(soundName: String) {
@@ -59,13 +51,11 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
                 job.cancel()
             }
 
-            soundScope.launch {
-                getOrLoadSound(soundName).also { sound ->
-                    loopingSounds[soundName] = sound
+            getOrLoadSound(soundName).also { sound ->
+                loopingSounds[soundName] = sound
 
-                    val id = sound.loop(Options.getRealSoundVolume())
-                    loopingSoundIds[soundName] = id
-                }
+                val id = sound.loop(Options.getRealSoundVolume())
+                loopingSoundIds[soundName] = id
             }
         }
     }
@@ -124,6 +114,23 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
             }
         }
+    }
+
+    private val assetManager = AssetManager(InternalFileHandleResolver()).apply {
+        soundDefinitions.entries.onEach { (soundName, defaultSoundFileName) ->
+            getSoundFileHandles(soundName, theme, defaultSoundFileName).onEach { soundFile ->
+                Gdx.app.log("Loading Sounds", "Queuing sound for loading: ${soundFile}")
+                load(soundFile.path(), Sound::class.java)
+            }
+        }
+    }
+
+    fun isLoaded(): Boolean {
+        return assetManager.update()
+    }
+
+    fun dispose() {
+        assetManager.dispose()
     }
 
     enum class StopType {

@@ -27,6 +27,7 @@ class BreakoutGameScreen(game: RetrowarsGame): GameScreen(
 
     private val state = BreakoutState(viewport.worldWidth, viewport.worldHeight)
     private val sounds = BreakoutSoundLibrary()
+    override fun getSoundLibrary() = sounds
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 

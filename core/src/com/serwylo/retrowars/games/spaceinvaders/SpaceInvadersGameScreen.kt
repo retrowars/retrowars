@@ -29,12 +29,12 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
     private val sounds = SpaceInvadersSoundLibrary()
+    override fun getSoundLibrary() = sounds
 
     private val barrierTextures: MutableMap<Barrier, Texture> = state.barriers.associateWith { Texture(it.pixmap) }.toMutableMap()
 
     init {
         addGameScoreToHUD(lifeContainer)
-        sounds.tick()
     }
 
     override fun updateGame(delta: Float) {
@@ -43,6 +43,10 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
         controller!!.update(delta)
 
         if (getState() == State.Playing) {
+            if (getPreviousState() == State.Loading) {
+                sounds.tick()
+            }
+
             state.isMovingLeft = controller.trigger(SpaceInvadersSoftController.Buttons.LEFT)
             state.isMovingRight = controller.trigger(SpaceInvadersSoftController.Buttons.RIGHT)
             state.isFiring = controller.trigger(SpaceInvadersSoftController.Buttons.FIRE)

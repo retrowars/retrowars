@@ -26,6 +26,7 @@ class TetrisGameScreen(game: RetrowarsGame) : GameScreen(game, Games.tetris, 400
 
     private val state = TetrisGameState()
     private val sounds = TetrisSoundLibrary()
+    override fun getSoundLibrary() = sounds
 
     private val linesLabel = Label("0 lines", game.uiAssets.getStyles().label.large)
 

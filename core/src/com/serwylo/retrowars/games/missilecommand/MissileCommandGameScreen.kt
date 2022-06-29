@@ -22,6 +22,7 @@ class MissileCommandGameScreen(game: RetrowarsGame) : GameScreen(game, Games.mis
 
     private val state = MissileCommandGameState(viewport.worldWidth, viewport.worldHeight)
     private val sounds = MissileCommandSoundLibrary()
+    override fun getSoundLibrary() = sounds
 
     init {
         queueEnemyMissile()

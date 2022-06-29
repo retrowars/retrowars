@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.serwylo.beatgame.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.audio.SoundLibrary
 import com.serwylo.retrowars.input.SoftController
 import com.serwylo.retrowars.net.Network
 import com.serwylo.retrowars.net.Player
@@ -42,6 +43,7 @@ abstract class GameScreen(
     }
 
     enum class State {
+        Loading,
         Playing,
         Finished,
     }
@@ -71,7 +73,13 @@ abstract class GameScreen(
      */
     private var isEnding = false
 
-    private var state = State.Playing
+    private var state = State.Loading
+
+    /**
+     * To allow games to query whether the game has changed state since the last frame
+     * (e.g. if the game has finished loading and started playing).
+     */
+    private var previousState = State.Loading
 
     /**
      * When damage is received on the network thread, queue up the players who are responsible and
@@ -113,9 +121,10 @@ abstract class GameScreen(
         hud.showMessage(strings[gameDetails.positiveDescription], strings[gameDetails.negativeDescription])
 
         music = Gdx.audio.newMusic(Gdx.files.internal(gameDetails.songAsset)).apply {
-            play()
             isLooping = true
             volume = Options.getRealMusicVolume()
+            Gdx.app.log(TAG, "Playing song ${gameDetails.songAsset} (looping, volume = ${Options.getRealMusicVolume()})")
+            play()
         }
 
         client?.listen(
@@ -126,11 +135,17 @@ abstract class GameScreen(
         )
     }
 
+    private fun changeState(newState: State) {
+        previousState = state
+        state = newState
+    }
+
     private fun playQuietMenuMusic() {
         music.volume = Options.getRealMusicVolume() * 0.5f
     }
 
     protected fun getState() = state
+    protected fun getPreviousState() = previousState
 
     protected fun showMessage(heading: String, body: String? = null) {
         hud.showMessage(heading, body)
@@ -267,7 +282,7 @@ abstract class GameScreen(
             return
         }
 
-        state = State.Finished
+        changeState(State.Finished)
 
         if (isEnding) {
             return
@@ -282,13 +297,13 @@ abstract class GameScreen(
                 launch { saveHighScore(gameDetails, score) }
                 launch { recordStats(Stats(System.currentTimeMillis() - startTime, score, gameDetails.id)) }
                 launch {
-                    music.stop()
                     music.dispose()
 
                     music = Gdx.audio.newMusic(Gdx.files.internal("music/awakenings_old_clock.ogg")).apply {
-                        play()
                         isLooping = true
                         volume = Options.getRealMusicVolume()
+                        Gdx.app.log(RetrowarsGame.TAG, "Playing end game music music/awakenings_old_clock.ogg (looping, volume = ${Options.getRealMusicVolume()})")
+                        play()
                     }
                 }
             }
@@ -344,6 +359,8 @@ abstract class GameScreen(
         })
     }
 
+    protected abstract fun getSoundLibrary(): SoundLibrary
+
     protected abstract fun updateGame(delta: Float)
 
     /**
@@ -375,7 +392,7 @@ abstract class GameScreen(
      * NOTE: We may receive damage from many players in a single frame. Given damage is received via network calls,
      *       we queue them up between frames to be applied at the start of the next frame. This function will be
      *       called at the start of a frame before calling [updateGame] if there is any damage to process.
-     *       It will always be called in the main game thread.j
+     *       It will always be called in the main game thread.
      */
     protected abstract fun onReceiveDamage(strength: Int)
 
@@ -425,6 +442,15 @@ abstract class GameScreen(
 
     override fun render(delta: Float) {
 
+        if (state == State.Loading) {
+            if (!getSoundLibrary().isLoaded()) {
+                return
+            }
+
+            Gdx.app.log(TAG, "Finished loading sounds, will start game.")
+            changeState(State.Playing)
+        }
+
         maybeReceiveDamage()
         shakeCamera(delta)
 
@@ -442,6 +468,8 @@ abstract class GameScreen(
 
             hud.render(score, delta)
         }
+
+        previousState = state
 
     }
 
@@ -559,8 +587,9 @@ abstract class GameScreen(
     }
 
     override fun dispose() {
-        music.stop()
+        Gdx.app.log(TAG, "Disposing game (music + sound assets)")
         music.dispose()
+        getSoundLibrary().dispose()
     }
 
     /**
