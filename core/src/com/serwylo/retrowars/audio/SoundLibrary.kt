@@ -23,7 +23,9 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
     private val soundScope = CoroutineScope(Dispatchers.IO + soundJob)
 
     protected fun play(soundName: String) {
-        getSound(soundName).play(Options.getRealSoundVolume())
+        soundScope.launch {
+            getSound(soundName).play(Options.getRealSoundVolume())
+        }
     }
 
     private fun getSound(soundName: String): Sound {
@@ -41,11 +43,13 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
                 job.cancel()
             }
 
-            getSound(soundName).also { sound ->
-                loopingSounds[soundName] = sound
+            soundScope.launch {
+                getSound(soundName).also { sound ->
+                    loopingSounds[soundName] = sound
 
-                val id = sound.loop(Options.getRealSoundVolume())
-                loopingSoundIds[soundName] = id
+                    val id = sound.loop(Options.getRealSoundVolume())
+                    loopingSoundIds[soundName] = id
+                }
             }
         }
     }
