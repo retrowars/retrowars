@@ -1,0 +1,1 @@
+Improvement: Load all sounds prior to starting game. Fixes issue with the first sound effect sometimes not playing.

@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.serwylo.beatgame.ui.UI_SPACE
 import com.serwylo.retrowars.RetrowarsGame
+import com.serwylo.retrowars.audio.SoundLibrary
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.games.asteroids.entities.Asteroid
@@ -27,6 +28,8 @@ class AsteroidsGameScreen(game: RetrowarsGame) : GameScreen(game, Games.asteroid
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 
     private val sounds = AsteroidsSoundLibrary()
+
+    override fun getSoundLibrary() = sounds
 
     init {
 

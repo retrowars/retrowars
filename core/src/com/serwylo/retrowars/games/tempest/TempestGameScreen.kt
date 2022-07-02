@@ -34,6 +34,7 @@ class TempestGameScreen(game: RetrowarsGame) : GameScreen(
 
     private val state = TempestGameState(viewport.worldWidth, viewport.worldHeight)
     private val sounds = TempestSoundLibrary()
+    override fun getSoundLibrary() = sounds
 
     private val lifeContainer = HorizontalGroup().apply { space(UI_SPACE) }
 

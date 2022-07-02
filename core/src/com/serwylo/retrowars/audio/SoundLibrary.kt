@@ -1,16 +1,17 @@
 package com.serwylo.retrowars.audio
 
+import com.badlogic.gdx.Files
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.assets.AssetManager
+import com.badlogic.gdx.assets.loaders.FileHandleResolver
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.files.FileHandle
 import com.serwylo.retrowars.utils.Options
-import io.ktor.server.engine.*
 import kotlinx.coroutines.*
 
 abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
-    private val foundSoundFiles = mutableMapOf<String, List<FileHandle>>()
-    private val loadedSounds = mutableMapOf<String, Sound>()
+    private val availableSounds = mutableMapOf<String, List<FileHandle>>()
 
     private val loopingSounds = mutableMapOf<String, Sound>()
     private val loopingSoundIds = mutableMapOf<String, Long>()
@@ -23,31 +24,14 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
 
     protected fun play(soundName: String) {
         soundScope.launch {
-            getOrLoadSound(soundName).play(Options.getRealSoundVolume())
+            getSound(soundName).play(Options.getRealSoundVolume())
         }
     }
 
-    private suspend fun getOrLoadSound(soundName: String): Sound = withContext(Dispatchers.IO) {
-        val soundFileName = soundDefinitions[soundName] ?: error("Could not find sound with name: $soundName")
-
-        val cachedFiles = foundSoundFiles[soundName]
-        val file = if (cachedFiles != null) {
-            cachedFiles.random()
-        } else {
-            val files = getSoundFileHandles(soundName, theme, soundFileName)
-            foundSoundFiles[soundName] = files
-            files.random()
-        }
-
-        val cachedSound = loadedSounds[file.path()]
-        if (cachedSound != null) {
-            cachedSound
-        } else {
-            Gdx.app.log("SoundLibrary", "Loading sound $soundName from $file")
-            val sound = Gdx.audio.newSound(file)
-            loadedSounds[file.path()] = sound
-            sound
-        }
+    private fun getSound(soundName: String): Sound {
+        val cachedFiles = availableSounds[soundName] ?: error("Could not find sound(s) with name: $soundName")
+        val file = cachedFiles.random()
+        return assetManager.get(InternalExternalFileHandleResolver.toFileName(file), Sound::class.java)
     }
 
     protected fun startLoop(soundName: String) {
@@ -60,7 +44,7 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
             }
 
             soundScope.launch {
-                getOrLoadSound(soundName).also { sound ->
+                getSound(soundName).also { sound ->
                     loopingSounds[soundName] = sound
 
                     val id = sound.loop(Options.getRealSoundVolume())
@@ -126,9 +110,63 @@ abstract class SoundLibrary(private val soundDefinitions: Map<String, String>) {
         }
     }
 
+    private val assetManager = AssetManager(InternalExternalFileHandleResolver()).apply {
+        soundDefinitions.entries.onEach { (soundName, defaultSoundFileName) ->
+            val files = getSoundFileHandles(soundName, theme, defaultSoundFileName)
+            availableSounds[soundName] = files
+            files.onEach { soundFile ->
+                Gdx.app.log("Loading Sounds", "Queuing sound for loading: $soundFile")
+                load(InternalExternalFileHandleResolver.toFileName(soundFile), Sound::class.java)
+            }
+        }
+    }
+
+    fun isLoaded(): Boolean {
+        return assetManager.update()
+    }
+
+    fun dispose() {
+        assetManager.dispose()
+    }
+
     enum class StopType {
         Immediately,
         FadeFast,
+    }
+
+}
+
+/**
+ * Helper class to differentiate between internal and external file handles when loading via
+ * the [AssetManager].
+ *
+ * This exists because [AssetManager] only knows the [String] path to a file, not a proper [FileHandle].
+ * Furthermore, depending on the platform the game runs on, we don't even know what class an
+ * internal or external file will resolve to.
+ *
+ * Therefore, by first calling [InternalExternalFileHandleResolver.toFileName] this will prefix
+ * the path with "internal:" or "external:". This in turn will be used when loading the asset,
+ * by inspecting the path and looking for the appropriate prefix, and using Gdx.files.internal/external
+ * as appropriate.
+ */
+class InternalExternalFileHandleResolver: FileHandleResolver {
+
+    companion object {
+        fun toFileName(handle: FileHandle): String = "${handle.type().name}:${handle.path()}"
+    }
+
+    override fun resolve(fileName: String): FileHandle {
+        val colon = fileName.indexOf(":")
+        val prefix = fileName.substring(0, colon)
+        val suffix = fileName.substring(colon + 1)
+        return when (prefix) {
+            Files.FileType.Internal.name -> Gdx.files.internal(suffix)
+            Files.FileType.Absolute.name -> Gdx.files.absolute(suffix)
+            Files.FileType.Classpath.name -> Gdx.files.classpath(suffix)
+            Files.FileType.External.name -> Gdx.files.external(suffix)
+            Files.FileType.Local.name -> Gdx.files.local(suffix)
+            else -> error("Unsupported fileName: $fileName. Be sure to call InternalExternalFilehandleResolver.toFileName(FileHandle) to prefix the file path before requesting an asset.")
+        }
     }
 
 }
