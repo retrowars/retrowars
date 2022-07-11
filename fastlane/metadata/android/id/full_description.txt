@@ -1,8 +1,8 @@
-Menikmati game retro? Menikmati game multiplayer? Pernah ingin memainkan satu game retro melawan game yang berbeda secara real time?
+Suka permainan retro? Suka permainan multipemain? Pernah ingin memainkan satu permainan retro melawan permainan yang berbeda secara waktu nyata?
 
-Selamat datang di Super Retro Mega Wars!
+Selamat datang di Perang Super Mega Retro!
 
-Bermain melawan teman-teman kamu, dengan masing-masing dari kamu dapat bersaing dengan memainkan permainan yang berbeda. Skor poin dalam permainan Anda dan setiap pertandingan lainnya akan memberi tantangan dengan cara unik mereka sendiri. Tapi hati-hati, karena orang lain dapat mencetak skor, permainan Anda akan menjadi lebih sulit juga.
+Main lawan teman-teman kamu, dengan masing-masing dari kamu dapat bersaing dengan memainkan permainan yang berbeda. Cetak poin dalam permainanmu dan setiap pertandingan lainnya akan memberi tantangan dengan cara unik mereka sendiri. Tapi hati-hati, karena orang lain dapat mencetak skor, permainanmu akan menjadi lebih sulit juga.
 
 Enam versi game tunggal dan multi-pemain yang berbeda berdasarkan judul retro klasik, dengan lebih banyak lagi dalam aliran!
 
@@ -15,4 +15,4 @@ Keterbatasan yang diketahui:
 * Pengujian bermain menyeluruh diperlukan untuk menyeimbangkan permainan dan mengidentifikasi dan menghapus bug dari server. \
 * Belum teruji pada beberapa ukuran layar.
 
-Harap dukung pengembangan lebih lanjut di sponsor GitHub atau Liberapay.
+Silakan dukung pengembangan lebih lanjut di GitHub Sponsors atau Liberapay.
