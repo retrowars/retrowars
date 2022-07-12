@@ -4,15 +4,15 @@ Selamat datang di Perang Super Mega Retro!
 
 Main lawan teman-teman kamu, dengan masing-masing dari kamu dapat bersaing dengan memainkan permainan yang berbeda. Cetak poin dalam permainanmu dan setiap pertandingan lainnya akan memberi tantangan dengan cara unik mereka sendiri. Tapi hati-hati, karena orang lain dapat mencetak skor, permainanmu akan menjadi lebih sulit juga.
 
-Enam versi game tunggal dan multi-pemain yang berbeda berdasarkan judul retro klasik, dengan lebih banyak lagi dalam aliran!
+Enam versi permainan pemain tunggal dan multi-pemain yang berbeda berdasarkan judul retro klasik, dengan lebih banyak lagi segera hadir!
 
-Tidak ada iklan. Tidak pembelian dalam game. Hanya game retro dan waktu yang menyenangkan.
+Tidak ada iklan. Tidak pembelian dalam permainan. Hanya game retro dan waktu yang menyenangkan.
 
-Umpan balik apa pun sangat disambut baik di GitHub.
+Masukan apa pun sangat disambut baik di GitHub.
 
 Keterbatasan yang diketahui:
 
-* Pengujian bermain menyeluruh diperlukan untuk menyeimbangkan permainan dan mengidentifikasi dan menghapus bug dari server. \
+* Pengujian bermain menyeluruh diperlukan untuk menyeimbangkan permainan dan mengidentifikasi dan menghapus bug dari server.
 * Belum teruji pada beberapa ukuran layar.
 
 Silakan dukung pengembangan lebih lanjut di GitHub Sponsors atau Liberapay.
