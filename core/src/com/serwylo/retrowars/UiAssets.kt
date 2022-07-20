@@ -5,6 +5,7 @@ import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.assets.loaders.I18NBundleLoader
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -21,6 +22,7 @@ import java.util.*
 class UiAssets(private val locale: Locale) {
 
     val shapeRenderer = ShapeRenderer()
+    val spriteBatch = SpriteBatch()
 
     private val manager = AssetManager()
     private lateinit var skin: Skin
