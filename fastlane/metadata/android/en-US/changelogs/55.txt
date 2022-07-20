@@ -1,0 +1,1 @@
+Bugfix: Prevent out of memory error when playing Space Invaders for a while.
