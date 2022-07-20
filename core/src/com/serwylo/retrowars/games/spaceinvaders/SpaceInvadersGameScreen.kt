@@ -112,13 +112,14 @@ class SpaceInvadersGameScreen(game: RetrowarsGame) : GameScreen(
 
     override fun renderGame(camera: Camera) {
 
-        val batch = SpriteBatch(1)
-        batch.projectionMatrix = camera.combined
-        batch.begin()
-        barrierTextures.onEach { (barrier, texture) ->
-            batch.draw(texture, barrier.x, barrier.y, barrier.width, barrier.height)
+        game.uiAssets.spriteBatch.also { batch ->
+            batch.projectionMatrix = camera.combined
+            batch.begin()
+            barrierTextures.onEach { (barrier, texture) ->
+                batch.draw(texture, barrier.x, barrier.y, barrier.width, barrier.height)
+            }
+            batch.end()
         }
-        batch.end()
 
         val r = game.uiAssets.shapeRenderer
         r.projectionMatrix = camera.combined
