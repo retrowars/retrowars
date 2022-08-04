@@ -1,0 +1,1 @@
+Hibajavítás: Memória hiba elkerülése a Space Invaders játék során.
