@@ -256,6 +256,7 @@ class UiAssets(private val locale: Locale) {
 
         private val notoLocales = setOf(
             "bs", // ž and other characters not represented by Kenney.
+            "hu", // ő and perhaps others are not supported by Kenney.
             "hr", // ž and other characters not represented by Kenney.
             "ru",
             "sr",
