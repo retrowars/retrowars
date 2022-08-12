@@ -1,0 +1,18 @@
+Kas sulle meeldivad retromängud? Kas sulle meeldivad mitmikmängud? Kas oled kunagi tahtnud mängida ühte retromängu teise mängu vastu reaalajas?
+
+Tere tulemast Üli Suurtele Retro Sõdadele!
+
+Mängi oma sõprade vastu, nii et igaüks teist saab võistelda mängides erinevat mängu. Saage oma mängus punkte siis muutuvad teiste mängud raskemaks. Kuid olge ettevaatlik, kui teised punkte saavad, muutub ka teie mäng raskemaks.
+
+Kuus erinevat ühe- ja mitme mängija versiooni klassikalistel retrohittidel põhinevatest mängudest, ja veel rohkem on tulemas!
+
+Ei mingeid reklaame. Ei mingeid mängusiseseid oste. Ainult retromängud ja head ajad.
+
+Igasugune tagasiside on väga teretulnud GitHubis.
+
+Teadaolevad piirangud:
+
+* Mängude tasakaalustamiseks ning vigade tuvastamiseks ja eemaldamiseks serverist on vaja põhjalikku mängutesti.
+* Mitme ekraanisuurusega testimata.
+
+Palun toetage edasist arendamist GitHubi sponsorite või Liberapay kaudu.
