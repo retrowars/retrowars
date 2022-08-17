@@ -239,10 +239,11 @@ class UiAssets(private val locale: Locale) {
          * or languages where glyphs are combined together such as Persian. This will be harder to
          * accomplish unfortunately.
          */
-        private val supportedLocales = setOf(
+        val supportedLocales = setOf(
             "bs",
             "de",
             "en",
+            "et",
             "fr",
             "hr",
             "id",

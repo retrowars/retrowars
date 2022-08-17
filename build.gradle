@@ -27,8 +27,8 @@ allprojects {
         // in order for the F-Droid checkupdates bot to pick them up. Normally it just checks the
         // android apps build.gradle or AndroidManifest, but we dynamically inject them via these
         // properties so that both the server and the client have access to the same information.
-        appVersionCode = 56
-        appVersionName = "0.31.5"
+        appVersionCode = 57
+        appVersionName = "0.31.6"
 
         gdxVersion = '1.10.0'
         kotlinCoroutinesVersion = '1.4.2'
@@ -114,6 +114,13 @@ project(":core") {
         implementation "io.ktor:ktor-websockets:$ktor_version"
         implementation "ch.qos.logback:logback-classic:1.2.3" // For server related logging (not Android - and hence game - logging, that uses Gdx.app.log)
         implementation 'org.jmdns:jmdns:3.5.7'
+
+        testImplementation 'junit:junit:4.13.2'
+        testImplementation "org.mockito:mockito-all:1.9.0"
+
+        testImplementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        testImplementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+        testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 
     // https://stackoverflow.com/a/54006518
