@@ -1,0 +1,18 @@
+¿Te gustan los juegos retro? ¿Disfrutas los juegos multijugador? ¿Siempre quisiste jugar un juego retro en un modo distinto en tiempo real?
+
+¡Bienvenido a Super Retro Mega Guerra!
+
+Juega contra tus amigos, cada uno de ustedes puede competir jugando un juego diferente. Gana puntos en tu juego y todos los demás juegos serán beneficiados de manera especial. Pero ten cuidado, como otros califican, tu juego también se volverá más difícil.
+
+Seis diferentes versiones en modo solitario o multi-jugador de juegos basados en titulos retro clasicos, ¡y mas por agregarse!
+
+Sin anuncios. No hay compras dentro del juego. Solo juegos retro y pasala bien.
+
+Cualquier retroalimentacion es bienvenida en GitHub.
+
+Limitaciones:
+
+* Se requieren más pruebas de los  juegos de manera intensa para equilibrar los juegos e identificar y eliminar errores del servidor.
+* No probado en múltiples tamaños de pantalla.
+
+Apoya al desarrollo en los patrocinadores de GitHub o Liberapay.
