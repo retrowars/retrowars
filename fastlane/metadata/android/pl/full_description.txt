@@ -1,0 +1,18 @@
+Lubisz gry retro? Lubisz gry wieloosobowe? Czy kiedykolwiek chciałeś zagrać w jedną grę retro przeciwko innej grze w czasie rzeczywistym?
+
+Witamy w Super Retro Mega Wars!
+
+Zagraj przeciwko swoim znajomym, z których każdy może konkurować grając w zupełnie inną grę. Zdobywaj punkty w swojej grze, a każda gra będzie upośledzona na swój własny, unikalny sposób. Lecz uważaj, jeśli inni zdobędą punkt, wtedy twoja gra stanie się trudniejsza.
+
+Sześć różnych wersji jedno i wieloosobowych gier opartych na klasycznych tytułach retro, a jeszcze więcej gier pojawi się wkrótce!
+
+Żadnych reklam. Żadnych zakupów w grze. Tylko gry retro i stare dobre czasy.
+
+Wszelkie opinie są bardzo mile widziane na GitHubie
+
+Znane ograniczenia:
+
+* Wymagane są dokładne testy do zbalansowania gier oraz do zidentyfikowania i usunięcia błędów z serwera.
+* Nieprzetestowane na wielu rozmiarach ekranu.
+
+Prosimy o wsparcie dalszego rozwoju na GitHub sponsors lub Liberapay.
