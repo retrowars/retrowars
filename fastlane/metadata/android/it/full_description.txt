@@ -1,0 +1,18 @@
+Ti piacciono i giochi retrò? Ti piacciono i giochi multiplayer? Mai voluto giocare un gioco retrò contro un gioco diverso in tempo reale?
+
+Benvenuti a Super Retro Mega Wars!
+
+Gioca contro i tuoi amici, ciascuno di voi può competere giocando un gioco diverso. Segna punti nel vostro gioco e ogni altro gioco sarà handicappato nel loro modo unico. Ma attenzione, come altri fanno un punteggio, il vostro gioco diventerà più difficile.
+
+Sei diverse versioni singole e multi-player di giochi basati su classici titoli retrò, con più in cantiere!
+
+Nessun annuncio. No acquisti in gioco. Solo giochi retrò e bei tempi.
+
+Qualsiasi feedback è molto benvenuto su GitHub.
+
+Limitazioni note:
+
+* Test di gioco approfonditi necessari per bilanciare i giochi e identificare e rimuovere i bug dal server.
+* Non testato su più dimensioni dello schermo.
+
+Per favore sostieni l'ulteriore sviluppo su GitHub sponsor o Liberapay.
