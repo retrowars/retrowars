@@ -1,0 +1,18 @@
+Curte jogos retrô e multijogador? Já quis jogar um jogo retrô contra um jogo diferente em tempo real?
+
+Bem-vindo(a) ao Super Mega Guerras Retrô!
+
+Jogue contra seus amigos, com cada de um vocês competindo jogando um jogo diferente. Marque pontos em seu jogo e cada outro jogo será prejudicado de sua própria maneira. Mas cuidado, à medida que outros pontuarem, seu jogo se tornará mais difícil também.
+
+Seis versões diferentes de jogos para um e vários jogadores baseadas em títulos clássicos retrô, com mais em preparação!
+
+Sem anúncios ou compras no aplicativo. Só jogos retrô e bons tempos.
+
+Qualquer feedback é muito bem-vindo no GitHub.
+
+Limitações conhecidas:
+
+* Testes completos de jogos precisos para equilibrar os jogos e identificar e remover bugs do servidor.
+* Não testado em vários tamanhos de tela.
+
+Por favor, apoie o desenvolvimento adicional no GitHub Sponsors ou Liberapay.
