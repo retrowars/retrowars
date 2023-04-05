@@ -1,0 +1,18 @@
+Vous aimez les jeux retro ? Vous aimez les jeux multijoueurs ? Vous avez déjà eu envie de jouer à un jeu retro face à un autre jeu en temps réel ?
+
+Bienvenue sur Super Retro Mega Wars !
+
+Jouez contre vos amis, avec chacun d'entre vous participant en jouant un jeu différent. Marquez des points dans votre jeu et chaque autre jeu se verra handicapé de manière unique. Mais attention, quand d'autres marquent des points, votre jeu deviendra plus difficile également.
+
+Six versions différentes, solo et multijoueur, de jeux basés sur des classiques du retro, avec des surprises en réserves !
+
+Pas de publicité. Pas de microtransactions. Juste des jeux retro et de bons moments.
+
+Les retours sont les bienvenus sur Github.
+
+Limites connues :
+
+* Du playtesting est nécessaire pour équilibrer les jeux et identifier et supprimer les bugs du serveur.
+* N'a pas été testé sur des écrans de taille différente.
+
+Merci de soutenir la suite du développement via Github sponsors ou Liberapay.
