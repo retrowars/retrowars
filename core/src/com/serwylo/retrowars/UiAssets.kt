@@ -252,7 +252,7 @@ class UiAssets(private val locale: Locale) {
             "nb",
             "nl",
             "pl",
-            "pt",
+            "pt", // TODO: This is for pt_BR. If pt translation lands, then update code to support countries. Currently just supports language.
             "ru",
             "sr",
         )
@@ -267,13 +267,13 @@ class UiAssets(private val locale: Locale) {
         )
 
         private fun isLocaleSupported(locale: Locale): Boolean {
-            val country = locale.language.toLowerCase(Locale.ENGLISH)
-            return supportedLocales.contains(country)
+            val language = locale.language.toLowerCase(Locale.ENGLISH)
+            return supportedLocales.contains(language)
         }
 
         private fun localeRequiresNotoFonts(locale: Locale): Boolean {
-            val country = locale.language.toLowerCase(Locale.ENGLISH)
-            return notoLocales.contains(country)
+            val language = locale.language.toLowerCase(Locale.ENGLISH)
+            return notoLocales.contains(language)
         }
 
         fun getLocale(localeFromCli: Locale?): Locale {
