@@ -273,17 +273,17 @@ class UiAssets(private val locale: Locale) {
             return notoLocales.contains(country)
         }
 
-        fun getLocale(): Locale {
+        fun getLocale(localeFromCli: Locale?): Locale {
             // Even though Weblate is allowing this game to be translated into many different languages,
             // only some of them are supported by libgdx. Ensure that we don't pick up an unsupported locale
             // which *does* have translation files available, because it will render invalid glyphs and
             // make the game unusable.
-            val systemLocale = Locale.getDefault()
+            val preferredLocale = localeFromCli ?: Locale.getDefault()
 
-            return if (isLocaleSupported(systemLocale)) {
-                systemLocale
+            return if (isLocaleSupported(preferredLocale)) {
+                preferredLocale
             } else {
-                Gdx.app.error(TAG, "Unsupported locale: $systemLocale, falling back to English.")
+                Gdx.app.error(TAG, "Unsupported locale: $preferredLocale, falling back to English.")
                 Locale.ROOT
             }
         }

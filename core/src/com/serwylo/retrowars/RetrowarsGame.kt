@@ -11,8 +11,9 @@ import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.net.ServerHostAndPort
 import com.serwylo.retrowars.utils.Options
 import com.serwylo.retrowars.utils.Platform
+import java.util.Locale
 
-class RetrowarsGame(val platform: Platform, private val verbose: Boolean, private val forceRandomAvatars: Boolean = false) : Game() {
+class RetrowarsGame(val platform: Platform, private val verbose: Boolean, private val forceRandomAvatars: Boolean = false, private val locale: Locale? = null) : Game() {
 
     companion object {
         const val TAG = "RetrowarsGame"
@@ -31,7 +32,7 @@ class RetrowarsGame(val platform: Platform, private val verbose: Boolean, privat
             Options.forceRandomPlayerId()
         }
 
-        uiAssets = UiAssets(UiAssets.getLocale())
+        uiAssets = UiAssets(UiAssets.getLocale(locale))
         uiAssets.initSync()
 
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/splash.ogg")).apply {
