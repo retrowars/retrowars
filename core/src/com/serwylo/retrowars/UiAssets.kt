@@ -251,6 +251,8 @@ class UiAssets(private val locale: Locale) {
             "it",
             "nb",
             "nl",
+            "pl",
+            "pt", // TODO: This is for pt_BR. If pt translation lands, then update code to support countries. Currently just supports language.
             "ru",
             "sr",
         )
@@ -259,31 +261,32 @@ class UiAssets(private val locale: Locale) {
             "bs", // ž and other characters not represented by Kenney.
             "hu", // ő and perhaps others are not supported by Kenney.
             "hr", // ž and other characters not represented by Kenney.
+            "pl",
             "ru",
             "sr",
         )
 
         private fun isLocaleSupported(locale: Locale): Boolean {
-            val country = locale.language.toLowerCase(Locale.ENGLISH)
-            return supportedLocales.contains(country)
+            val language = locale.language.toLowerCase(Locale.ENGLISH)
+            return supportedLocales.contains(language)
         }
 
         private fun localeRequiresNotoFonts(locale: Locale): Boolean {
-            val country = locale.language.toLowerCase(Locale.ENGLISH)
-            return notoLocales.contains(country)
+            val language = locale.language.toLowerCase(Locale.ENGLISH)
+            return notoLocales.contains(language)
         }
 
-        fun getLocale(): Locale {
+        fun getLocale(localeFromCli: Locale?): Locale {
             // Even though Weblate is allowing this game to be translated into many different languages,
             // only some of them are supported by libgdx. Ensure that we don't pick up an unsupported locale
             // which *does* have translation files available, because it will render invalid glyphs and
             // make the game unusable.
-            val systemLocale = Locale.getDefault()
+            val preferredLocale = localeFromCli ?: Locale.getDefault()
 
-            return if (isLocaleSupported(systemLocale)) {
-                systemLocale
+            return if (isLocaleSupported(preferredLocale)) {
+                preferredLocale
             } else {
-                Gdx.app.error(TAG, "Unsupported locale: $systemLocale, falling back to English.")
+                Gdx.app.error(TAG, "Unsupported locale: $preferredLocale, falling back to English.")
                 Locale.ROOT
             }
         }
