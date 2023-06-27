@@ -251,6 +251,8 @@ class UiAssets(private val locale: Locale) {
             "it",
             "nb",
             "nl",
+            "pl",
+            "pt",
             "ru",
             "sr",
         )
@@ -259,6 +261,7 @@ class UiAssets(private val locale: Locale) {
             "bs", // ž and other characters not represented by Kenney.
             "hu", // ő and perhaps others are not supported by Kenney.
             "hr", // ž and other characters not represented by Kenney.
+            "pl",
             "ru",
             "sr",
         )
