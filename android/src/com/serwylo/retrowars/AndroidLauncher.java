@@ -5,6 +5,8 @@ import android.os.Bundle;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
+import java.util.Locale;
+
 public class AndroidLauncher extends AndroidApplication {
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
@@ -12,6 +14,6 @@ public class AndroidLauncher extends AndroidApplication {
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 		config.useImmersiveMode = true;
 		config.useWakelock = true;
-		initialize(new RetrowarsGame(new AndroidPlatform(this), true, false), config);
+		initialize(new RetrowarsGame(new AndroidPlatform(this), true, false, Locale.getDefault()), config);
 	}
 }
