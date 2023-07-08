@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlinVersion = '1.6.21'
+    ext.kotlinVersion = '1.5.20'
 
     repositories {
         mavenCentral()
@@ -7,7 +7,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:4.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
     }
@@ -27,8 +27,8 @@ allprojects {
         // in order for the F-Droid checkupdates bot to pick them up. Normally it just checks the
         // android apps build.gradle or AndroidManifest, but we dynamically inject them via these
         // properties so that both the server and the client have access to the same information.
-        appVersionCode = 58
-        appVersionName = "0.31.7"
+        appVersionCode = 59
+        appVersionName = "0.31.8"
 
         gdxVersion = '1.10.0'
         kotlinCoroutinesVersion = '1.4.2'
