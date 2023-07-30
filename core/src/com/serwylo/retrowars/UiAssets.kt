@@ -121,28 +121,29 @@ class UiAssets(private val locale: Locale) {
      */
     class Styles(private val skin: Skin, private val locale: Locale) {
 
-        private val useNoto = localeRequiresNotoFonts(locale)
+        private val font = fontForLocale(locale) ?: Font.KENNEY
 
         val label = Labels()
         val textButton = TextButtons()
 
         inner class Labels {
+
             val small = skin.get("small", Label.LabelStyle::class.java)
             val medium = skin.get("default", Label.LabelStyle::class.java)
             val large = skin.get("large", Label.LabelStyle::class.java)
             val huge = skin.get("huge", Label.LabelStyle::class.java)
 
             init {
-                if (useNoto) {
-                    val smallNoto = skin.get("small-noto", Label.LabelStyle::class.java)
-                    val mediumNoto = skin.get("default-noto", Label.LabelStyle::class.java)
-                    val largeNoto = skin.get("large-noto", Label.LabelStyle::class.java)
-                    val hugeNoto = skin.get("huge-noto", Label.LabelStyle::class.java)
+                if (font != Font.KENNEY) {
+                    val smallAlternative = skin.get("small-${font.id}", Label.LabelStyle::class.java)
+                    val mediumAlternative = skin.get("default-${font.id}", Label.LabelStyle::class.java)
+                    val largeAlternative = skin.get("large-${font.id}", Label.LabelStyle::class.java)
+                    val hugeAlternative = skin.get("huge-${font.id}", Label.LabelStyle::class.java)
 
-                    huge.font = hugeNoto.font
-                    large.font = largeNoto.font
-                    medium.font = mediumNoto.font
-                    small.font = smallNoto.font
+                    huge.font = hugeAlternative.font
+                    large.font = largeAlternative.font
+                    medium.font = mediumAlternative.font
+                    small.font = smallAlternative.font
                 }
             }
         }
@@ -154,16 +155,17 @@ class UiAssets(private val locale: Locale) {
             val huge = skin.get("huge", TextButton.TextButtonStyle::class.java)
 
             init {
-                if (useNoto) {
-                    val smallNoto = skin.get("small-noto", TextButton.TextButtonStyle::class.java)
-                    val mediumNoto = skin.get("default-noto", TextButton.TextButtonStyle::class.java)
-                    val largeNoto = skin.get("large-noto", TextButton.TextButtonStyle::class.java)
-                    val hugeNoto = skin.get("huge-noto", TextButton.TextButtonStyle::class.java)
+                if (font != Font.KENNEY) {
 
-                    huge.font = hugeNoto.font
-                    large.font = largeNoto.font
-                    medium.font = mediumNoto.font
-                    small.font = smallNoto.font
+                    val smallAlternative = skin.get("small-${font.id}", TextButton.TextButtonStyle::class.java)
+                    val mediumAlternative = skin.get("default-${font.id}", TextButton.TextButtonStyle::class.java)
+                    val largeAlternative = skin.get("large-${font.id}", TextButton.TextButtonStyle::class.java)
+                    val hugeAlternative = skin.get("huge-${font.id}", TextButton.TextButtonStyle::class.java)
+
+                    huge.font = hugeAlternative.font
+                    large.font = largeAlternative.font
+                    medium.font = mediumAlternative.font
+                    small.font = smallAlternative.font
                 }
             }
         }
@@ -221,6 +223,12 @@ class UiAssets(private val locale: Locale) {
 
     }
 
+    enum class Font(val id: String) {
+        KENNEY("kenney"),
+        NOTO_MONO("noto"),
+        NOTO_CJK("noto_cjk"),
+    }
+
     companion object {
 
         private const val TAG = "UiAssets"
@@ -239,41 +247,29 @@ class UiAssets(private val locale: Locale) {
          * or languages where glyphs are combined together such as Persian. This will be harder to
          * accomplish unfortunately.
          */
-        val supportedLocales = setOf(
-            "bs",
-            "de",
-            "en",
-            "et",
-            "fr",
-            "hr",
-            "id",
-            "in", // Java and Weblate disagree on the language code for Indonesian. Java uses "in", weblate uses "id", so we symlink them together.
-            "it",
-            "nb",
-            "nl",
-            "pl",
-            "pt", // TODO: This is for pt_BR. If pt translation lands, then update code to support countries. Currently just supports language.
-            "ru",
-            "sr",
+        val supportedLocales = mapOf(
+            "bs" to Font.NOTO_MONO, // ž and other characters not represented by Kenney.
+            "de" to Font.KENNEY,
+            "en" to Font.KENNEY,
+            "et" to Font.KENNEY,
+            "fr" to Font.KENNEY,
+            "hu" to Font.NOTO_MONO, // ő and perhaps others are not supported by Kenney.
+            "hr" to Font.NOTO_MONO, // ž and other characters not represented by Kenney.
+            "id" to Font.KENNEY,
+            "in" to Font.KENNEY, // Java and Weblate disagree on the language code for Indonesian. Java uses "in", weblate uses "id", so we symlink them together.
+            "it" to Font.KENNEY,
+            "ko" to Font.NOTO_CJK,
+            "nb" to Font.KENNEY,
+            "nl" to Font.KENNEY,
+            "pl" to Font.NOTO_MONO,
+            "pt" to Font.KENNEY, // TODO: This is for pt_BR. If pt translation lands, then update code to support countries. Currently just supports language.
+            "ru" to Font.NOTO_MONO,
+            "sr" to Font.NOTO_MONO,
         )
 
-        private val notoLocales = setOf(
-            "bs", // ž and other characters not represented by Kenney.
-            "hu", // ő and perhaps others are not supported by Kenney.
-            "hr", // ž and other characters not represented by Kenney.
-            "pl",
-            "ru",
-            "sr",
-        )
-
-        private fun isLocaleSupported(locale: Locale): Boolean {
-            val language = locale.language.toLowerCase(Locale.ENGLISH)
-            return supportedLocales.contains(language)
-        }
-
-        private fun localeRequiresNotoFonts(locale: Locale): Boolean {
-            val language = locale.language.toLowerCase(Locale.ENGLISH)
-            return notoLocales.contains(language)
+        private fun fontForLocale(locale: Locale): Font? {
+            val country = locale.language.toLowerCase(Locale.ENGLISH)
+            return supportedLocales[country]
         }
 
         fun getLocale(localeFromCli: Locale?): Locale {
@@ -283,7 +279,9 @@ class UiAssets(private val locale: Locale) {
             // make the game unusable.
             val preferredLocale = localeFromCli ?: Locale.getDefault()
 
-            return if (isLocaleSupported(preferredLocale)) {
+            val font = fontForLocale(preferredLocale)
+
+            return if (font != null) {
                 preferredLocale
             } else {
                 Gdx.app.error(TAG, "Unsupported locale: $preferredLocale, falling back to English.")

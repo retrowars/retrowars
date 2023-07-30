@@ -3,7 +3,6 @@ package com.serwylo.beatgame.bin
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.backends.headless.HeadlessApplication
-import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.g2d.PixmapPacker
@@ -11,17 +10,22 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.tools.bmfont.BitmapFontWriter
 import com.badlogic.gdx.tools.texturepacker.TexturePacker
-import com.badlogic.gdx.utils.BufferUtils
+import com.serwylo.retrowars.UiAssets
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.util.*
 
-fun main(arg: Array<String>) {
+fun main() {
     packTextures()
     generateFonts()
 }
+
+private val fontPaths = mapOf(
+    UiAssets.Font.NOTO_MONO to "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf",
+    UiAssets.Font.NOTO_CJK to "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+)
 
 private fun packTextures() {
     val settings = TexturePacker.Settings()
@@ -36,14 +40,16 @@ private fun generateFonts() {
     HeadlessApplication(object : ApplicationAdapter() {
         override fun create() {
 
-            val chars = requiredCharacters()
+            UiAssets.Font.values().filter { it != UiAssets.Font.KENNEY }.onEach { font ->
+                val chars = requiredCharacters(font)
 
-            Gdx.app.log("Font generation", "Creating fonts of size 18, 26, 58, 72 for characters: $chars")
+                Gdx.app.log("Font generation", "Creating ${font.id} fonts of size 18, 26, 58, 72 for characters: $chars")
 
-            outputFont(18, 16, chars, 256, bold = true)
-            outputFont(26, 23, chars, 256)
-            outputFont(58, 38, chars, 512)
-            outputFont(72, 46, chars, 512, scale = 2)
+                outputFont(font, 18, 16, chars, 256, bold = true)
+                outputFont(font, 26, 23, chars, 256)
+                outputFont(font, 58, 38, chars, 512)
+                outputFont(font, 72, 46, chars, 512, scale = 2)
+            }
 
             Gdx.app.exit()
         }
@@ -55,10 +61,21 @@ private fun generateFonts() {
  * Parse every i18n properties file, and gather up every unique character that is in use.
  * Will remove duplicates and sort somewhat.
  */
-private fun requiredCharacters(): String {
+private fun requiredCharacters(font: UiAssets.Font): String {
     val propertiesDir = FileSystems.getDefault().getPath("../android/assets/i18n")
+
+    val langs = UiAssets.supportedLocales.entries
+        .filter { it.value == font }
+        .map { it.key }
+        .toSet()
+
+    val regex = "messages_(.+)\\.properties".toRegex()
     val chars: String = Files.newDirectoryStream(propertiesDir)
         .filter { it.toString().endsWith(".properties") }
+        .filter {
+            val code: String? = regex.find(it.fileName.toString())?.groups?.get(1)?.value
+            (it.fileName.toString() == "messages.properties") || code != null && langs.contains(code)
+        }
         .map { Properties().apply {
             load(InputStreamReader(Files.newInputStream(it), Charset.forName("UTF-8")))
         }}
@@ -76,11 +93,11 @@ private fun requiredCharacters(): String {
 
 /**
  * It is hard to change the font-size definition in the scene2d skin, so we instead maintain this
- * as constant while we tweak the sizeInFont until wee are happy with the output.
+ * as constant while we tweak the sizeInFont until we are happy with the output.
  */
-private fun outputFont(sizeInSkin: Int, sizeInFont: Int, chars: String, pageSize: Int, bold: Boolean = false, scale: Int = 1) {
+private fun outputFont(font: UiAssets.Font, sizeInSkin: Int, sizeInFont: Int, chars: String, pageSize: Int, bold: Boolean = false, scale: Int = 1) {
 
-    Gdx.app.log("Font generation", "Creating fonts of size $sizeInFont. Saving as noto_mono_$sizeInSkin in skin/retrowars-skin_data/")
+    Gdx.app.log("Font generation", "Creating ${font.id} font of size $sizeInFont. Saving as ${font.id}_$sizeInSkin in skin/retrowars-skin_data/")
 
     val info = BitmapFontWriter.FontInfo()
     info.padding = BitmapFontWriter.Padding(1, 1, 1, 1)
@@ -95,20 +112,20 @@ private fun outputFont(sizeInSkin: Int, sizeInFont: Int, chars: String, pageSize
     param.renderCount = 1
     param.packer = BlockyPixmapPacker(scale, pageSize, pageSize, Pixmap.Format.RGBA8888, 1, false)
 
-    val generator = FreeTypeFontGenerator(Gdx.files.absolute("/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf"))
+    val generator = FreeTypeFontGenerator(Gdx.files.absolute(fontPaths[font]))
 
     val data = generator.generateData(param)
 
     val imagePages = BitmapFontWriter.writePixmaps(
         param.packer.pages,
         Gdx.files.absolute("../skin/retrowars-skin_data/"),
-        "noto_mono_$sizeInSkin"
+        "${font.id}_$sizeInSkin"
     )
 
     BitmapFontWriter.writeFont(
         data,
         imagePages,
-        Gdx.files.absolute("../skin/retrowars-skin_data/noto_mono_$sizeInSkin.fnt"),
+        Gdx.files.absolute("../skin/retrowars-skin_data/${font.id}_$sizeInSkin.fnt"),
         info,
         pageSize,
         pageSize
