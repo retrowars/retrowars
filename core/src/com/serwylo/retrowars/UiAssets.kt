@@ -251,6 +251,7 @@ class UiAssets(private val locale: Locale) {
             "bs" to Font.NOTO_MONO, // ž and other characters not represented by Kenney.
             "de" to Font.KENNEY,
             "en" to Font.KENNEY,
+            "es" to Font.KENNEY,
             "et" to Font.KENNEY,
             "fr" to Font.KENNEY,
             "hu" to Font.NOTO_MONO, // ő and perhaps others are not supported by Kenney.
