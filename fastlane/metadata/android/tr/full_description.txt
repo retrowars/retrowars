@@ -1,0 +1,18 @@
+Retro oyunlardan hoşlanıyor musun? Peki çok oyunculu oyunlardan hoşlanıyor musun? Daha önce gerçek zamanlı olarak bir retro oyuna karşı başka bir retro oyun oynamak istedin mi?
+
+Super Retro Mega Savaşları'na hoşgeldin!
+
+Arkadaşlarına karşı, hepiniz farklı oyunlardayken oynayabilirsin. Kendi oynadığın oyunda puan kazan, her oyun kendi içindeki sisteme göre hesaplanacak. Ama dikkat et, diğerleri puan kazandıkça senin oyunun daha da zorlaşacak.
+
+Altı farklı tek ve çok oyunculu oyunlar klasik retro oyunlara dayanıyor. Daha fazlası da yolda!
+
+Reklam yok. Uygulama içi satın alım yok. Sadece retro oyunlar ve güzel zamanlar var.
+
+Github üzerinden herhangi bir geri bildirimi çok hoş karşılarız.
+
+Bilinen kısıtlamalar:
+
+*Oyunları dengelemek ve hataları tespit edip kaldırmak için kapsamlı bir oynayış gerekli.
+*Farklı ekran boyutlarında test edilmedi.
+
+Lütfen oyunun geliştirilmesini Github sponsors veya Liberapay aracılığıyla destekleyin.
