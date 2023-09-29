@@ -3370,7 +3370,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: huge-noto
+				name: huge-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.TextButton
 				properties: {
 					font: {
@@ -3640,7 +3640,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: large-noto
+				name: large-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.TextButton
 				properties: {
 					font: {
@@ -3910,7 +3910,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: small-noto
+				name: small-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.TextButton
 				properties: {
 					font: {
@@ -4180,7 +4180,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: default-noto
+				name: default-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.TextButton
 				properties: {
 					font: {
@@ -5671,7 +5671,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: huge-noto
+				name: huge-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.Label
 				properties: {
 					font: {
@@ -5725,7 +5725,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: large-noto
+				name: large-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.Label
 				properties: {
 					font: {
@@ -5779,7 +5779,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: small-noto
+				name: small-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.Label
 				properties: {
 					font: {
@@ -5833,7 +5833,7 @@ jsonData: {
 			}
 			{
 				class: com.ray3k.skincomposer.data.StyleData
-				name: default-noto
+				name: default-noto_mono
 				clazz: com.badlogic.gdx.scenes.scene2d.ui.Label
 				properties: {
 					font: {

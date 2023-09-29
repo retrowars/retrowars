@@ -225,7 +225,7 @@ class UiAssets(private val locale: Locale) {
 
     enum class Font(val id: String) {
         KENNEY("kenney"),
-        NOTO_MONO("noto"),
+        NOTO_MONO("noto_mono"),
         NOTO_CJK("noto_cjk"),
     }
 
@@ -266,6 +266,7 @@ class UiAssets(private val locale: Locale) {
             "pt" to Font.KENNEY, // TODO: This is for pt_BR. If pt translation lands, then update code to support countries. Currently just supports language.
             "ru" to Font.NOTO_MONO,
             "sr" to Font.NOTO_MONO,
+            "tr" to Font.NOTO_MONO,
         )
 
         private fun fontForLocale(locale: Locale): Font? {
