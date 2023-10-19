@@ -267,6 +267,7 @@ class UiAssets(private val locale: Locale) {
             "ru" to Font.NOTO_MONO,
             "sr" to Font.NOTO_MONO,
             "tr" to Font.NOTO_MONO,
+            "uk" to Font.NOTO_MONO,
         )
 
         private fun fontForLocale(locale: Locale): Font? {

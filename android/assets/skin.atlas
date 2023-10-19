@@ -1,8 +1,8 @@
 
 skin.png
-size: 2048,2048
+size: 2048, 2048
 format: RGBA8888
-filter: Linear,Linear
+filter: Linear, Linear
 repeat: none
 button
   rotate: false
