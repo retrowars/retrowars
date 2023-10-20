@@ -65,8 +65,7 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
                     pad(UI_SPACE)
 
                     wrapper.row().pad(UI_SPACE)
-                    // TODO: i18n
-                    wrapper.add(Label("Audio / Visual", styles.label.medium))
+                    wrapper.add(Label(strings["options.audio-visual"], styles.label.medium))
                     wrapper.row()
                     wrapper.add(makeMusicToggle()).growX()
                     wrapper.row()
@@ -117,14 +116,11 @@ class OptionsScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showMainMen
 
         val playerId = Options.getPlayerId()
         return if (playerId == 0L) {
-            // TODO: i18n
-            makeButton("Choose Avatar", styles, action)
+            makeButton(strings["options.avatar.btn-choose"], styles, action)
         } else {
             HorizontalGroup().also { row ->
                 row.addActor(Avatar(playerId, game.uiAssets))
-                // TODO: i18n
-                makeButton("Choose Avatar", styles, action)
-                row.addActor(makeButton("Change Avatar", styles, action))
+                row.addActor(makeButton(strings["options.avatar.btn-change"], styles, action))
             }
         }
     }

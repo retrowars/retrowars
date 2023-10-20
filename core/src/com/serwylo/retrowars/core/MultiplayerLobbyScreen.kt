@@ -344,15 +344,15 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             ).left().colspan(2)
             metadata.row()
 
-            metadata.add(Label("Rooms:", styles.label.small)).left()
+            metadata.add(Label(strings["multiplayer.server-list.advanced.rooms"], styles.label.small)).left()
             metadata.add(Label("${server.currentRoomCount}/${server.maxRooms}", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Version:", styles.label.small)).left()
+            metadata.add(Label(strings["multiplayer.server-list.advanced.version"], styles.label.small)).left()
             metadata.add(Label("v${server.versionName}", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
-            metadata.add(Label("Query time:", styles.label.small)).left()
+            metadata.add(Label(strings["multiplayer.server-list.advanced.query-time"], styles.label.small)).left()
             metadata.add(Label("${server.pingTime}ms", styles.label.small)).left().padLeft(UI_SPACE)
             metadata.row()
 
