@@ -1,6 +1,7 @@
 package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
+import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import com.serwylo.retrowars.utils.Platform
@@ -33,7 +34,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         val port: Int,
         val finalScoreDelayMillis: Int,
         val inactivePlayerTimeoutMillis: Int,
-        val includeBetaGames: Boolean = false,
+        val supportedGames: List<GameDetails>,
     )
 
     sealed interface Rooms {
@@ -165,7 +166,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500, 90000))
+            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500, 90000, Games.allAvailable))
             server = newServer
             return newServer
         }
@@ -254,6 +255,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         }
 
         logger.info("Starting server of type: ${rooms.getName()}")
+        logger.info("Available games: ${config.supportedGames.map { it.id }.joinToString(", ")}")
 
         server = WebSocketNetworkServer(
             this,
@@ -398,13 +400,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
         scheduleReturnToLobby(room)
     }
 
-    private val games = if (config.includeBetaGames) {
-        Games.allAvailable
-    } else {
-        Games.allReleased
-    }
-
-    private fun randomGame() = games.random().id
+    private fun randomGame() = config.supportedGames.random().id
 
     private fun scheduleReturnToLobby(room: Room) {
         if (returnToLobbyTask != null) {
