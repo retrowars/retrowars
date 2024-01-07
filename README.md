@@ -72,21 +72,11 @@ We use [Weblate](https://hosted.weblate.org/engage/retrowars/) to manage transla
 
 Pull requests will be warmly received at [https://github.com/retrowars/retrowars](https://github.com/retrowars/retrowars), although it is often easier to first discuss your ideas via the [issue tracker](https://github.com/retrowars/retrowars/issues).
 
-## Running a public server
+## Running a server
 
-If you are able to run a public server, please [see the retrowars-server](https://github.com/retrowars/retrowars-servers/#contributing) project for more details.
-Doing so will make it appear in the default retro wars client when searching for public servers, and ensure that people can continue to play against eachother even if the official servers are down.
+Documentation on running servers can be found at [the retrowars-server project](https://github.com/retrowars/retrowars-servers/#running-a-server).
 
-### Running a server on Heroku
-
-Before pushing to your Heroku app, make sure to set the following config:
-
-```
-heroku config:set GRADLE_TASK="-PexcludeAndroid stage"
-```
-
-Explanation: Newer versions of the Android Gradle plugin require an Android SDK to even configure the `:android` subproject of a libgdx project, not just to compile it.
-To [avoid this issue, run the command above](https://devcenter.heroku.com/articles/deploying-gradle-apps-on-heroku#multiple-application-types-in-the-same-project) to tell Heroku that it doesn't need to worry about configuring anything except the `:core` and `:server` projects, and therefore it doesn't matter that the Android SDK is missing.
+Pull requests to the `retrowars/retrowars-servers` project will allow your server to appear in the default retro wars client when searching for public servers, and ensure that people can continue to play against each other even if the official servers are down.
 
 # Compiling
 

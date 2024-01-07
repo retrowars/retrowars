@@ -17,7 +17,7 @@ class ServerApp(
     private lateinit var server: RetrowarsServer
 
     override fun create() {
-        logger.info("Launching server app [port: ${config.port}, rooms: [type: ${config.rooms.getName()}, maxRooms: ${config.rooms.getMaxRooms()}, roomSize: ${config.rooms.getRoomSize()}], finalScoreDelayMillis: ${config.finalScoreDelayMillis}, inactivePlayerTimeoutMillis: ${config.inactivePlayerTimeoutMillis}]")
+        logger.info("Launching server app [port: ${config.port}, rooms: [type: ${config.rooms.getName()}, maxRooms: ${config.rooms.getMaxRooms()}, roomSize: ${config.rooms.getRoomSize()}], finalScoreDelayMillis: ${config.finalScoreDelayMillis}, inactivePlayerTimeoutMillis: ${config.inactivePlayerTimeoutMillis}, supportedGames: [${config.supportedGames.map { it.id }.joinToString(", ")}]]")
 
         server = RetrowarsServer(platform, config)
 
