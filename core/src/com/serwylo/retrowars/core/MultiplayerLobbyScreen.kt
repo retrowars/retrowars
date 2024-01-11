@@ -194,6 +194,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.clear()
 
         wrapper.add(Label(strings["multiplayer.server-list.no-servers-found"], styles.label.large))
+
+        wrapper.row()
+        wrapper.add(makeManualServerInput())
+
         wrapper.row().spaceTop(UI_SPACE * 2)
         wrapper.add(makeContributeServerInfo(game.uiAssets))
     }
@@ -209,6 +213,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.row()
         wrapper.add(
             ScrollPane(Table().apply {
+
                 activeServers.onEach { server ->
                     row()
                     add(makeServerInfo(server)).pad(UI_SPACE).expandX().fillX()
@@ -218,6 +223,10 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                     row()
                     add(makeUnsupportedServerInfo(server)).pad(UI_SPACE).expandX().fillX()
                 }
+
+                row()
+                add(makeManualServerInput()).pad(UI_SPACE).expandX().fillX()
+
             }).apply {
                 setScrollingDisabled(true, false)
             }
@@ -285,6 +294,75 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         }
     }
 
+    private fun makeManualServerInput(): Actor {
+
+        val styles = game.uiAssets.getStyles()
+        val skin = game.uiAssets.getSkin()
+        return Table().apply {
+            background = skin.getDrawable("window")
+            padTop(UI_SPACE)
+            padBottom(UI_SPACE)
+            padLeft(UI_SPACE * 2)
+            padRight(UI_SPACE * 2)
+
+            val hostField = TextField("", skin)
+            val portField = TextField("", skin).apply {
+                width = UI_SPACE * 3
+
+                // DigitsOnlyFilter seems to accept non-latin digits too, which probably are not
+                // port numbers. But given this is just a convenience to prevent common mistakes,
+                // that is okay. Worst case, it will fail when trying to connect, just as if they
+                // typed the wrong hostname, which we have no control over.
+                textFieldFilter = TextField.TextFieldFilter.DigitsOnlyFilter()
+
+                maxLength = 5 // No ports larger than 65k.
+            }
+
+            add(
+                VerticalGroup().also { group ->
+                    group.expand()
+                    group.fill()
+                    group.addActor(Label("Hostname / IP Address", styles.label.small))
+                    group.addActor(hostField)
+                }
+            ).expandX().fillX()
+
+            add(
+                VerticalGroup().also { group ->
+                    group.expand()
+                    group.fill()
+                    group.addActor(Label("Port", styles.label.small))
+                    group.addActor(portField)
+                }
+            )
+
+            add(makeButton(strings["multiplayer.server-list.btn.join"], styles) {
+
+                val host = hostField.text
+                val port = "\\d{1,5}".toRegex().matchEntire(portField.text)?.value?.toInt(10) ?: -1
+
+                if (host.isNotEmpty() && port != -1) {
+                    joinServer(host, port)
+                }
+
+            }.apply {
+                padLeft(UI_SPACE * 2)
+                padRight(UI_SPACE * 2)
+            }).top()
+            row()
+        }
+    }
+
+    private fun joinServer(hostname: String, port: Int) {
+        Gdx.app.debug(TAG, "About to join server ${hostname}:${port}. Will cancel the job scheduled to find all servers in case there are any still in progress (no longer relevant now we have selected as server).")
+        findPublicServersJob.cancel()
+        changeState(Action.AttemptToJoinServer)
+
+        GlobalScope.launch(Dispatchers.IO) {
+            createClient(hostname, port)
+        }
+    }
+
     private fun makeServerInfo(server: ServerDetails): Actor {
 
         val styles = game.uiAssets.getStyles()
@@ -321,13 +399,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
             add(
                 makeButton(strings["multiplayer.server-list.btn.join"], styles) {
-                    Gdx.app.debug(TAG, "About to join server ${server.hostname}:${server.port}. Will cancel the job scheduled to find all servers in case there are any still in progress (no longer relevant now we have selected as server).")
-                    findPublicServersJob.cancel()
-                    changeState(Action.AttemptToJoinServer)
-
-                    GlobalScope.launch(Dispatchers.IO) {
-                        createClient(server.hostname, server.port)
-                    }
+                    joinServer(server.hostname, server.port)
                 }.apply {
                     padLeft(UI_SPACE * 2)
                     padRight(UI_SPACE * 2)
