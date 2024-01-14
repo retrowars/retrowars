@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.I18NBundle
-import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.Player

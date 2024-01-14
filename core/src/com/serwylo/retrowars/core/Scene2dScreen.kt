@@ -1,7 +1,7 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.*
-import com.serwylo.beatgame.ui.makeStage
+import com.serwylo.retrowars.ui.makeStage
 import com.serwylo.retrowars.RetrowarsGame
 
 abstract class Scene2dScreen(protected val game: RetrowarsGame, private val onBack: (() -> Unit)? = null): ScreenAdapter() {

@@ -9,10 +9,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.*
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.makeButton
-import com.serwylo.beatgame.ui.makeHeading
+import com.serwylo.retrowars.ui.*
+import com.serwylo.retrowars.ui.UI_SPACE
+import com.serwylo.retrowars.ui.makeButton
+import com.serwylo.retrowars.ui.makeHeading
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.UiAssets
 import com.serwylo.retrowars.games.GameDetails

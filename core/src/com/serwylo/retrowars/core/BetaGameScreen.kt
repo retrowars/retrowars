@@ -1,11 +1,10 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.*
+import com.serwylo.retrowars.ui.*
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.BetaInfo
 import com.serwylo.retrowars.games.GameDetails

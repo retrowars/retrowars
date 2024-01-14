@@ -4,7 +4,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.*
 import com.serwylo.retrowars.UiAssets
 
 class SingleplayerInGameMenuActor(

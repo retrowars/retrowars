@@ -1,4 +1,4 @@
-package com.serwylo.beatgame.ui
+package com.serwylo.retrowars.ui
 
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion

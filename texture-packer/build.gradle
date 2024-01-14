@@ -3,7 +3,7 @@ apply plugin: "kotlin"
 sourceCompatibility = 1.7
 sourceSets.main.java.srcDirs = [ "src/" ]
 
-project.ext.mainClassName = "com.serwylo.beatgame.bin.TexturePackerKt"
+project.ext.mainClassName = "com.serwylo.retrowars.bin.TexturePackerKt"
 
 task packTextures(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
