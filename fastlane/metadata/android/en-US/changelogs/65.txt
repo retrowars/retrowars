@@ -1,0 +1,4 @@
+New features:
+ * When starting a local server, players can choose to limit the games to only their favourites.
+ * Players can manually enter private server addresses instead of only relying on public servers.
+ * If you are a server operator, you can also limit the games to only your favourites.
