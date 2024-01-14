@@ -1,16 +1,20 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction
 import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.Align
 import com.serwylo.beatgame.ui.*
+import com.badlogic.gdx.utils.Scaling
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameDetails
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.net.*
 import com.serwylo.retrowars.ui.createPlayerSummaries
 import com.serwylo.retrowars.ui.filterActivePlayers
@@ -53,6 +57,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
     private val wrapper = Table()
 
+    private val assets = game.uiAssets
     private val styles = game.uiAssets.getStyles()
     private val strings = game.uiAssets.getStrings()
 
@@ -171,6 +176,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                 is ShowEmptyServerList -> showEmptyServerList()
                 is NoLocalServerFound -> showNoLocalServerFound()
                 is ConnectingToServer -> showConnectingToServer()
+                is CustomisingServer -> showCustomisingServer(new.selectedGames)
                 is StartingServer -> showStartingServer()
                 is ReadyToStart -> showReadyToStart(new.players, new.previousPlayers)
                 is WaitingForOtherPlayers -> showServerWaitingForClients(new.me)
@@ -470,15 +476,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 
         wrapper.add(
             makeButton(strings["multiplayer.lobby.splash.btn.start-local-server"], styles) {
-                changeState(Action.AttemptToStartServer)
-
-                GlobalScope.launch(Dispatchers.IO) {
-                    RetrowarsServer.start(game.platform)
-                    createClient("localhost", Network.defaultPort)
-
-                    // Don't change the state here. Instead, we will wait for a 'players updated'
-                    // event from our client which will in turn trigger the appropriate state change.
-                }
+                changeState(Action.CustomiseServer)
             }
         )
 
@@ -754,6 +752,91 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
         wrapper.add(Label(strings["multiplayer.connecting-to-server"], styles.label.medium))
     }
 
+    private fun showCustomisingServer(games: List<GameDetails>) {
+        wrapper.clear()
+
+        val gamesPerRow = 8
+        val width = (stage.width - UI_SPACE * 4) / gamesPerRow
+        val height = width
+
+        wrapper.add(Label("Select games:", styles.label.medium)).colspan(gamesPerRow)
+        wrapper.row().spaceTop(UI_SPACE * 2)
+
+        var x = 0
+        var y = 0
+        Games.allAvailable.forEachIndexed { i, game ->
+
+            if (i % gamesPerRow == 0) {
+                wrapper.row()
+                y ++
+                x = 0
+            }
+
+            val isSelected = games.contains(game)
+            wrapper.add(makeGameButton(game, isSelected) {
+                val newSelected = if (isSelected) {
+                    games - game
+                } else {
+                    games + game
+                }
+
+                changeState(Action.SelectedGamesUpdated(newSelected))
+            }).width(width).height(height)
+
+            x ++
+
+        }
+
+        wrapper.row().spaceTop(UI_SPACE * 2)
+        wrapper.add(
+            makeLargeButton("Play", styles) {
+                changeState(Action.AttemptToStartServer)
+
+                GlobalScope.launch(Dispatchers.IO) {
+                    RetrowarsServer.start(game.platform, games)
+                    createClient("localhost", Network.defaultPort)
+
+                    // Don't change the state here. Instead, we will wait for a 'players updated'
+                    // event from our client which will in turn trigger the appropriate state change.
+                }
+            }
+        ).center().colspan(gamesPerRow)
+
+    }
+
+    private fun makeGameButton(game: GameDetails, isSelected: Boolean, onClick: () -> Unit): Stack {
+
+        val buttonStyle = if (isSelected) "default" else "locked"
+
+        val button = Button(assets.getSkin(), buttonStyle).apply {
+            setFillParent(true)
+            addListener(object: ChangeListener() {
+                override fun changed(event: ChangeEvent?, actor: Actor?) {
+                    onClick()
+                }
+            })
+        }
+
+        val iconWrapper = Container<Image>().apply {
+            setFillParent(true)
+            touchable = Touchable.disabled // Let the button in the background do the interactivity.
+            pad(UI_SPACE)
+        }
+
+        iconWrapper.actor = Image(game.icon(assets.getSprites())).apply {
+            setScaling(Scaling.fit)
+            if (!isSelected) {
+                color = Color.GRAY
+            }
+        }
+
+        return Stack().also { stack ->
+            stack.addActor(button)
+            stack.addActor(iconWrapper)
+        }
+
+    }
+
     private fun showStartingServer() {
         wrapper.clear()
 
@@ -1016,6 +1099,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
 }
 
 sealed class Action {
+    object CustomiseServer : Action()
     object AttemptToStartServer : Action()
     object FindPublicServers : Action()
     object FindLocalServer : Action()
@@ -1023,6 +1107,7 @@ sealed class Action {
     class PlayersChanged(val players: List<Player>): Action() {
         fun isPending() = players.isNotEmpty() && players[0].status == Player.Status.pending
     }
+    class SelectedGamesUpdated(val selectedGames: List<GameDetails>): Action()
     class ScoreUpdated(val scores: Map<Player, Long>): Action()
     class ShowFinalScores(val scores: Map<Player, Long>): Action()
     class ReturnToLobby(val players: List<Player>): Action()
@@ -1045,9 +1130,19 @@ interface UiState {
 class Splash: UiState {
     override fun consumeAction(action: Action): UiState {
         return when(action) {
-            is Action.AttemptToStartServer -> StartingServer()
+            is Action.CustomiseServer -> CustomisingServer(Games.allAvailable)
             is Action.FindPublicServers -> SearchingForPublicServers()
             is Action.FindLocalServer -> SearchingForLocalServer()
+            else -> unsupported(action)
+        }
+    }
+}
+
+class CustomisingServer(val selectedGames: List<GameDetails>): UiState {
+    override fun consumeAction(action: Action): UiState {
+        return when(action) {
+            is Action.SelectedGamesUpdated -> CustomisingServer(action.selectedGames)
+            is Action.AttemptToStartServer -> StartingServer()
             else -> unsupported(action)
         }
     }
