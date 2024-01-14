@@ -1,4 +1,4 @@
-package com.serwylo.beatgame.bin
+package com.serwylo.retrowars.bin
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx

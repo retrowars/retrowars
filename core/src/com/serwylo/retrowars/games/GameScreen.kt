@@ -14,7 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.serwylo.beatgame.ui.withBackground
+import com.serwylo.retrowars.ui.withBackground
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.audio.SoundLibrary
 import com.serwylo.retrowars.input.SoftController

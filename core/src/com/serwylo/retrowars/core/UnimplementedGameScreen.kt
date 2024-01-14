@@ -1,18 +1,14 @@
 package com.serwylo.retrowars.core
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Input
-import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup
 import com.badlogic.gdx.utils.Align
-import com.serwylo.beatgame.ui.UI_SPACE
-import com.serwylo.beatgame.ui.addToggleAudioButtonToMenuStage
-import com.serwylo.beatgame.ui.makeButton
-import com.serwylo.beatgame.ui.makeHeading
+import com.serwylo.retrowars.ui.UI_SPACE
+import com.serwylo.retrowars.ui.addToggleAudioButtonToMenuStage
+import com.serwylo.retrowars.ui.makeButton
+import com.serwylo.retrowars.ui.makeHeading
 import com.serwylo.retrowars.RetrowarsGame
-import com.serwylo.retrowars.games.GameDetails
 
 class UnimplementedGameScreen(game: RetrowarsGame): Scene2dScreen(game, { game.showGameSelectMenu() }) {
 
