@@ -161,12 +161,12 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
 
         private var server: RetrowarsServer? = null
 
-        fun start(platform: Platform): RetrowarsServer {
+        fun start(platform: Platform, games: List<GameDetails>): RetrowarsServer {
             if (server != null) {
                 throw IllegalStateException("Cannot start a server, one has already been started.")
             }
 
-            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500, 90000, Games.allAvailable))
+            val newServer = RetrowarsServer(platform, Config(Rooms.SingleLocalRoom(), 8080, 7500, 90000, games))
             server = newServer
             return newServer
         }
