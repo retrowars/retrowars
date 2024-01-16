@@ -2,75 +2,39 @@
 BitmapFont: {
 	font_huge: {
 		file: kenney_high_square_72.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_huge_noto_mono: {
 		file: noto_mono_72.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_huge_noto_cjk: {
 		file: noto_cjk_72.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_large: {
 		file: kenney_pixel_72.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_large_noto_mono: {
 		file: noto_mono_58.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_large_noto_cjk: {
 		file: noto_cjk_58.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_medium: {
 		file: kenney_pixel_42.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_medium_noto_mono: {
 		file: noto_mono_26.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_medium_noto_cjk: {
 		file: noto_cjk_26.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_small: {
 		file: kenney_mini_18.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_small_noto_mono: {
 		file: noto_mono_18.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 	font_small_noto_cjk: {
 		file: noto_cjk_18.fnt
-		scaledSize: -1
-		markupEnabled: false
-		flip: false
 	}
 }
 Color: {
@@ -342,7 +306,7 @@ ImageTextButtonStyle: {
 }
 LabelStyle: {
 	default: {
-		font: font_medium
+		font: font_large_noto_mono
 		fontColor: text
 	}
 	over: {
