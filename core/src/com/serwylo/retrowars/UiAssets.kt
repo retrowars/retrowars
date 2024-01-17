@@ -260,6 +260,7 @@ class UiAssets(private val locale: Locale) {
             "in" to Font.KENNEY, // Java and Weblate disagree on the language code for Indonesian. Java uses "in", weblate uses "id", so we symlink them together.
             "it" to Font.KENNEY,
             "ko" to Font.NOTO_CJK,
+            "lt" to Font.NOTO_MONO,
             "nb" to Font.KENNEY,
             "nl" to Font.KENNEY,
             "pl" to Font.NOTO_MONO,

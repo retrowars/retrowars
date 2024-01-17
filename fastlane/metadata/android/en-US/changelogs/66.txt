@@ -1,0 +1,4 @@
+New translation:
+ * Lithuanian (thanks to @mazas)
+
+Want to see this game in your language? Please join us on Weblate to contribute a translation.
