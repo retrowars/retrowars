@@ -3,6 +3,7 @@ package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
 import com.google.gson.annotations.Since
+import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -43,6 +44,9 @@ data class ServerMetadataDTO(
  *
  * Version history:
  *  - 9 (v0.7.0) Initial support for online multiplayer.
+ *  - 67 (v0.32.2) Add "supported games". Each server can optionally specify only a subset of all
+ *                 games. Technically this happened in v0.32.1, but now we report the list of
+ *                 games via the "/info" endpoint.
  */
 data class ServerInfoDTO(
 
@@ -78,6 +82,9 @@ data class ServerInfoDTO(
 
     @Since(37.0)
     val lastPlayerTimestamp: Long = LAST_PLAYER_TIMESTAMP_NEVER,
+
+    @Since(67.0)
+    val supportedGames: List<String> = Games.allAvailable.map { it.id },
 
 ) {
     companion object {
