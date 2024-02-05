@@ -310,6 +310,7 @@ class RetrowarsServer(private val platform: Platform, private val config: Config
     fun getPlayerCount() = rooms.getPlayerCount()
     fun getLastGameTime() = lastGame
     fun getLastPlayerTime() = lastPlayer
+    fun getSupportedGames() = config.supportedGames
 
     private var returnToLobbyTask: Job? = null
 
@@ -666,6 +667,7 @@ class WebSocketNetworkServer(
                             currentPlayerCount = retrowarsServer.getPlayerCount(),
                             lastGameTimestamp = retrowarsServer.getLastGameTime()?.time ?: -1,
                             lastPlayerTimestamp = retrowarsServer.getLastPlayerTime()?.time ?: ServerInfoDTO.LAST_PLAYER_TIMESTAMP_NEVER,
+                            supportedGames = retrowarsServer.getSupportedGames().map { it.id },
                         ))
                     }
                 }
