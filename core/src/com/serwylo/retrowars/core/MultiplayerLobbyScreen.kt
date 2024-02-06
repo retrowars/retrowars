@@ -380,19 +380,32 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
             padLeft(UI_SPACE * 2)
             padRight(UI_SPACE * 2)
 
-            val summary: Label
+            var summary: Label? = null
 
             val serverInfoWrapper = VerticalGroup().apply {
                 addActor(
                     Label(
                         server.hostname,
-                        styles.label.medium
+                        styles.label.small
                     )
                 )
 
-                summary = Label(playerActivityMessage(strings, server.currentPlayerCount, server.lastPlayerTimestamp), styles.label.small)
+                addActor(
+                    Table().also { supportedGamesWrapper ->
+                        space(UI_SPACE)
+                        server.supportedGames.forEach {  supportedGame ->
+                            supportedGamesWrapper.add(
+                                makeGameIcon(supportedGame, game.uiAssets)
+                            ).width(UI_SPACE * 4).height(UI_SPACE * 4)
+                        }
+                    }
+                )
 
-                addActor(summary)
+                if (server.currentPlayerCount > 0) {
+                    val string = strings.format("multiplayer.server-list.num-players", server.currentPlayerCount)
+                    summary = Label(string, styles.label.small)
+                    addActor(summary)
+                }
 
                 columnAlign(Align.left)
             }
@@ -670,6 +683,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                         info.currentPlayerCount,
                         info.lastGameTimestamp,
                         info.lastPlayerTimestamp,
+                        info.getSupportedGameDetails(),
                         pingTime.toInt(),
                     ))
                 } catch (e: Exception) {
@@ -696,6 +710,7 @@ class MultiplayerLobbyScreen(game: RetrowarsGame, serverToConnectTo: ServerHostA
                         info.currentPlayerCount,
                         info.lastGameTimestamp,
                         info.lastPlayerTimestamp,
+                        info.getSupportedGameDetails(),
                         pingTime.toInt(),
                     )).sortedBy { serverDetails ->
                         // We could sort by ping time, but it just isn't the only relevant metric here.
