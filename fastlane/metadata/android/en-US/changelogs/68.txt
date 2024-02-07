@@ -1,0 +1,2 @@
+Fixes:
+ * Use the correct font for latin-based alphabets.
