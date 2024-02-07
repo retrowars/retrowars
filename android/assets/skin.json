@@ -306,7 +306,7 @@ ImageTextButtonStyle: {
 }
 LabelStyle: {
 	default: {
-		font: font_large_noto_mono
+		font: font_large
 		fontColor: text
 	}
 	over: {
