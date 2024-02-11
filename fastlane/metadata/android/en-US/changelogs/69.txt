@@ -1,0 +1,4 @@
+Improved server list:
+ * Show list of games supported by each server.
+ * Emphasise how many players are in a given server.
+ * De-emphasise hostname.
