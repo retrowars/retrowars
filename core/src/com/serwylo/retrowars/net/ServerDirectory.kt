@@ -3,6 +3,7 @@ package com.serwylo.retrowars.net
 
 import com.badlogic.gdx.Gdx
 import com.google.gson.annotations.Since
+import com.serwylo.retrowars.games.GameDetails
 import com.serwylo.retrowars.games.Games
 import com.serwylo.retrowars.utils.AppProperties
 import io.ktor.client.*
@@ -83,10 +84,39 @@ data class ServerInfoDTO(
     @Since(37.0)
     val lastPlayerTimestamp: Long = LAST_PLAYER_TIMESTAMP_NEVER,
 
+    /**
+     * See [getSupportedGames] where legacy servers before version 67 will return a specific
+     * list of hard coded games supported by those servers.
+     */
     @Since(67.0)
-    val supportedGames: List<String> = Games.allAvailable.map { it.id },
+    private val supportedGames: List<String>?,
 
 ) {
+
+    fun getSupportedGameDetails(): List<GameDetails> {
+        return supportedGames?.mapNotNull { serverGameId ->
+            Games.allAvailable.firstOrNull { clientGame ->
+                clientGame.id == serverGameId
+            }
+        } ?: listOf(
+
+            // Do NOT update the hardcoded list of games as new games are added.
+            // These games that were available on server versions 66 before the introduction of this data element.
+            // 
+            // Technically even older servers (that only support, e.g. asteroids and missile command) will report the wrong games.
+            // But in the Worst case we report to the user an incorrect list of games and they end up never playing tempest
+            //  or other newer games despite the server seemingly supporting it.
+
+            Games.asteroids,
+            Games.breakout,
+            Games.missileCommand,
+            Games.snake,
+            Games.spaceInvaders,
+            Games.tempest,
+            Games.tetris,
+        )
+    }
+
     companion object {
         const val LAST_PLAYER_TIMESTAMP_NEVER = -1L
     }
@@ -112,6 +142,7 @@ data class ServerDetails(
     val currentPlayerCount: Int,
     val lastGameTimestamp: Long,
     val lastPlayerTimestamp: Long,
+    val supportedGames: List<GameDetails>,
 
     /**
      * Approx ping time - the time it took to ask the server for its details.
