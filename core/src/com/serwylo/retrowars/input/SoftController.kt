@@ -411,6 +411,81 @@ class SnakeSoftController: SoftControllerLayout() {
 
 }
 
+class PacmanSoftController: SoftControllerLayout() {
+
+    object Buttons {
+        const val UP = "up"
+        const val DOWN = "down"
+        const val LEFT = "left"
+        const val RIGHT = "right"
+    }
+
+    override fun getLayouts() = listOf(
+        """
+            [      ][  up  ][       ][<---------->]
+            [ left ][ down ][ right ][<---------->]
+            """,
+
+        """
+            [<---------->][      ][  up  ][       ]
+            [<---------->][ left ][ down ][ right ]
+            """,
+
+        """
+            [<--->][      ][  up  ][       ][<--->]
+            [<--->][ left ][ down ][ right ][<--->]
+            """,
+
+        """
+            [      ][       ][      ][    ][      ]
+            [ left ][ right ][<---->][ up ][ down ]
+            """,
+
+        """
+            [      ][       ][      ][      ][    ]
+            [ left ][ right ][<---->][ down ][ up ]
+            """,
+
+        """
+            [      ][    ][      ][      ][       ]
+            [ left ][ up ][<---->][ down ][ right ]
+            """,
+
+        """
+            [      ][      ][      ][    ][       ]
+            [ left ][ down ][<---->][ up ][ right ]
+            """,
+    )
+
+    override fun getButtons() = listOf(
+        ButtonDefinition(
+            Buttons.UP,
+            { sprites -> sprites.buttonIcons.up },
+            Input.Keys.UP,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.DOWN,
+            { sprites -> sprites.buttonIcons.down },
+            Input.Keys.DOWN,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.LEFT,
+            { sprites -> sprites.buttonIcons.left },
+            Input.Keys.LEFT,
+            { SingleShotButton() },
+        ),
+        ButtonDefinition(
+            Buttons.RIGHT,
+            { sprites -> sprites.buttonIcons.right },
+            Input.Keys.RIGHT,
+            { SingleShotButton() },
+        ),
+    )
+
+}
+
 class AsteroidsSoftController: SoftControllerLayout() {
     override fun getButtons() = listOf(
         ButtonDefinition(

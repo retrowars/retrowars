@@ -9,6 +9,7 @@ import com.serwylo.retrowars.games.asteroids.AsteroidsGameScreen
 import com.serwylo.retrowars.games.breakout.BreakoutGameScreen
 import com.serwylo.retrowars.games.missilecommand.MissileCommandGameScreen
 import com.serwylo.retrowars.games.snake.SnakeGameScreen
+import com.serwylo.retrowars.games.pacman.PacmanGameScreen
 import com.serwylo.retrowars.games.spaceinvaders.SpaceInvadersGameScreen
 import com.serwylo.retrowars.games.tempest.TempestGameScreen
 import com.serwylo.retrowars.games.tetris.TetrisGameScreen
@@ -93,6 +94,17 @@ object Games {
         { app -> SpaceInvadersGameScreen(app) }
     )
 
+    val pacman = GameDetails(
+        "pacman",
+        isAvailable = true,
+        PacmanSoftController(),
+        "music/wherever_aliens.ogg",
+        "game.pacman.intro-message.positive",
+        "game.pacman.intro-message.negative",
+        { s -> s.icons.unknown },
+        { app -> PacmanGameScreen(app) }
+    )
+
     val other = UnavailableGameDetails("other")
 
     val all = listOf(
@@ -103,10 +115,17 @@ object Games {
         spaceInvaders,
         tempest,
         tetris,
+        pacman,
         other,
     )
 
-    val betaInfo = emptyList<BetaInfo>()
+    val betaInfo = listOf(
+        BetaInfo(
+            pacman,
+            "https://github.com/retrowars/retrowars/issues/18",
+            "Very early prototype. Not even playable yet.",
+        ),
+    )
 
     val allAvailable = all
         .filter { it !is UnavailableGameDetails }
