@@ -101,7 +101,7 @@ object Games {
         "music/wherever_aliens.ogg",
         "game.pacman.intro-message.positive",
         "game.pacman.intro-message.negative",
-        { s -> s.icons.unknown },
+        { s -> s.icons.pacman },
         { app -> PacmanGameScreen(app) }
     )
 
