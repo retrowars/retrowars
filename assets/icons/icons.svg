@@ -2,14 +2,6 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="32"
    height="32"
    viewBox="0 0 8.4666667 8.4666669"
@@ -18,8 +10,16 @@
    inkscape:export-filename="/tmp/test.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
-   sodipodi:docname="icons.svg">
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="icons.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs2">
     <linearGradient
@@ -195,18 +195,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.5"
-     inkscape:cx="891.97376"
-     inkscape:cy="1165.6542"
+     inkscape:zoom="2.1148619"
+     inkscape:cx="12.530369"
+     inkscape:cy="6.6198175"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g910-3"
      showgrid="true"
      units="px"
      inkscape:window-width="1916"
      inkscape:window-height="1041"
      inkscape:window-x="0"
      inkscape:window-y="18"
-     inkscape:window-maximized="0" />
+     inkscape:window-maximized="0"
+     inkscape:pagecheckerboard="0" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -396,6 +397,46 @@
        inkscape:export-xdpi="186.18182"
        inkscape:export-ydpi="186.18182" />
     <g
+       id="g910-3"
+       transform="translate(38.353602,25.686658)"
+       inkscape:export-xdpi="186.18182"
+       inkscape:export-ydpi="186.18182">
+      <rect
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect894-6"
+         width="8.4666662"
+         height="8.4666662"
+         x="0.070870675"
+         y="274.88037"
+         rx="0"
+         ry="0" />
+      <path
+         id="path932-3-3"
+         style="opacity:1;fill:#ffffff;stroke-width:0.264584"
+         d="m 3.4382176,277.0115 a 2.1541678,2.1541678 0 0 0 -2.1540662,2.15406 2.1541678,2.1541678 0 0 0 2.1540662,2.15407 2.1541678,2.1541678 0 0 0 1.4760041,-0.58739 l -1.5473339,-1.54777 1.5679593,-1.56796 A 2.1541678,2.1541678 0 0 0 3.4382176,277.0115 Z" />
+      <rect
+         y="278.98141"
+         x="4.885859"
+         height="0.26458332"
+         width="1.2238197e-08"
+         id="rect867-18"
+         style="fill:#4d4d4d;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         y="278.98141"
+         x="6.0363226"
+         height="0.26458332"
+         width="1.2238198e-08"
+         id="rect867-7-7"
+         style="fill:#4d4d4d;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         y="278.98141"
+         x="7.1867862"
+         height="0.26458332"
+         width="1.2238198e-08"
+         id="rect867-7-7-2"
+         style="fill:#4d4d4d;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    </g>
+    <g
        inkscape:export-ydpi="186.18184"
        inkscape:export-xdpi="186.18184"
        id="g1004"
@@ -414,7 +455,7 @@
          inkscape:export-filename="/tmp/icon_unknown.png" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-weight:normal;font-size:3.48126268px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         style="font-style:normal;font-weight:normal;font-size:3.48126px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
          x="3.606595"
          y="294.11371"
          id="text1008"
@@ -425,7 +466,7 @@
            id="tspan1006"
            x="3.606595"
            y="294.11371"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';fill:#ffffff;stroke-width:0.26458332">?</tspan></text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';fill:#ffffff;stroke-width:0.264583">?</tspan></text>
     </g>
     <g
        id="g140"
@@ -1713,7 +1754,7 @@
     </g>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:18.13230133px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.79408354"
+       style="font-style:normal;font-weight:normal;font-size:18.1323px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.794084"
        x="-118.39513"
        y="95.936211"
        id="text386"
@@ -1724,7 +1765,7 @@
          id="tspan384"
          x="-118.39513"
          y="95.936211"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.39999962px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.79408354">Super Retro Mega Wars</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.4px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.794084">Super Retro Mega Wars</tspan></text>
     <g
        id="g1594"
        transform="translate(0,-26.458338)"
@@ -2505,9 +2546,9 @@
            id="text2046"
            y="233.89679"
            x="-180.42586"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            xml:space="preserve"><tspan
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
              y="233.89679"
              x="-180.42586"
              id="tspan2044"
@@ -2525,7 +2566,7 @@
            y="231.79416" />
         <text
            xml:space="preserve"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            x="-180.42586"
            y="233.89679"
            id="text541"><tspan
@@ -2533,7 +2574,7 @@
              id="tspan539"
              x="-180.42586"
              y="233.89679"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
       </g>
       <g
          transform="matrix(4.6498444,0,0,4.6498444,775.21964,-895.32518)"
@@ -2549,9 +2590,9 @@
            id="text549"
            y="233.89679"
            x="-180.42586"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            xml:space="preserve"><tspan
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
              y="233.89679"
              x="-180.42586"
              id="tspan547"
@@ -2569,7 +2610,7 @@
            y="231.79416" />
         <text
            xml:space="preserve"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            x="-180.42586"
            y="233.89679"
            id="text557"><tspan
@@ -2577,7 +2618,7 @@
              id="tspan555"
              x="-180.42586"
              y="233.89679"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
       </g>
       <g
          transform="matrix(4.6498444,0,0,4.6498444,877.52479,-907.26543)"
@@ -2593,9 +2634,9 @@
            id="text565"
            y="233.89679"
            x="-180.42586"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            xml:space="preserve"><tspan
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
              y="233.89679"
              x="-180.42586"
              id="tspan563"
@@ -2613,7 +2654,7 @@
            y="231.79416" />
         <text
            xml:space="preserve"
-           style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+           style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
            x="-180.42586"
            y="233.89679"
            id="text573"><tspan
@@ -2621,7 +2662,7 @@
              id="tspan571"
              x="-180.42586"
              y="233.89679"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
       </g>
       <g
          id="g2008"
@@ -2731,12 +2772,12 @@
        id="text1598"
        y="110.75288"
        x="-91.407623"
-       style="font-style:normal;font-weight:normal;font-size:18.13230133px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.79408354"
+       style="font-style:normal;font-weight:normal;font-size:18.1323px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.794084"
        xml:space="preserve"
        inkscape:export-filename="/home/pete/code/retrowars/fastlane/metadata/android/en-US/images/featureGraphic.png"
        inkscape:export-xdpi="72.000008"
        inkscape:export-ydpi="72.000008"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.93333244px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.79408354"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.9333px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.794084"
          y="110.75288"
          x="-91.407623"
          id="tspan1596"
@@ -2891,9 +2932,9 @@
          id="text386-9"
          y="-4.1037607"
          x="-306.44659"
-         style="font-style:normal;font-weight:normal;font-size:18.13230133px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.7940836"
+         style="font-style:normal;font-weight:normal;font-size:18.1323px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.794084"
          xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.39999962px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.7940836"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.4px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.794084"
            y="-4.1037607"
            x="-306.44659"
            id="tspan384-3"
@@ -3676,7 +3717,7 @@
              y="231.79416" />
           <text
              xml:space="preserve"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              x="-180.42586"
              y="233.89679"
              id="text2046-7"><tspan
@@ -3684,7 +3725,7 @@
                id="tspan2044-3"
                x="-180.42586"
                y="233.89679"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
         </g>
         <g
            transform="matrix(4.6498444,0,0,4.6498444,738.73735,-929.73393)"
@@ -3700,9 +3741,9 @@
              id="text541-6"
              y="233.89679"
              x="-180.42586"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              xml:space="preserve"><tspan
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
                y="233.89679"
                x="-180.42586"
                id="tspan539-3"
@@ -3720,7 +3761,7 @@
              y="231.79416" />
           <text
              xml:space="preserve"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              x="-180.42586"
              y="233.89679"
              id="text549-8"><tspan
@@ -3728,7 +3769,7 @@
                id="tspan547-1"
                x="-180.42586"
                y="233.89679"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
         </g>
         <g
            transform="matrix(4.6498444,0,0,4.6498444,836.14443,-897.84338)"
@@ -3744,9 +3785,9 @@
              id="text557-3"
              y="233.89679"
              x="-180.42586"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              xml:space="preserve"><tspan
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
                y="233.89679"
                x="-180.42586"
                id="tspan555-9"
@@ -3764,7 +3805,7 @@
              y="231.79416" />
           <text
              xml:space="preserve"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              x="-180.42586"
              y="233.89679"
              id="text565-8"><tspan
@@ -3772,7 +3813,7 @@
                id="tspan563-5"
                x="-180.42586"
                y="233.89679"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637">vs</tspan></text>
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776">vs</tspan></text>
         </g>
         <g
            transform="matrix(4.6498444,0,0,4.6498444,928.07108,-918.33707)"
@@ -3788,9 +3829,9 @@
              id="text573-6"
              y="233.89679"
              x="-180.42586"
-             style="font-style:normal;font-weight:normal;font-size:3.89954996px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.17077637"
+             style="font-style:normal;font-weight:normal;font-size:3.89955px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.170776"
              xml:space="preserve"><tspan
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.17077637"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#b3b3b3;stroke-width:0.170776"
                y="233.89679"
                x="-180.42586"
                id="tspan571-3"
@@ -3905,7 +3946,7 @@
          inkscape:export-xdpi="72.000008"
          inkscape:export-filename="/home/pete/code/retrowars/fastlane/metadata/android/en-US/images/featureGraphic.png"
          xml:space="preserve"
-         style="font-style:normal;font-weight:normal;font-size:18.13230133px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.7940836"
+         style="font-style:normal;font-weight:normal;font-size:18.1323px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.794084"
          x="-279.45911"
          y="10.71289"
          id="text1598-3"><tspan
@@ -3913,7 +3954,7 @@
            id="tspan1596-0"
            x="-279.45911"
            y="10.71289"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.93333244px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.7940836">Online multiplayer chaos</tspan></text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.9333px;font-family:'Kenney Pixel';-inkscape-font-specification:'Kenney Pixel';fill:#ffffff;stroke-width:0.794084">Online multiplayer chaos</tspan></text>
     </g>
   </g>
 </svg>
