@@ -195,11 +195,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.1148619"
-     inkscape:cx="12.530369"
-     inkscape:cy="6.6198175"
+     inkscape:zoom="3.6360721"
+     inkscape:cx="108.63371"
+     inkscape:cy="26.677139"
      inkscape:document-units="mm"
-     inkscape:current-layer="g910-3"
+     inkscape:current-layer="layer1"
      showgrid="true"
      units="px"
      inkscape:window-width="1916"
@@ -400,7 +400,8 @@
        id="g910-3"
        transform="translate(38.353602,25.686658)"
        inkscape:export-xdpi="186.18182"
-       inkscape:export-ydpi="186.18182">
+       inkscape:export-ydpi="186.18182"
+       inkscape:export-filename="/home/pete/code/retrowars/assets/icons/icon_pacman.png">
       <rect
          style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect894-6"

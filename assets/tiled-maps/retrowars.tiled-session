@@ -1,0 +1,42 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "pacman.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "pacman.tmx": {
+            "scale": 2.2281,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 332.3459449755397,
+                "y": 115.79372559579912
+            }
+        },
+        "pacman.tsx": {
+            "scaleInDock": 7.0711,
+            "scaleInEditor": 7.4311
+        }
+    },
+    "last.imagePath": "/home/pete/code/retrowars/assets/retrowars-sprites",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "openFiles": [
+        "pacman.tsx",
+        "pacman.tmx"
+    ],
+    "project": "retrowars.tiled-project",
+    "recentFiles": [
+        "pacman.tsx",
+        "pacman.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    }
+}
