@@ -1,0 +1,18 @@
+Máš rád/a retro hry? Máš rád/a hry pro více hráčů? Chtěl/a sis někdy zahrát nějakou retro hru proti jinému hráči?
+
+Vítej v Epických retro mega válkách!
+
+Hraj proti svým přátelům a soutěžte spolu hraním různých her. Skórujte body ve své hře a každá další hra bude nějakým způsobem upravená. Ale pozor – jak budou ostatní skórovat, bude tvá hra čím dál tím těžší.
+
+Šest různých her pro jednoho i více hráčů založených na klasických retro titulech, s dalšími na cestě!
+
+Žádné reklamy. Žádné nákupy ve hře. Jen retro hry a pohoda.
+
+Jakákoli zpětná vazba je velmi vítána na GitHubu.
+
+Známá omezení:
+
+* Bude potřeba spousta testování pro lepší balancování her a identifikaci a odstranění bugů ze serveru.
+* Neozkoušeno na různých velikostech obrazovky.
+
+Podpořte prosím další vývoj přes GitHub Sponsors nebo Liberapay.
