@@ -1,0 +1,5 @@
+Translations:
+ * Updated various translations.
+
+Misc:
+ * Bump target SDK
