@@ -13,7 +13,7 @@ class I18nTests {
 
     @Test
     fun testStringFormats() {
-        UiAssets.supportedLocales.forEach { locale ->
+        UiAssets.supportedLocales.forEach { (locale) ->
             val strings = I18NBundle.createBundle(Gdx.files.internal("i18n/messages"), Locale(locale))
 
             val props = Properties().apply {

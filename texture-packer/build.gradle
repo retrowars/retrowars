@@ -1,6 +1,6 @@
 apply plugin: "kotlin"
 
-sourceCompatibility = 1.7
+sourceCompatibility = JavaVersion.VERSION_1_8
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 project.ext.mainClassName = "com.serwylo.retrowars.bin.TexturePackerKt"
