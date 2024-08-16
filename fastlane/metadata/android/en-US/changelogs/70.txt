@@ -1,0 +1,8 @@
+Translations:
+ * New translation: Czech (thanks @Fjuro).
+ * Updated various translations.
+
+Misc:
+ * Bump target SDK
+
+Want to see this game in your language? Please join us on Weblate to contribute a translation.

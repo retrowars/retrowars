@@ -1,6 +1,6 @@
 android {
-    buildToolsVersion "30.0.3"
-    compileSdkVersion 33
+    compileSdk 34
+    namespace = "com.serwylo.retrowars"
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -23,7 +23,7 @@ android {
     defaultConfig {
         applicationId "com.serwylo.retrowars"
         minSdkVersion 14
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         // Pull these from the parent project build.gradle.
         versionCode = appVersionCode
@@ -43,6 +43,13 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        renderScript true
+        aidl true
     }
 }
 

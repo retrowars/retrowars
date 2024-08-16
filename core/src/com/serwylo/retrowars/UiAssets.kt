@@ -249,6 +249,7 @@ class UiAssets(private val locale: Locale) {
          */
         val supportedLocales = mapOf(
             "bs" to Font.NOTO_MONO, // ž and other characters not represented by Kenney.
+            "cs" to Font.NOTO_MONO,
             "de" to Font.KENNEY,
             "en" to Font.KENNEY,
             "es" to Font.KENNEY,

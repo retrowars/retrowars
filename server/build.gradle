@@ -1,4 +1,4 @@
-sourceCompatibility = 1.7
+sourceCompatibility = JavaVersion.VERSION_1_8
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../android/assets", "resources/"]
 
@@ -26,7 +26,8 @@ task dist(type: Jar) {
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
-    baseName 'retrowars-server'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = 'retrowars-server'
     version project.ext.appVersionName
     dependsOn configurations.runtimeClasspath
     from {
