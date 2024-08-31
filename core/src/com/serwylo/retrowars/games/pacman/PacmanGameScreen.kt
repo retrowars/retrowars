@@ -3,7 +3,10 @@ package com.serwylo.retrowars.games.pacman
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.serwylo.retrowars.RetrowarsGame
 import com.serwylo.retrowars.games.GameScreen
 import com.serwylo.retrowars.games.Games
@@ -86,7 +89,13 @@ class PacmanGameScreen(game: RetrowarsGame) : GameScreen(game, Games.pacman, 400
     }
 
     override fun renderGame(camera: Camera) {
-        val r = game.uiAssets.shapeRenderer
+
+        val mapRenderer = OrthogonalTiledMapRenderer(game.uiAssets.getPacmanMap(), 1.6f)
+        mapRenderer.setView(camera as OrthographicCamera)
+
+        mapRenderer.render()
+
+        /*val r = game.uiAssets.shapeRenderer
         r.projectionMatrix = camera.combined
 
         r.begin(ShapeRenderer.ShapeType.Filled)
@@ -94,7 +103,7 @@ class PacmanGameScreen(game: RetrowarsGame) : GameScreen(game, Games.pacman, 400
         r.color = Color.BLUE
         // r.rect(state.food.x * cellWidth + 1, state.food.y * cellHeight + 1, cellWidth - 2, cellHeight - 2)
 
-        r.end()
+        r.end()*/
     }
 
 }

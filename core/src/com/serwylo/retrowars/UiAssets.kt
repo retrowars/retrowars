@@ -3,11 +3,14 @@ package com.serwylo.retrowars
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.assets.loaders.I18NBundleLoader
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.maps.tiled.TiledMap
+import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
@@ -29,6 +32,7 @@ class UiAssets(private val locale: Locale) {
     private lateinit var styles: Styles
     private lateinit var sprites: Sprites
     private lateinit var effects: Effects
+    private lateinit var pacmanMap: TiledMap
 
     @GDXAssets(propertiesFiles = ["android/assets/i18n/messages.properties"])
     private lateinit var strings: I18NBundle
@@ -37,6 +41,14 @@ class UiAssets(private val locale: Locale) {
         manager.load("i18n/messages", I18NBundle::class.java, I18NBundleLoader.I18NBundleParameter(locale))
         manager.load("skin.json", Skin::class.java)
         manager.load("sprites.atlas", TextureAtlas::class.java)
+
+        // The above items are all required for the main menu to work, so are loaded instantly.
+        // This is a little lazy, because it is only needed for pacman. If it becomes
+        // onerous, then we can move it to the pacman loading screen. However at time of writing,
+        // there is not really a provision for games to support a loading screen so that would
+        // need to be built first.
+        manager.setLoader(TiledMap::class.java, TmxMapLoader(InternalFileHandleResolver()))
+        manager.load("tiled-maps/pacman.tmx", TiledMap::class.java)
     }
 
     fun initSync() {
@@ -53,6 +65,8 @@ class UiAssets(private val locale: Locale) {
 
         styles = Styles(skin, locale)
 
+        pacmanMap = manager.get("tiled-maps/pacman.tmx")
+
         Gdx.app.debug(TAG, "Finished loading assets (${System.currentTimeMillis() - startTime}ms)")
 
     }
@@ -62,6 +76,7 @@ class UiAssets(private val locale: Locale) {
     fun getStyles() = styles
     fun getSprites() = sprites
     fun getEffects() = effects
+    fun getPacmanMap() = pacmanMap
 
     class Effects {
 
